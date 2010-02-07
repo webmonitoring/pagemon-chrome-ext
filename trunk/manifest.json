@@ -1,0 +1,22 @@
+{
+  "name": "Page Monitor",
+  "version": "1.2.1",
+  "description": "Sits in the background and monitors web pages for changes.",
+  "icons": {
+    "128": "extension_icon.png",
+    "48": "extension_icon.png",
+    "32": "extension_icon.png",
+    "16": "browser_icon.png"
+   },
+  "background_page": "background.htm",
+  "options_page": "options.htm",
+  "browser_action": {
+    "default_icon": "browser_icon.png",
+    "popup": "popup.htm"
+  },
+  "permissions": [
+    "tabs",
+    "http://*/*",
+    "https://*/*"
+  ]
+}

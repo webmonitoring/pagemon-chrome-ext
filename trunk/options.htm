@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Page Monitor Options</title>
+  <script type="text/javascript" src="jscolor/jscolor.js"></script>
+  <script type="text/javascript">
+    var bg = chrome.extension.getBackgroundPage();
+    
+    function fillPages() {
+      var pages = bg.getAllPages();
+      var table = document.getElementById('pages');
+      
+      table.innerHTML = '';
+      if (pages == undefined || pages == {}) {
+        markTableEmpty();
+      } else {
+        for (var i in pages) {
+          var page = pages[i];
+          insertNewPage(page.name, page.url, page.icon, page.regex || '');
+        }
+      }
+    }
+    
+    function markTableEmpty() {
+      var table = document.getElementById('pages');
+      var row = document.createElement('tr');
+      table.appendChild(row);
+      var cell = document.createElement('td');
+      row.appendChild(cell);
+      cell.className = 'no_pages';
+      cell.innerText = 'No pages are being monitored.'
+    }
+    
+    function insertNewPage(name, url, icon_path, regex) {
+      function removeNotification(sender) {
+        var node = sender;
+        
+        while (node.tagName.toLowerCase() != 'tr' && node.parentNode) {
+          node = node.parentNode;
+        }
+        
+        if (node) {
+          table.removeChild(node);
+        }
+      }
+      function stopTrackingPage() {
+        removeNotification(this);
+        bg.removePage(url);
+        if (document.getElementById('pages').childNodes.length == 0) {
+          markTableEmpty();
+        }
+      }
+    
+      var table = document.getElementById('pages');
+      var row = document.createElement('tr');
+      table.appendChild(row);
+      var cell = document.createElement('td');
+      row.appendChild(cell);
+      var link = document.createElement('a');
+      cell.appendChild(link);
+      var icon = document.createElement('img');
+      link.appendChild(icon);
+      var button = document.createElement('a');
+      cell.appendChild(button);
+      
+      var is_odd_row = (table.childNodes.length % 2 == 0);
+      row.className = is_odd_row ? 'even' : 'odd';
+      
+      icon.className = 'favicon';
+      icon.src = icon_path || 'page.png';
+      
+      name = name || 'Untitled (' + url + ')';
+      if (name.length > 60) {
+        name = name.replace(/([^]{20,60})(\w)\b.*/, '$1$2...');
+      }
+      link.innerHTML += name;
+      link.href = url;
+      link.className = 'page_link';
+      link.target = '_blank';
+      link.title = 'Visit Page';
+      
+      button.innerText = '[stop tracking]';
+      button.href = '#';
+      button.className = 'marker';
+      button.addEventListener('click', stopTrackingPage);
+      
+      var regex_container = document.createElement('div');
+      cell.appendChild(regex_container);
+      regex_container.className = 'regex';
+      
+      var regex_checkbox = document.createElement('input');
+      regex_container.appendChild(regex_checkbox);
+      regex_checkbox.type = 'checkbox';
+      regex_checkbox.checked = Boolean(regex);
+      regex_checkbox.onclick = function() { updateRegexCheckbox(this, url); };
+      
+      var regex_label = document.createElement('span');
+      regex_container.appendChild(regex_label);
+      regex_label.innerText = 'Custom Regex';
+      
+      var regex_textbox = document.createElement('input');
+      regex_container.appendChild(regex_textbox);
+      regex_textbox.type = 'text';
+      regex_textbox.value = regex;
+      regex_textbox.onkeyup = function() { updateRegexTextbox(this, url); };
+      
+      var regex_test_button = document.createElement('input');
+      regex_container.appendChild(regex_test_button);
+      regex_test_button.type = 'button';
+      regex_test_button.value = 'Test';
+      regex_test_button.onclick = function() {
+        regex_test_button.value = 'Testing...';
+        regex_test_button.disabled = true;
+        regex_textbox.disabled = true;
+        regex_checkbox.disabled = true;
+        bg.sendAjaxRequest(url, function(xhr) {
+          if (xhr.status == 200) {
+            results = bg.findAndFormatRegexMatches(xhr.responseText, regex_textbox.value);
+            if (results) {
+              alert('Matched:\n' + results);
+            } else {
+              alert('No matches.');
+            }
+          } else {
+            alert('Could not retrieve selected page.');
+          }
+          regex_test_button.value = 'Test';
+          regex_test_button.disabled = false;
+          regex_textbox.disabled = false;
+          regex_checkbox.disabled = false;
+        });
+      };
+      
+      updateRegexCheckbox(regex_checkbox, url);
+    }
+    
+    function updateRegexCheckbox(box, url) {
+      var label = box.nextElementSibling;
+      var textbox = label.nextElementSibling;
+      var test_button = textbox.nextElementSibling;
+      
+      label.className = box.checked ? 'enabled' : 'disabled';
+      textbox.style.display = box.checked ? 'inline' : 'none';
+      test_button.style.display = box.checked ? 'inline' : 'none';
+      
+      updateRegexTextbox(textbox, url);
+    }
+    
+    function updateRegexTextbox(box, url) {
+      if (box.style.display == 'none') {
+        bg.updatePageRegex(url, '');
+      } else {
+        var is_valid_regex;
+        try {
+          temp_regex = new RegExp(box.value);
+          is_valid_regex = true;
+        } catch (e) {
+          is_valid_regex = false;
+        }
+        
+        var test_button = box.nextElementSibling;
+        
+        box.className = is_valid_regex ? 'valid' : 'invalid';
+        test_button.disabled = !is_valid_regex;
+        
+        if (is_valid_regex) {
+          bg.updatePageRegex(url, box.value);
+        }
+      }
+    }
+    
+    function getInterval() {
+      interval_input = document.getElementById('interval');
+      interval_input.value = bg.getInterval() / 60 / 1000;
+    }
+    
+    function updateInterval() {
+      var interval_input = document.getElementById('interval');
+            
+      var caret_pos = interval_input.selectionStart;
+      var caret_end = interval_input.selectionEnd;
+      var cleaned_interval = interval_input.value.replace(/[^-.0-9]/g, '');
+      var parsed_interval = Math.abs(parseFloat(cleaned_interval));
+      interval_input.value = isNaN(parsed_interval) ? 1 : cleaned_interval;
+      interval_input.selectionStart = caret_pos;
+      interval_input.selectionEnd = caret_end;
+      
+      if (parsed_interval > 1 / 61) {
+        bg.updateCheckInterval(interval_input.value * 60 * 1000);
+        interval_input.style.backgroundColor = '#bfb';
+      } else {
+        interval_input.style.backgroundColor = '#fbb';
+      }
+    }
+    
+    function updateLastCheckTime() {
+      var time_span = document.getElementById('last_check_time');
+      
+      var last_check_timestamp = bg.getLastCheckTime();
+      if (last_check_timestamp) {
+        var time_delta = (new Date()).getTime() - last_check_timestamp;
+        var seconds = Math.floor(time_delta / 1000);
+        var minutes = Math.floor(seconds / 60) % 60;
+        var hours = Math.floor(seconds / (60 * 60)) % 24;
+        var days = Math.floor(seconds / (60 * 60 * 24));
+        
+        var label = '';
+        
+        if (days) label += days + ((days == 1) ? ' day ' : ' days ');
+        if (hours) label += hours + ((hours == 1) ? ' hour ' : ' hours ');
+        if (minutes) label += minutes + ((minutes == 1) ? ' minute ' : ' minutes ');
+        if (!label) label += seconds + ((seconds == 1) ? ' second ' : ' seconds ');
+        label += 'ago';
+        
+        time_span.innerText = label;
+      } else {
+        time_span.innerText = 'Never checked.';
+      }
+      
+      setTimeout(updateLastCheckTime, 60000);
+    }
+    
+    function setBadgeColor(color) {
+      color = [ Math.floor(color.rgb[0] * 255),
+                Math.floor(color.rgb[1] * 255),
+                Math.floor(color.rgb[2] * 255),
+                255 ];
+      bg.setBadgeColor(color);
+    }
+    
+    function getBadgeColor() {
+      var color = bg.getBadgeColor();
+      color = toHex(color[0]) + toHex(color[1]) + toHex(color[2]);
+      document.getElementById('badge_color_picker').value = color.toUpperCase();
+      document.getElementById('badge_color').style.backgroundColor = '#' + color;
+    }
+    
+    function toHex(d, padding) {
+      var hex = d.toString(16);
+      
+      while (hex.length < 2) {
+        hex = '0' + hex;
+      }
+
+      return hex;
+    }
+  </script>
+  <style type="text/css">
+    body {
+      width: 780px;
+      font-family: Calibri, Tahoma, Arial, sans-serif;
+      margin: auto;
+      padding: none;
+      padding-bottom: 5.5em;
+    }
+    
+    table {
+      width: 100%;
+      border: none;
+    }
+    
+    td {
+      width: 100%;
+      height: 2em;
+      padding: 0.2em;
+      border-top: 1px lightgray solid;
+    }
+    
+    tr:first-child td {
+      border-top: none;
+    }
+    
+    td.no_pages {
+      padding-top: 1em;
+      text-align: center;
+      color: #999;
+    }
+    
+    tr.even {
+      background: #f4f4f4;
+    }
+    
+    td input[type=text] {
+      width: 400px;
+    }
+    
+    hr {
+      width: 100%;
+      border-top: none;
+      border-bottom: 1px gray dotted;
+      margin-top: 1em;
+    }
+    
+    a:link, a:visited {
+      color: #647CCB;
+      text-decoration: none;
+    }
+    
+    a:hover {
+      text-decoration: none;
+      color: blue;
+    }
+    
+    .util, .util:link, .util:visited {
+      display: block;
+      float: right;
+      margin-left: 3em;
+      color: #849CCB;
+    }
+    
+    .util img {
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+    }
+    
+    .util input {
+      width: 3em;
+      text-align: center;
+      border: 1px #a4bCeB solid;
+    }
+    
+    a.util:hover {
+      text-shadow: #849ccb 0px -1px 0px;
+    }
+    
+    a.util:hover img {
+      opacity: 200%;
+    }
+    
+    .marker {
+      float: right;
+      font-size: 75%;
+      position: relative;
+      top: 1em;
+    }
+    
+    .marker a {
+      display: block;
+    }
+    
+    a.page_link {
+      float: left;
+      display: block;
+    }
+    
+    img.favicon {
+      float: left;
+      display: block;
+      margin-right: 0.4em;
+      vertical-align: baseline;
+      width: 16px;
+      height: 16px;
+      position: relative;
+      top: 2px;
+    }
+    
+    h1 {
+      margin-top: 0px;
+      color: #F8F8FF;
+      background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
+      border-radius: 0px 0px 10px 10px;
+      padding: 5px 10px 10px 10px;
+      text-shadow: rgba(0, 0, 0, 0.3) 0px -1px 1px;
+      font-size: 150%;
+      text-align: center;
+      -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 5px;
+    }
+    
+    .regex {
+      clear: both;
+      margin: 1.25em 0 0 1.25em;
+    }
+    
+    .regex input[type=checkbox] {
+      position: relative;
+      top: 2px;
+    }
+    
+    .regex input[type=text] {
+      height: 1em;
+      border: 1px #bbb solid;
+    }
+    
+    .enabled {
+      color: #849ccb;
+    }
+    
+    .enabled:after {
+      content: ': ';
+    }
+    
+    .disabled {
+      color: #999;
+    }
+    
+    .regex input[type=text] {
+      -webkit-transition: background-color 0.2s linear;
+    }
+    
+    .regex input.valid {
+      background: #cfc;
+    }
+    
+    .regex input.invalid {
+      background: #fcc;
+    }
+    
+    .regex input[type=button] {
+      height: 1.6em;
+      position: relative;
+      top: 1px;
+    }
+    
+    #badge_color {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      position: relative;
+      top: 3px;
+    }
+    
+    #interval {
+      -webkit-transition: background-color 0.2s linear;
+    }
+  </style>
+</head>
+<body onload="fillPages(); getInterval(); updateLastCheckTime(); getBadgeColor();">
+  <h1>Monitored Pages</h1>
+  <table id="pages" cellspacing="0">
+    <!-- Pages go here. -->
+  </table>
+  <hr />
+  <p>
+    <a class="util" href="#" onclick="bg.checkUpdates(updateLastCheckTime); document.getElementById('last_check_time').innerText = 'Checking..';">
+      <img src="refresh.png" />
+      Check Now
+    </a>
+    <span class="util">
+      <img src="clock.png" />
+      Check every
+      <input type="text" id="interval" value="180" maxlength="5" onkeyup="updateInterval(this.value);" />
+      minutes.
+      <br />
+      <span style="float: left;">
+        <img src="monitor.png" />
+        Last Check: <span id="last_check_time"></span>.
+      </span>
+    </span>
+    <span class="util">
+      <img src="color.png" />
+      Badge color:
+      <input id="badge_color_picker" type="text" class="color {pickerPosition:'top',styleElement:'badge_color'}" value="00B400" maxlength="6" style="width: 4em" onchange="setBadgeColor(this.color);" />
+      <span id="badge_color"></span>
+    </span>
+    <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
+      <img src="feedback.png" />
+      Feedback
+    </a>
+  </p>
+</body>
+</html>

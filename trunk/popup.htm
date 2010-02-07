@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<title>Page Monitor</title>
+	<link rel="shortcut icon" href="browser_icon.png" />
+  <script type="text/javascript">
+    var bg = chrome.extension.getBackgroundPage();
+    
+    function fillNotifications() {
+      var new_pages = bg.getUpdatedPages();
+      var table = document.getElementById('notifications');
+      
+      table.innerHTML = '';
+      if (new_pages.length == 0) {
+        markTableEmpty();
+      } else {
+        for (var i in new_pages) {
+          var page = new_pages[i];
+          insertNewNotification(page.name, page.url, page.icon);
+        }
+      }
+      
+      table.className = 'done';
+    }
+    
+    function checkWhetherPageIsMonitored() {
+      chrome.tabs.getSelected(null, function(tab) {
+        if (bg.isPageMonitored(tab.url)) {
+          markPageMonitored();
+        }
+      });
+    }
+    
+    function markTableEmpty() {
+      var table = document.getElementById('notifications');
+      var row = document.createElement('tr');
+      table.appendChild(row);
+      var cell = document.createElement('td');
+      row.appendChild(cell);
+      cell.className = 'no_updates';
+      cell.innerText = 'No changes found.'
+    }
+    
+    function monitorCurrentPage() {
+      chrome.tabs.getSelected(null, function(tab) {
+        if (tab.status == 'loading') {
+          //console.log('Page still loading; waiting.');
+          setTimeout(monitorCurrentPage, 250);
+        } else {
+          bg.addNewPage(tab.title, tab.url, tab.favIconUrl);
+          markPageMonitored();
+        }
+      });
+    }
+    
+    function markPageMonitored() {
+      monitor_label = document.getElementById('monitor_page');
+      monitor_label.className = 'util_unlinked';
+      monitor_label.onclick = function() {};
+      
+      var temp = monitor_label.firstElementChild;
+      monitor_label.innerHTML = '';
+      monitor_label.appendChild(temp);
+      monitor_label.innerHTML += ' Page Monitored.';
+    }
+    
+    function refreshNotifications() {
+      var table = document.getElementById('notifications');
+      table.innerHTML = '<tr><td>&nbsp;</td></tr>';
+      table.className = 'loading';
+      
+      bg.checkUpdates(function() {
+        table.innerHTML = '';
+        fillNotifications();
+      });
+    }
+    
+    function insertNewNotification(name, url, icon_path) {
+      function removeNotification(sender) {
+        var node = sender;
+        
+        while (node.tagName.toLowerCase() != 'tr' && node.parentNode) {
+          node = node.parentNode;
+        }
+        
+        if (node) {
+          table.removeChild(node);
+        }
+      }
+      function markVisited() {
+        removeNotification(this);
+        bg.markPageVisited(url);
+        if (document.getElementById('notifications').childNodes.length == 0) {
+          markTableEmpty();
+        }
+      }
+      function stopTrackingPage() {
+        removeNotification(this);
+        bg.removePage(url);
+        if (document.getElementById('notifications').childNodes.length == 0) {
+          markTableEmpty();
+        }
+      }
+    
+      var table = document.getElementById('notifications');
+      var row = document.createElement('tr');
+      table.appendChild(row);
+      var cell = document.createElement('td');
+      row.appendChild(cell);
+      var link = document.createElement('a');
+      cell.appendChild(link);
+      var icon = document.createElement('img');
+      link.appendChild(icon);
+      var modifiers = document.createElement('div');
+      cell.appendChild(modifiers);
+      var button = document.createElement('a');
+      modifiers.appendChild(button);
+      var button2 = document.createElement('a');
+      modifiers.appendChild(button2);
+      
+      var is_odd_row = (table.childNodes.length % 2 == 0);
+      row.className = is_odd_row ? 'even' : 'odd';
+      
+      icon.className = 'favicon';
+      icon.src = icon_path || 'page.png';
+      
+      name = name || 'Untitled (' + url + ')';
+      link.innerHTML += name;
+      link.href = url;
+      link.className = 'page_link';
+      link.target = '_blank';
+      link.title = 'Visit Page';
+      link.addEventListener('click', markVisited);
+      
+      modifiers.className = 'marker';
+      
+      button.innerText = '[mark visited]';
+      button.href = '#';
+      button.addEventListener('click', markVisited);
+      
+      //button2.innerText = '[stop tracking]';
+      //button2.href = '#';
+      //button2.addEventListener('click', stopTrackingPage);
+      
+      button2.innerText = '[view changes]';
+      button2.href = 'diff.htm#' + btoa(url)
+      button2.target = '_blank';
+    }
+  </script>
+  <style type="text/css">
+    body {
+      width: 600px;
+      font-family: Calibri, Tahoma, Arial, sans-serif;
+      margin: none;
+      padding: none;
+      padding-bottom: 1.5em;
+    }
+    
+    table {
+      width: 100%;
+      border: none;
+    }
+    
+    td {
+      width: 100%;
+      height: 2em;
+      padding: 0.2em;
+      border-top: 1px lightgray solid;
+    }
+    
+    tr:first-child td {
+      border-top: none;
+    }
+    
+    td.no_updates {
+      padding-top: 1em;
+      text-align: center;
+      color: #999;
+    }
+    
+    tr.even {
+      background: #f4f4f4;
+    }
+    
+    hr {
+      width: 100%;
+      border-top: none;
+      border-bottom: 1px gray dotted;
+      margin-top: 1em;
+    }
+    
+    a:link, a:visited {
+      color: #647CCB;
+      text-decoration: none;
+    }
+    
+    a:hover {
+      color: blue;
+    }
+    
+    .util, .util:link, .util:visited {
+      display: block;
+      float: right;
+      width: 150px;
+      color: #849CCB;
+    }
+    
+    .util img, .util_unlinked img {
+      vertical-align: middle;
+      position: relative;
+      top: -2px;
+    }
+    
+    a.util:hover {
+      text-shadow: #849ccb 0px -1px 0px;
+    }
+    
+    .util_unlinked, .util_unlinked:link, .util_unlinked:visited {
+      display: block;
+      float: right;
+      width: 150px;
+      color: #849CCB;
+      font-weight: bold;
+      cursor: default;
+    }
+    
+    a.util_unlinked:hover {
+      color: #849CCB;
+      cursor: default;
+    }
+    
+    .marker {
+      float: right;
+      font-size: 75%;
+    }
+    
+    .marker a {
+      display: block;
+    }
+    
+    a.page_link {
+      float: left;
+      display: block;
+    }
+    
+    img.favicon {
+      float: left;
+      display: block;
+      margin-right: 0.4em;
+      vertical-align: baseline;
+      width: 16px;
+      height: 16px;
+      position: relative;
+      top: 2px;
+    }
+    
+    table.loading {
+      height: 51px;
+      background: url('loader.gif') center center no-repeat;
+    }
+  </style>
+</head>
+<body onload="fillNotifications(); checkWhetherPageIsMonitored();">
+  <table id="notifications" class="loading" cellspacing="0">
+    <!-- Notification entries go here. -->
+  </table>
+  <hr />
+  <p>
+    <a id="monitor_page" class="util" href="#" onclick="monitorCurrentPage();">
+      <img src="monitor.png" />
+      Monitor This Page
+    </a>
+    <a class="util" href="#" onclick="refreshNotifications();">
+      <img src="refresh.png" />
+      Check Now
+    </a>
+    <a class="util" href="options.htm" target="_blank">
+      <img src="options.png" />
+      Options
+    </a>
+    <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
+      <img src="feedback.png" />
+      Feedback
+    </a>
+  </p>
+</body>
+</html>
