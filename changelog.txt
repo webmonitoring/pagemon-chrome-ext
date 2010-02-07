@@ -1,0 +1,36 @@
+v1.2.1
+  Switched back from bold to text-shadow for popup link hovers.
+  Made the "no changes" and "no pages" messages grey.
+  Fixed the disappearing "no pages" message in the options page.
+  Resized the loader in the popup to match the "No changes found" message.
+  Support for fractional intervals (seconds). Against my better judgement...
+  Added validity-hinting for interval option field.
+  Added transitions to option fields.
+
+v1.2
+  Removed header and status check modes.
+  Added experimental diffing feature.
+
+v1.1.4
+  Graceful handling of trying to monitor a page before it is loaded.
+
+v1.1.3
+  No longer marks unavailable pages as updated.
+
+v1.1.2
+  Automatic detection of broken network connections.
+
+v1.1.1
+  Made the browser action icon light up when there are notifications.
+
+v1.1
+  Added regex test button.
+
+v1.0.2
+  Added request timeout to handle hanging HTTP authentication requests.
+
+v1.0.1
+  Forcing content mode when a custom regex is supplied.
+  
+v.1.0
+  Initial release.
