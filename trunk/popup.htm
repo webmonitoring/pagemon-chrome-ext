@@ -1,288 +1,296 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 <head>
+	<title>Page Monitor Popup</title>
 	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-	<title>Page Monitor</title>
-	<link rel="shortcut icon" href="browser_icon.png" />
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+  <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
+  <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
-    var bg = chrome.extension.getBackgroundPage();
+    $(function() {
+      // "Monitor this page" handler.
+      $('#monitor_page').click(monitorCurrentPage);
+      
+      // "Check All Now" handler.
+      $('#check_now').click(checkAllPages);
+      
+      // Page link live click handler - mark visited.
+      $('.page_link').live('click', hideNotification);
+      
+      // "Mark visited" live click handler.
+      $('.mark_visited').live('click', hideNotification);
+      
+      // "Stop monitoring" live click handler.
+      $('.stop_monitoring').live('click', function() {
+        var url = getNotificationUrl(this);
+        hideNotification(this);
+        removePage(url);
+      });
+      
+      // Mark page monitored if it is (initially).
+      chrome.tabs.getSelected(null, function(tab) {
+        setPageStatus(isPageMonitored(tab.url));
+      });
+      
+      // Initially fill the notification table.
+      fillNotifications();
+    });
     
-    function fillNotifications() {
-      var new_pages = bg.getUpdatedPages();
-      var table = document.getElementById('notifications');
-      
-      table.innerHTML = '';
-      if (new_pages.length == 0) {
-        markTableEmpty();
-      } else {
-        for (var i in new_pages) {
-          var page = new_pages[i];
-          insertNewNotification(page.name, page.url, page.icon);
-        }
-      }
-      
-      table.className = 'done';
+    // Returns the URL of the notification record given any element in it.
+    function getNotificationUrl(context) {
+      return $(context).closest('.notification').find('.page_link').get()[0].href;
     }
     
-    function checkWhetherPageIsMonitored() {
-      chrome.tabs.getSelected(null, function(tab) {
-        if (bg.isPageMonitored(tab.url)) {
-          markPageMonitored();
+    // Hides a notification record given any element in it.
+    function hideNotification(context) {
+      var url = getNotificationUrl(this);
+      var bg = chrome.extension.getBackgroundPage();
+      
+      // Remember the page as it is now. Done on background in case the popup is
+      // closed too soon.
+      bg.console.log('Marking visited: ' + url);
+      bg.$.get(url, function(html) {
+        setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+        bg.console.log('Marked visited: ' + url);
+      });
+      
+      setPageSetting(url, SETTINGS.page.updated, false);
+      updateBadge();
+      
+      $(this).closest('.notification td').slideUp('slow', function() {
+        if ($('#notifications .notification').length == 1) {
+          $('#notifications').animate(
+            { height: '50px', opacity: 1 }, 'slow', fillNotifications
+          );
+        } else {
+          fillNotifications();
         }
       });
     }
     
-    function markTableEmpty() {
-      var table = document.getElementById('notifications');
-      var row = document.createElement('tr');
-      table.appendChild(row);
-      var cell = document.createElement('td');
-      row.appendChild(cell);
-      cell.className = 'no_updates';
-      cell.innerText = 'No changes found.'
+    // Mark page as monitored/unmonitored with the relevant label/event changes.
+    function setPageStatus(monitored) {
+      if (monitored) {
+        $('#monitor_page').unbind('click')
+                          .addClass('inactive').addClass('emphasized')
+                          .find('span').text('Page Monitored');
+      } else {
+        $('#monitor_page').click(monitorCurrentPage)
+                          .removeClass('inactive').removeClass('emphasized')
+                          .find('span').text('Monitor This Page');
+      }
     }
     
+    // Add current page to the monitored list.
     function monitorCurrentPage() {
       chrome.tabs.getSelected(null, function(tab) {
+        // If the page is still loading, try a little while later.
         if (tab.status == 'loading') {
-          //console.log('Page still loading; waiting.');
-          setTimeout(monitorCurrentPage, 250);
+          setTimeout(monitorCurrentPage, 100);
         } else {
-          bg.addNewPage(tab.title, tab.url, tab.favIconUrl);
-          markPageMonitored();
+          addPage(tab.url, tab.title, tab.favIconUrl);
+          setPageStatus(true);
         }
       });
     }
     
-    function markPageMonitored() {
-      monitor_label = document.getElementById('monitor_page');
-      monitor_label.className = 'util_unlinked';
-      monitor_label.onclick = function() {};
+    // Fill the notifications list with notifications for each updated page. If
+    // no pages are updated, set teh appropriate message.
+    function fillNotifications() {
+      var pages = getAllUpdatedPages();
       
-      var temp = monitor_label.firstElementChild;
-      monitor_label.innerHTML = '';
-      monitor_label.appendChild(temp);
-      monitor_label.innerHTML += ' Page Monitored.';
+      $('#notifications').html('');
+      
+      if (pages.length > 0) {
+        $.each(pages, function(i, url) {
+          var notification = $('#templates .notification').clone();
+      
+          var name = getPageSetting(url, SETTINGS.page.name) || 'Untitled (' + url + ')';
+          if (name.length > 60) {
+            name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
+          }
+          
+          notification.find('.page_link').attr({
+            href: url
+          }).text(name);
+          
+          notification.find('.favicon').attr({
+            src: getPageSetting(url, SETTINGS.page.icon) || 'img/page.png'
+          });
+          
+          notification.find('.view_diff').attr({
+            href: 'diff.htm#' + btoa(url)
+          });
+        
+          notification.appendTo('#notifications');
+        });
+      } else {
+        $('#templates .empty').clone().appendTo('#notifications');
+      }
     }
     
-    function refreshNotifications() {
-      var table = document.getElementById('notifications');
-      table.innerHTML = '<tr><td>&nbsp;</td></tr>';
-      table.className = 'loading';
+    // Force a check on all pages that are being monitored. Does some complex
+    // animation to smoothly slide in the current notifications, display a
+    // loader, then slide out the new notifications.
+    function checkAllPages() {
+      // Get all the URLs to check.
+      var pages = getSetting(SETTINGS.pages_list);
+      // Keep track of how many pages have been checked already.
+      var pages_checked = 0;
       
-      bg.checkUpdates(function() {
-        table.innerHTML = '';
-        fillNotifications();
+      // If there are no pages to check, return.
+      if (pages.length === 0 ||
+          pages.length == $('#notifications .notification').length) {
+        return;
+      }
+      
+      // Disable this event handler.
+      $('#check_now').unbind('click');
+      
+      // Slide in the notifications list.
+      // NOTE: Setting opacity to 0 leads to jumpiness (perhaps setting display: none?).
+      if ($('#notifications .notification').length > 0) {
+        var fadeout_target = { height: '50px', opacity: 0.01 };
+      } else {
+        var fadeout_target = { opacity: 0.01 };
+      }
+      
+      $('#notifications').animate(fadeout_target, 'slow', function() {
+        // Once the list has slid into its minimal state, remove all contents
+        // and fade in the loader.
+        $(this).html('');
+        $(this).addClass('loading');
+        $('#templates .loading_spacer').clone().appendTo($(this));
+        $(this).show();
+        $(this).animate({ opacity: 1.0 }, 400);
       });
-    }
-    
-    function insertNewNotification(name, url, icon_path) {
-      function removeNotification(sender) {
-        var node = sender;
-        
-        while (node.tagName.toLowerCase() != 'tr' && node.parentNode) {
-          node = node.parentNode;
-        }
-        
-        if (node) {
-          table.removeChild(node);
-        }
-      }
-      function markVisited() {
-        removeNotification(this);
-        bg.markPageVisited(url);
-        if (document.getElementById('notifications').childNodes.length == 0) {
-          markTableEmpty();
-        }
-      }
-      function stopTrackingPage() {
-        removeNotification(this);
-        bg.removePage(url);
-        if (document.getElementById('notifications').childNodes.length == 0) {
-          markTableEmpty();
-        }
-      }
-    
-      var table = document.getElementById('notifications');
-      var row = document.createElement('tr');
-      table.appendChild(row);
-      var cell = document.createElement('td');
-      row.appendChild(cell);
-      var link = document.createElement('a');
-      cell.appendChild(link);
-      var icon = document.createElement('img');
-      link.appendChild(icon);
-      var modifiers = document.createElement('div');
-      cell.appendChild(modifiers);
-      var button = document.createElement('a');
-      modifiers.appendChild(button);
-      var button2 = document.createElement('a');
-      modifiers.appendChild(button2);
       
-      var is_odd_row = (table.childNodes.length % 2 == 0);
-      row.className = is_odd_row ? 'even' : 'odd';
-      
-      icon.className = 'favicon';
-      icon.src = icon_path || 'page.png';
-      
-      name = name || 'Untitled (' + url + ')';
-      link.innerHTML += name;
-      link.href = url;
-      link.className = 'page_link';
-      link.target = '_blank';
-      link.title = 'Visit Page';
-      link.addEventListener('click', markVisited);
-      
-      modifiers.className = 'marker';
-      
-      button.innerText = '[mark visited]';
-      button.href = '#';
-      button.addEventListener('click', markVisited);
-      
-      //button2.innerText = '[stop tracking]';
-      //button2.href = '#';
-      //button2.addEventListener('click', stopTrackingPage);
-      
-      button2.innerText = '[view changes]';
-      button2.href = 'diff.htm#' + btoa(url)
-      button2.target = '_blank';
+      $.each(pages, function(i, url) {
+        checkPage(url, function() {
+          // A page has been checked. Increment the counter and check if we're done.
+          if (++pages_checked == pages.length) {
+            // Fade out the loader.
+            $('#notifications').animate({ opacity: 0 }, 400, function() {
+              // Fill the table - done at this point to get the final height.
+              fillNotifications();
+              updateBadge();
+              
+              // Remember the height and content of the table.
+              var height = $(this).height();
+              var html = $(this).html();
+              
+              // Remove the loader, empty the table, and reset its height back to
+              // 50px. The user does not see any change from the time the fade-out
+              // finished.
+              $(this).removeClass('loading').html('').height(50);
+              // Slide the table to our pre-calculated height.
+              $(this).animate({ height: height + 'px' }, 'slow', function() {
+                // Put the table contents back and fade it in.
+                $(this).css({ height: 'auto' });
+                $(this).html(html);
+                $(this).animate({ opacity: 1 }, 400);
+                $('#check_now').click(checkAllPages);
+              });
+            });
+          }
+        });
+      });
     }
   </script>
   <style type="text/css">
     body {
       width: 600px;
-      font-family: Calibri, Tahoma, Arial, sans-serif;
       margin: none;
-      padding: none;
       padding-bottom: 1.5em;
+      overflow: hidden;
     }
-    
-    table {
-      width: 100%;
-      border: none;
-    }
-    
-    td {
-      width: 100%;
-      height: 2em;
-      padding: 0.2em;
-      border-top: 1px lightgray solid;
-    }
-    
-    tr:first-child td {
-      border-top: none;
-    }
-    
-    td.no_updates {
-      padding-top: 1em;
-      text-align: center;
-      color: #999;
-    }
-    
-    tr.even {
-      background: #f4f4f4;
-    }
-    
-    hr {
-      width: 100%;
-      border-top: none;
-      border-bottom: 1px gray dotted;
-      margin-top: 1em;
-    }
-    
-    a:link, a:visited {
-      color: #647CCB;
-      text-decoration: none;
-    }
-    
-    a:hover {
-      color: blue;
-    }
-    
+
     .util, .util:link, .util:visited {
-      display: block;
-      float: right;
-      width: 150px;
-      color: #849CCB;
-    }
-    
-    .util img, .util_unlinked img {
-      vertical-align: middle;
-      position: relative;
-      top: -2px;
-    }
-    
-    a.util:hover {
-      text-shadow: #849ccb 0px -1px 0px;
-    }
-    
-    .util_unlinked, .util_unlinked:link, .util_unlinked:visited {
-      display: block;
-      float: right;
-      width: 150px;
-      color: #849CCB;
-      font-weight: bold;
-      cursor: default;
-    }
-    
-    a.util_unlinked:hover {
-      color: #849CCB;
-      cursor: default;
-    }
-    
-    .marker {
-      float: right;
-      font-size: 75%;
-    }
-    
-    .marker a {
-      display: block;
-    }
-    
-    a.page_link {
       float: left;
+      width: 150px;
+      text-align: left;
       display: block;
     }
-    
-    img.favicon {
-      float: left;
-      display: block;
-      margin-right: 0.4em;
-      vertical-align: baseline;
-      width: 16px;
-      height: 16px;
-      position: relative;
-      top: 2px;
+
+    .emphasized, .emphasized:hover {
+      text-shadow: #849ccb 0px -1px 0px !important;
     }
     
-    table.loading {
-      height: 51px;
-      background: url('loader.gif') center center no-repeat;
+    .loading {
+      width: 100%;
+      background: url('img/loader.gif') center 13px no-repeat;
+    }
+    
+    .loading_spacer {
+      height: 49px;
+    }
+    
+    .notification div {
+      width: 600px;
+    }
+    
+    #monitor_page {
+      text-align: right;
     }
   </style>
 </head>
-<body onload="fillNotifications(); checkWhetherPageIsMonitored();">
-  <table id="notifications" class="loading" cellspacing="0">
+<body>
+  <table id="templates">
+    <tr class="notification">
+      <td>
+        <div class="page_info">
+          <img class="favicon" src="img/page.png" />
+          <a class="page_link" href="#" target="_blank">Page</a>
+        </div>
+        <div class="page_controls">
+          <span class="util stop_monitoring">
+            <img src="img/stop_monitoring.png" />
+            stop monitoring
+          </span>
+          <span class="util mark_visited">
+            <img src="img/mark_visited.png" />
+            mark visited
+          </span>
+          <a class="util view_diff" href="#" target="_blank">
+            <img src="img/diff.png" />
+            view changes
+          </a>
+        </div>
+      </td>
+    </tr>
+    <tr class="empty">
+      <td>
+        No changes found.
+      </td>
+    </tr>
+    <tr class="loading_spacer">
+      <td>
+        &nbsp;
+      </td>
+    </tr>
+  </table>
+      
+  <table id="notifications" cellspacing="0">
     <!-- Notification entries go here. -->
   </table>
   <hr />
-  <p>
-    <a id="monitor_page" class="util" href="#" onclick="monitorCurrentPage();">
-      <img src="monitor.png" />
-      Monitor This Page
-    </a>
-    <a class="util" href="#" onclick="refreshNotifications();">
-      <img src="refresh.png" />
-      Check Now
+  <p class="main_controls">
+    <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
+      <img src="img/feedback.png" />
+      <span>Feedback</span>
     </a>
     <a class="util" href="options.htm" target="_blank">
-      <img src="options.png" />
-      Options
+      <img src="img/options.png" />
+      <span>Options</span>
     </a>
-    <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
-      <img src="feedback.png" />
-      Feedback
-    </a>
+    <span class="util" id="check_now">
+      <img src="img/refresh.png" />
+      <span>Check All Now</span>
+    </span>
+    <span class="util" id="monitor_page">
+      <img src="img/monitor.png" />
+      <span>Monitor This Page</span>
+    </span>
   </p>
 </body>
 </html>
