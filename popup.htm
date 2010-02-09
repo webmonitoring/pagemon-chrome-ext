@@ -14,16 +14,15 @@
       // "Check All Now" handler.
       $('#check_now').click(checkAllPages);
       
-      // Page link live click handler - mark visited.
-      $('.page_link').live('click', hideNotification);
-      
-      // "Mark visited" live click handler.
-      $('.mark_visited').live('click', hideNotification);
+      // Handlers to mark the page visited.
+      $('.mark_visited').live('click', markPageVisited);
+      $('.view_diff').live('click', markPageVisited);
+      $('.page_link').live('click', markPageVisited);
       
       // "Stop monitoring" live click handler.
       $('.stop_monitoring').live('click', function() {
         var url = getNotificationUrl(this);
-        hideNotification(this);
+        markPageVisited(this);
         removePage(url);
       });
       
@@ -42,7 +41,7 @@
     }
     
     // Hides a notification record given any element in it.
-    function hideNotification(context) {
+    function markPageVisited(context) {
       var url = getNotificationUrl(this);
       var bg = chrome.extension.getBackgroundPage();
       

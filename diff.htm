@@ -7,7 +7,7 @@
     <script type="text/javascript" src="lib/difflib.js"></script>
     <script type="text/javascript" src="monitor.js"></script>
     <script type="text/javascript">
-      function diff(src, dest) {
+      function diff(url, src, dest) {
         var src =  html2list(src.replace(/\s+/g, ' '));
         var dest =  html2list(dest.replace(/\s+/g, ' '));
         var matcher = new difflib.SequenceMatcher(src, dest);
@@ -45,7 +45,12 @@
         
         var compiled_html = out.join('');
         
-        document.getElementsByTagName('body')[0].innerHTML = compiled_html;
+        $('body').html(compiled_html);
+        
+        var link = url;
+        link = '<a href="' + link + '" title="View Original Page">Original</a>';
+        link = '<div id="chrome_page_monitor_ext_orig_link">' + link + '</div>';
+        $(link).appendTo('body');
       }
       
       function wrapText(list, prefix, suffix) {
@@ -170,7 +175,7 @@
         }
         
         // Generate diffed body.
-        diff(tryToGetBody(src), tryToGetBody(dest));
+        diff(url, tryToGetBody(src), tryToGetBody(dest));
       }
       
       $(function() {
@@ -190,7 +195,34 @@
       ins {
         background: #6d5 !important;
         color: black !important;
-        text-decoration: none;
+        text-decoration: none !important;
+      }
+      #chrome_page_monitor_ext_orig_link {
+        position: fixed !important;
+        bottom: 0px !important;
+        right: 40px !important;
+        width: 150px !important;
+        height: 23px !important;
+        background: white !important;
+        border: 1px grey solid !important;
+        border-radius: 15px 15px 0px 0px !important;
+        margin: 0px !important;
+        padding: 0px !important;
+        padding-top: 7px !important;
+      }
+      #chrome_page_monitor_ext_orig_link a:link,
+      #chrome_page_monitor_ext_orig_link a:visited {
+        font-family: Calibri, Tahoma, sans-serif !important;
+        font-size: medium !important;
+        font-weight: bold !important;
+        color: #849ccb !important;
+        text-decoration: underline !important;
+        letter-spacing: 2px !important;
+      }
+      #chrome_page_monitor_ext_orig_link a:hover,
+      #chrome_page_monitor_ext_orig_link a:focus {
+        color: #a4bceb !important;
+        text-decoration: none !important;
       }
     </style>
   </head> 
