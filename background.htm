@@ -10,21 +10,26 @@
       var timeout = getSetting('check_interval') || (180 * 60 * 1000);
       var pages = getSetting('pages_to_check') || {};
       
-      deleteSetting('check_interval');
-      deleteSetting('last_check');
-      deleteSetting('pages_to_check');
-      
-      setSetting(SETTINGS.pages_list, []);
-      
-      $.each(pages, function(url, vals) {
-        addPage(url, vals.name, vals.icon);
-        setPageSetting(url, SETTINGS.page.regex, vals.regex);
-        setPageSetting(url, SETTINGS.page.updated, false);
-      });
-      
-      setSetting(SETTINGS.badge_color, badge_color);
-      setSetting(SETTINGS.timeout, timeout);
-      setSetting(SETTINGS.version, chrome.extension.getVersion());
+      try {
+        deleteSetting('check_interval');
+        deleteSetting('last_check');
+        deleteSetting('pages_to_check');
+        
+        setSetting(SETTINGS.pages_list, []);
+        
+        $.each(pages, function(url, vals) {
+          addPage(url, vals.name, vals.icon);
+          setPageSetting(url, SETTINGS.page.regex, vals.regex);
+          setPageSetting(url, SETTINGS.page.updated, false);
+        });
+        
+        setSetting(SETTINGS.badge_color, badge_color);
+        setSetting(SETTINGS.timeout, timeout);
+        setSetting(SETTINGS.version, chrome.extension.getVersion());
+      } catch(e) {
+        // Import failed. Make sure we didn't lose the pages list.
+        setSetting('pages_to_check', pages);
+      }
     }
     
     // Initializations to perform on every startup. Schedules page and badge
