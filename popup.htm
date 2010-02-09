@@ -22,7 +22,7 @@
       // "Stop monitoring" live click handler.
       $('.stop_monitoring').live('click', function() {
         var url = getNotificationUrl(this);
-        markPageVisited(this);
+        markPageVisited.call(this);
         removePage(url);
       });
       
@@ -41,16 +41,14 @@
     }
     
     // Hides a notification record given any element in it.
-    function markPageVisited(context) {
+    function markPageVisited() {
       var url = getNotificationUrl(this);
       var bg = chrome.extension.getBackgroundPage();
       
       // Remember the page as it is now. Done on background in case the popup is
       // closed too soon.
-      bg.console.log('Marking visited: ' + url);
       bg.$.get(url, function(html) {
         setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-        bg.console.log('Marked visited: ' + url);
       });
       
       setPageSetting(url, SETTINGS.page.updated, false);

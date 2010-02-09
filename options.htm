@@ -178,11 +178,16 @@
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
         var pages = getSetting(SETTINGS.pages_list);
+          var pages_checked = 0;
         
         $('.last_check_time').text('checking..');
         
         $.each(pages, function(i, url) {
-          checkPage(url);
+          checkPage(url, function() {
+            if (++pages_checked == pages.length) {
+              updateBadge();
+            }
+          });
         });
       });
       
