@@ -1,461 +1,515 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 	<title>Page Monitor Options</title>
-  <script type="text/javascript" src="jscolor/jscolor.js"></script>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <link rel="shortcut icon" type="image/png" href="image/browser_icon.png" />
+  <link rel="stylesheet" type="text/css" href="lib/colorPicker.css" />
+  <link rel="stylesheet" type="text/css" href="styles.css" />
+  <script type="text/javascript" src="lib/jquery-1.4.1.js"></script>
+  <script type="text/javascript" src="lib/jquery.colorPicker.js"></script>
+  <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
-    var bg = chrome.extension.getBackgroundPage();
-    
-    function fillPages() {
-      var pages = bg.getAllPages();
-      var table = document.getElementById('pages');
-      
-      table.innerHTML = '';
-      if (pages == undefined || pages == {}) {
-        markTableEmpty();
-      } else {
-        for (var i in pages) {
-          var page = pages[i];
-          insertNewPage(page.name, page.url, page.icon, page.regex || '');
-        }
+    function initializeColorPicker() {
+      var toHex = function(d) {
+        return d >= 16 ? d.toString(16) : '0' + d.toString(16);
       }
+      
+      var badge_color = getSetting(SETTINGS.badge_color);
+      var badge_color = '#' + toHex(badge_color[0]) + 
+                              toHex(badge_color[1]) +
+                              toHex(badge_color[2]);
+      
+      $('#badge_color_picker').val(badge_color).change(function() {
+        var color = $(this).val();
+      
+        setSetting(SETTINGS.badge_color, [parseInt(color.slice(1,3), 16),
+                                          parseInt(color.slice(3,5), 16),
+                                          parseInt(color.slice(5,7), 16),
+                                          255]);
+        updateBadge();
+      }).colorPicker();
     }
     
-    function markTableEmpty() {
-      var table = document.getElementById('pages');
-      var row = document.createElement('tr');
-      table.appendChild(row);
-      var cell = document.createElement('td');
-      row.appendChild(cell);
-      cell.className = 'no_pages';
-      cell.innerText = 'No pages are being monitored.'
+    function initializeTimeoutTextbox() {
+      var timeout = Math.round(getSetting(SETTINGS.timeout) / (60 * 1000));
+      
+      $('#global_timeout').val(timeout).keyup(function() {
+        setSetting(SETTINGS.timeout, cleanTimeoutTextbox(this) * 60 * 1000);
+      }).blur(function() { $(this).keyup(); });
     }
     
-    function insertNewPage(name, url, icon_path, regex) {
-      function removeNotification(sender) {
-        var node = sender;
-        
-        while (node.tagName.toLowerCase() != 'tr' && node.parentNode) {
-          node = node.parentNode;
-        }
-        
-        if (node) {
-          table.removeChild(node);
-        }
-      }
-      function stopTrackingPage() {
-        removeNotification(this);
-        bg.removePage(url);
-        if (document.getElementById('pages').childNodes.length == 0) {
-          markTableEmpty();
-        }
-      }
+    function cleanTimeoutTextbox(textbox) {
+      var caret_pos = textbox.selectionStart;
+      var caret_end = textbox.selectionEnd;
+      
+      var new_timeout = parseInt($(textbox).val().replace(/[^0-9]/g, '')) || 1;
+      $(textbox).val(new_timeout);
+      
+      this.selectionStart = caret_pos;
+      this.selectionEnd = caret_end;
+      
+      return new_timeout;
+    }
     
-      var table = document.getElementById('pages');
-      var row = document.createElement('tr');
-      table.appendChild(row);
-      var cell = document.createElement('td');
-      row.appendChild(cell);
-      var link = document.createElement('a');
-      cell.appendChild(link);
-      var icon = document.createElement('img');
-      link.appendChild(icon);
-      var button = document.createElement('a');
-      cell.appendChild(button);
+    // Returns the URL of the page record given any element in it.
+    function findUrl(context) {
+      return $(context).closest('.page_record').find('.page_link').get()[0].href;
+    }
+    
+    // Returns the page record given its URL.
+    function findPageRecord(url) {
+      return $('.page_record').filter(function() {
+        return $(this).has('a[href=' + url + ']');
+      });
+    }
+    
+    function fillPagesList() {
+      var pages = getSetting(SETTINGS.pages_list);
       
-      var is_odd_row = (table.childNodes.length % 2 == 0);
-      row.className = is_odd_row ? 'even' : 'odd';
+      $('#pages').html('');
       
-      icon.className = 'favicon';
-      icon.src = icon_path || 'page.png';
+      if (pages.length > 0) {
+        $.each(pages, function(i, url) {
+          var page_record = $('#templates .page_record').clone();
+          var advanced_set = false;
       
-      name = name || 'Untitled (' + url + ')';
-      if (name.length > 60) {
-        name = name.replace(/([^]{20,60})(\w)\b.*/, '$1$2...');
-      }
-      link.innerHTML += name;
-      link.href = url;
-      link.className = 'page_link';
-      link.target = '_blank';
-      link.title = 'Visit Page';
-      
-      button.innerText = '[stop tracking]';
-      button.href = '#';
-      button.className = 'marker';
-      button.addEventListener('click', stopTrackingPage);
-      
-      var regex_container = document.createElement('div');
-      cell.appendChild(regex_container);
-      regex_container.className = 'regex';
-      
-      var regex_checkbox = document.createElement('input');
-      regex_container.appendChild(regex_checkbox);
-      regex_checkbox.type = 'checkbox';
-      regex_checkbox.checked = Boolean(regex);
-      regex_checkbox.onclick = function() { updateRegexCheckbox(this, url); };
-      
-      var regex_label = document.createElement('span');
-      regex_container.appendChild(regex_label);
-      regex_label.innerText = 'Custom Regex';
-      
-      var regex_textbox = document.createElement('input');
-      regex_container.appendChild(regex_textbox);
-      regex_textbox.type = 'text';
-      regex_textbox.value = regex;
-      regex_textbox.onkeyup = function() { updateRegexTextbox(this, url); };
-      
-      var regex_test_button = document.createElement('input');
-      regex_container.appendChild(regex_test_button);
-      regex_test_button.type = 'button';
-      regex_test_button.value = 'Test';
-      regex_test_button.onclick = function() {
-        regex_test_button.value = 'Testing...';
-        regex_test_button.disabled = true;
-        regex_textbox.disabled = true;
-        regex_checkbox.disabled = true;
-        bg.sendAjaxRequest(url, function(xhr) {
-          if (xhr.status == 200) {
-            results = bg.findAndFormatRegexMatches(xhr.responseText, regex_textbox.value);
-            if (results) {
-              alert('Matched:\n' + results);
-            } else {
-              alert('No matches.');
-            }
-          } else {
-            alert('Could not retrieve selected page.');
+          var name = getPageSetting(url, SETTINGS.page.name) || 'Untitled (' + url + ')';
+          if (name.length > 60) {
+            name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
           }
-          regex_test_button.value = 'Test';
-          regex_test_button.disabled = false;
-          regex_textbox.disabled = false;
-          regex_checkbox.disabled = false;
+          
+          page_record.find('.page_link').attr({
+            href: url
+          }).text(name);
+          
+          page_record.find('.favicon').attr({
+            src: getPageSetting(url, SETTINGS.page.icon) || 'img/page.png'
+          });
+          
+          var last_check_updater = function() {
+            var last_check = getPageSetting(url, SETTINGS.page.last_check);
+            var last_check_span = page_record.find('.last_check_time');
+            var last_check_message = last_check ? describeTimeSince(last_check) : 'never';
+            
+            if (last_check_message != last_check_span.text()) {
+              last_check_span.fadeOut('slow', function() {
+                $(this).text(last_check_message).fadeIn('slow');
+              });
+            }
+          }
+          last_check_updater();
+          setInterval(last_check_updater, 15000);
+          
+          var timeout = getPageTimeout(url) / (60 * 1000);
+          page_record.find('.timeout input[type=text]').val(timeout);
+          if (getPageSetting(url, SETTINGS.page.timeout)) {
+            page_record.find('.timeout span').addClass('enabled').removeClass('disabled');
+            page_record.find('.timeout input').attr({ disabled: false });
+            page_record.find('.timeout input[type=checkbox]').attr({ checked: true });
+            advanced_set = true;
+          }
+          
+          var regex = getPageSetting(url, SETTINGS.page.regex);
+          if (regex) {
+            page_record.find('.regex span').addClass('enabled').removeClass('disabled');
+            page_record.find('.regex input').attr({ disabled: false });
+            page_record.find('.regex input[type=checkbox]').attr({ checked: true });
+            page_record.find('.regex input[type=text]').val(regex);
+            advanced_set = true;
+          }
+          
+          if (advanced_set) {
+            page_record.find('.advanced_toggle input[type=checkbox]').attr({ checked: true });
+            page_record.find('.advanced_toggle').addClass('toggled');
+            page_record.find('.advanced_controls').css({ display: 'block' });
+          }
+          
+          page_record.appendTo('#pages');
         });
-      };
-      
-      updateRegexCheckbox(regex_checkbox, url);
-    }
-    
-    function updateRegexCheckbox(box, url) {
-      var label = box.nextElementSibling;
-      var textbox = label.nextElementSibling;
-      var test_button = textbox.nextElementSibling;
-      
-      label.className = box.checked ? 'enabled' : 'disabled';
-      textbox.style.display = box.checked ? 'inline' : 'none';
-      test_button.style.display = box.checked ? 'inline' : 'none';
-      
-      updateRegexTextbox(textbox, url);
-    }
-    
-    function updateRegexTextbox(box, url) {
-      if (box.style.display == 'none') {
-        bg.updatePageRegex(url, '');
       } else {
-        var is_valid_regex;
+        $('#templates .empty').clone().appendTo('#pages');
+      }
+    }
+    
+    function setPageTimeout(context, timeout) {
+      var url = findUrl(context);
+      
+      if (timeout === null)  {
+        deletePageSetting(url, SETTINGS.page.timeout);
+      } else {
+        timeout = parseInt(timeout) * 60 * 1000;
+        if (timeout) {
+          setPageSetting(url, SETTINGS.page.timeout, timeout);
+          schedulePageCheck(url);
+        }
+      }
+    }
+    
+    function setPageRegex(context, regex) {
+      if (regex === null)  {
+        deletePageSetting(findUrl(context), SETTINGS.page.regex);
+      } else {
+        var is_valid_regex = true;
         try {
-          temp_regex = new RegExp(box.value);
-          is_valid_regex = true;
+          temp_regex = new RegExp(regex);
         } catch (e) {
           is_valid_regex = false;
         }
-        
-        var test_button = box.nextElementSibling;
-        
-        box.className = is_valid_regex ? 'valid' : 'invalid';
-        test_button.disabled = !is_valid_regex;
-        
+      
+        var regex_textbox = $(context).closest('.page_record').find('.regex input[type=text]');
+        var regex_test_button = $(context).closest('.page_record').find('.regex input[type=button]');
         if (is_valid_regex) {
-          bg.updatePageRegex(url, box.value);
+          regex_textbox.removeClass('invalid');
+          regex_test_button.attr({ disabled: false });
+          setPageSetting(findUrl(context), SETTINGS.page.regex, regex);
+        } else {
+          regex_test_button.attr({ disabled: true });
+          regex_textbox.addClass('invalid');
         }
       }
     }
     
-    function getInterval() {
-      interval_input = document.getElementById('interval');
-      interval_input.value = bg.getInterval() / 60 / 1000;
-    }
-    
-    function updateInterval() {
-      var interval_input = document.getElementById('interval');
-            
-      var caret_pos = interval_input.selectionStart;
-      var caret_end = interval_input.selectionEnd;
-      var cleaned_interval = interval_input.value.replace(/[^-.0-9]/g, '');
-      var parsed_interval = Math.abs(parseFloat(cleaned_interval));
-      interval_input.value = isNaN(parsed_interval) ? 1 : cleaned_interval;
-      interval_input.selectionStart = caret_pos;
-      interval_input.selectionEnd = caret_end;
+    $(function() {
+      // Set up the main color/timeout contols.
+      initializeColorPicker();
+      initializeTimeoutTextbox();
       
-      if (parsed_interval > 1 / 61) {
-        bg.updateCheckInterval(interval_input.value * 60 * 1000);
-        interval_input.style.backgroundColor = '#bfb';
-      } else {
-        interval_input.style.backgroundColor = '#fbb';
-      }
-    }
-    
-    function updateLastCheckTime() {
-      var time_span = document.getElementById('last_check_time');
-      
-      var last_check_timestamp = bg.getLastCheckTime();
-      if (last_check_timestamp) {
-        var time_delta = (new Date()).getTime() - last_check_timestamp;
-        var seconds = Math.floor(time_delta / 1000);
-        var minutes = Math.floor(seconds / 60) % 60;
-        var hours = Math.floor(seconds / (60 * 60)) % 24;
-        var days = Math.floor(seconds / (60 * 60 * 24));
+      // Set up the "Check All Now" button handler.
+      $('#check_now').click(function() {
+        var pages = getSetting(SETTINGS.pages_list);
         
-        var label = '';
+        $('.last_check_time').text('checking..');
         
-        if (days) label += days + ((days == 1) ? ' day ' : ' days ');
-        if (hours) label += hours + ((hours == 1) ? ' hour ' : ' hours ');
-        if (minutes) label += minutes + ((minutes == 1) ? ' minute ' : ' minutes ');
-        if (!label) label += seconds + ((seconds == 1) ? ' second ' : ' seconds ');
-        label += 'ago';
+        $.each(pages, function(i, url) {
+          checkPage(url);
+        });
+      });
+      
+      // Set up "rename page" live click handlers.
+      $('.rename').live('click', function() {
+        var record = $(this).closest('.page_record');
+        var page_link = record.find('.page_link');
         
-        time_span.innerText = label;
-      } else {
-        time_span.innerText = 'Never checked.';
-      }
+        if (!page_link.is(':hidden')) {
+          var textbox = $('<input type="text" value="' + page_link.text() + '" />');
+          var cancel_button = $('<input type="button" value="Cancel" />');
+          var ok_button = $('<input type="button" value="Ok" />');
+          
+          cancel_button.click(function() {
+            textbox.remove();
+            ok_button.remove();
+            cancel_button.remove();
+            page_link.show();
+          });
+          
+          ok_button.click(function() {
+            page_link.text(textbox.val());
+            setPageSetting(findUrl(this), SETTINGS.page.name, textbox.val());
+            cancel_button.click();
+          });
+          
+          page_link.hide();
+          page_link.after(cancel_button).after(ok_button).after(textbox);
+        }
+      });
       
-      setTimeout(updateLastCheckTime, 60000);
-    }
-    
-    function setBadgeColor(color) {
-      color = [ Math.floor(color.rgb[0] * 255),
-                Math.floor(color.rgb[1] * 255),
-                Math.floor(color.rgb[2] * 255),
-                255 ];
-      bg.setBadgeColor(color);
-    }
-    
-    function getBadgeColor() {
-      var color = bg.getBadgeColor();
-      color = toHex(color[0]) + toHex(color[1]) + toHex(color[2]);
-      document.getElementById('badge_color_picker').value = color.toUpperCase();
-      document.getElementById('badge_color').style.backgroundColor = '#' + color;
-    }
-    
-    function toHex(d, padding) {
-      var hex = d.toString(16);
+      // Set up "stop monitoring" live click handlers.
+      $('.stop_monitoring').live('click', function() {
+        var url = findUrl(this);
+        
+        removePage(url);
+        updateBadge();
+        
+        $(this).closest('.page_record td').slideUp('slow', function() {
+          if ($('#pages .page_record').length == 1) {
+            $('#pages').animate(
+              { height: '50px', opacity: 1 }, 'slow', fillPagesList
+            );
+          } else {
+            fillPagesList();
+          }
+        });
+      });
       
-      while (hex.length < 2) {
-        hex = '0' + hex;
-      }
-
-      return hex;
-    }
+      // Set up advanced option expansion events.
+      $('.advanced_toggle input').live('click', function() {
+        if ($(this).is(':checked')) {
+          $(this).closest('.page_record').find('.advanced_toggle').addClass('toggled');
+          $(this).closest('.page_record').find('.advanced_controls').slideDown('fast');
+          
+          // Apply previously-set advanced settings.
+          var timeout_div = $(this).closest('.page_record').find('.timeout');
+          if (timeout_div.find(':checked').length > 0) {
+            setPageTimeout(this, timeout_div.find('input[type=text]').val());
+          }
+          var regex_div = $(this).closest('.page_record').find('.regex');
+          if (regex_div.find(':checked').length > 0) {
+            setPageRegex(this, regex_div.find('input[type=text]').val());
+          }
+        } else {
+          $(this).closest('.page_record').find('.advanced_controls').slideUp('fast', function() {
+            $(this).closest('.page_record').find('.advanced_toggle').removeClass('toggled');
+          });
+          
+          setPageTimeout(this, null);
+          setPageRegex(this, null);
+        }
+      });
+      
+      // Set up advanced option enabling/disabling events.
+      $('.advanced_controls input[type=checkbox]').live('click', function() {
+        if ($(this).is(':checked')) {
+          $(this).nextAll('span').addClass('enabled').removeClass('disabled');
+          $(this).nextAll('span').find('input').attr({ disabled: false });
+        } else {
+          $(this).nextAll('span').addClass('disabled').removeClass('enabled');
+          $(this).nextAll('span').find('input').attr({ disabled: true });
+        }
+      });
+      
+      $('.timeout input[type=checkbox]').live('click', function() {
+        if ($(this).is(':checked')) {
+          setPageTimeout(this, $(this).nextAll('span').find('input').val());
+        } else {
+          setPageTimeout(this, null);
+        }
+      });
+      
+      $('.regex input[type=checkbox]').live('click', function() {
+        if ($(this).is(':checked')) {
+          setPageRegex(this, $(this).nextAll('span').find('input').val());
+        } else {
+          setPageRegex(this, null);
+        }
+      });
+      
+      // Set advanced option editing events.
+      $('.timeout input[type=text]').live('keyup', function() {
+        setPageTimeout(this, cleanTimeoutTextbox(this));
+      });
+      $('.regex input[type=text]').live('keyup', function() {
+        setPageRegex(this, $(this).val());
+      });
+      
+      // Set up regex test click handler
+      $('.regex input[type=button]').live('click', function() {
+        var url = findUrl(this);
+        var regex = getPageSetting(url, SETTINGS.page.regex);
+        var button = $(this);
+        
+        if (regex) {
+          $(this).val('Testing...');
+          $(this).closest('.regex').find('input').attr({ disabled: true });
+          $.ajax({
+            url: url,
+            success: function(html) {
+              results = findAndFormatRegexMatches(html, regex);
+              if (results) {
+                alert('Matched:\n' + results);
+              } else {
+                alert('No matches.');
+              }
+            },
+            error: function() {
+              alert('Could not retrieve selected page.');
+            },
+            complete: function() {
+              button.value = 'Test';
+              button.closest('.regex').find('input').attr({ disabled: false });
+            }
+          });
+        }
+      });
+      
+      // Finally, fill the pages list.
+      fillPagesList();
+    });
   </script>
   <style type="text/css">
     body {
       width: 780px;
-      font-family: Calibri, Tahoma, Arial, sans-serif;
       margin: auto;
-      padding: none;
       padding-bottom: 5.5em;
     }
     
-    table {
-      width: 100%;
-      border: none;
-    }
-    
-    td {
-      width: 100%;
-      height: 2em;
-      padding: 0.2em;
-      border-top: 1px lightgray solid;
-    }
-    
-    tr:first-child td {
-      border-top: none;
-    }
-    
-    td.no_pages {
-      padding-top: 1em;
-      text-align: center;
-      color: #999;
-    }
-    
-    tr.even {
-      background: #f4f4f4;
-    }
-    
-    td input[type=text] {
-      width: 400px;
-    }
-    
-    hr {
-      width: 100%;
-      border-top: none;
-      border-bottom: 1px gray dotted;
-      margin-top: 1em;
-    }
-    
-    a:link, a:visited {
-      color: #647CCB;
-      text-decoration: none;
-    }
-    
-    a:hover {
-      text-decoration: none;
-      color: blue;
-    }
-    
-    .util, .util:link, .util:visited {
-      display: block;
+    .main_controls .util, .main_controls .util:link, .main_controls .util:visited {
       float: right;
-      margin-left: 3em;
-      color: #849CCB;
+      margin-left: 1.95em;
+      margin-right: 1.9em;
     }
     
-    .util img {
-      vertical-align: middle;
-      position: relative;
-      top: -2px;
-    }
-    
-    .util input {
-      width: 3em;
-      text-align: center;
-      border: 1px #a4bCeB solid;
-    }
-    
-    a.util:hover {
-      text-shadow: #849ccb 0px -1px 0px;
-    }
-    
-    a.util:hover img {
-      opacity: 200%;
-    }
-    
-    .marker {
-      float: right;
-      font-size: 75%;
-      position: relative;
-      top: 1em;
-    }
-    
-    .marker a {
-      display: block;
-    }
-    
-    a.page_link {
-      float: left;
-      display: block;
-    }
-    
-    img.favicon {
-      float: left;
-      display: block;
-      margin-right: 0.4em;
-      vertical-align: baseline;
-      width: 16px;
-      height: 16px;
+    .color_picker {
+      display: inline-block;
       position: relative;
       top: 2px;
     }
     
-    h1 {
-      margin-top: 0px;
-      color: #F8F8FF;
-      background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
-      border-radius: 0px 0px 10px 10px;
-      padding: 5px 10px 10px 10px;
-      text-shadow: rgba(0, 0, 0, 0.3) 0px -1px 1px;
-      font-size: 150%;
-      text-align: center;
-      -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 5px;
+    .toggled {
+      position: relative;
+      left: -1px;
+      border: 1px solid #9eafd1;
+      border-radius: 5px 5px 0px 0px;
+      border-bottom: 1px white solid;
+      margin-right: -2px;
+      z-index: 1;
     }
     
-    .regex {
-      clear: both;
-      margin: 1.25em 0 0 1.25em;
+    .advanced_controls {
+      position: relative;
+      top: -1px;
+      left: -1px;
+      border: 1px solid #9eafd1;
+      margin-left: 50px;
+      padding: 10px;
+      padding-left: 20px;
+      display: none;
+      border-radius: 0px 5px 5px 5px;
     }
     
-    .regex input[type=checkbox] {
+    .advanced_toggle input {
       position: relative;
       top: 2px;
     }
     
-    .regex input[type=text] {
-      height: 1em;
-      border: 1px #bbb solid;
+    .page_info {
+      margin-bottom: 10px;
     }
     
-    .enabled {
+    .advanced_controls div {
+      margin-top: 5px;
+    }
+    
+    .advanced_controls .disabled {
+      color: #999999;
+    }
+    
+    .advanced_controls .enabled {
       color: #849ccb;
     }
     
-    .enabled:after {
-      content: ': ';
-    }
-    
-    .disabled {
-      color: #999;
-    }
-    
-    .regex input[type=text] {
-      -webkit-transition: background-color 0.2s linear;
-    }
-    
-    .regex input.valid {
-      background: #cfc;
-    }
-    
-    .regex input.invalid {
-      background: #fcc;
-    }
-    
-    .regex input[type=button] {
+    .advanced_controls input[type=button] {
       height: 1.6em;
       position: relative;
       top: 1px;
     }
     
-    #badge_color {
-      display: inline-block;
-      width: 16px;
-      height: 16px;
+    .advanced_controls input[type=checkbox] {
       position: relative;
-      top: 3px;
+      top: 2px;
     }
     
-    #interval {
+    .regex input[type=text] {
+      width: 400px;
+      padding-left: 1px;
+      height: 1em;
+      border: 1px #bbb solid;
       -webkit-transition: background-color 0.2s linear;
+    }
+    
+    .invalid {
+      background: #fcc;
+    }
+    
+    .timeout input[type=text] {
+      width: 3em;
+      text-align: center;
+    }
+    
+    .page_info input {
+      position: relative;
+      top: -2px;
+    }
+    
+    .page_info input[type=text] {
+      width: 600px;
+      height: 1.25em;
+    }
+    
+    #global_timeout {
+      width: 3em;
+      text-align: center;
+      border: 1px #a4bceb solid;
     }
   </style>
 </head>
-<body onload="fillPages(); getInterval(); updateLastCheckTime(); getBadgeColor();">
+<body>
   <h1>Monitored Pages</h1>
+  <table id="templates">
+    <tr class="page_record">
+      <td>
+        <div class="page_info">
+          <img class="favicon" src="img/page.png" />
+          <a class="page_link" title="Visit Page" href="#" target="_blank">Page</a>
+        </div>
+        <div class="page_controls">
+          <label class="util advanced_toggle">
+            <!--img src="img/plus.png" /-->
+            <input type="checkbox" />
+            advanced
+          </label>
+          <span class="util rename">
+            <img src="img/rename.png" />
+            rename page
+          </span>
+          <span class="util stop_monitoring">
+            <img src="img/stop_monitoring.png" />
+            stop monitoring
+          </span>
+          <span class="util last_check inactive">
+            <img src="img/monitor.png" />
+            Last Check: <span class="last_check_time">unknown</span>.
+          </span>
+          <div class="advanced_controls">
+            <div class="timeout">
+              <input type="checkbox" />
+              <span class="disabled">
+                Check every
+                <input type="text" disabled="disabled" />
+                minutes.
+              </span>
+            </div>
+            <div class="regex">
+              <input type="checkbox" />
+              <span class="disabled">
+                Regex:
+                <input type="text" disabled="disabled" />
+                <input type="button" disabled="disabled" value="Test" />
+              </span>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+    <tr class="empty">
+      <td>
+        No pages are being monitored.
+      </td>
+    </tr>
+  </table>
+  
   <table id="pages" cellspacing="0">
     <!-- Pages go here. -->
   </table>
   <hr />
-  <p>
-    <a class="util" href="#" onclick="bg.checkUpdates(updateLastCheckTime); document.getElementById('last_check_time').innerText = 'Checking..';">
-      <img src="refresh.png" />
-      Check Now
-    </a>
-    <span class="util">
-      <img src="clock.png" />
-      Check every
-      <input type="text" id="interval" value="180" maxlength="5" onkeyup="updateInterval(this.value);" />
-      minutes.
-      <br />
-      <span style="float: left;">
-        <img src="monitor.png" />
-        Last Check: <span id="last_check_time"></span>.
-      </span>
+  <p class="main_controls">
+    <span class="util" id="check_now">
+      <img src="img/refresh.png" />
+      Check All Now
     </span>
-    <span class="util">
-      <img src="color.png" />
+    <span class="util inactive">
+      <img src="img/clock.png" />
+      Check every
+      <input type="text" id="global_timeout" value="180" maxlength="5" />
+      minutes.
+    </span>
+    <span class="util inactive">
+      <img src="img/color.png" />
       Badge color:
-      <input id="badge_color_picker" type="text" class="color {pickerPosition:'top',styleElement:'badge_color'}" value="00B400" maxlength="6" style="width: 4em" onchange="setBadgeColor(this.color);" />
-      <span id="badge_color"></span>
+      <input id="badge_color_picker" name="badge_color_picker" type="text" value="#00B400" />
     </span>
     <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
-      <img src="feedback.png" />
+      <img src="img/feedback.png" />
       Feedback
     </a>
   </p>
