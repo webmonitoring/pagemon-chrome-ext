@@ -16,6 +16,9 @@ var RESCHEDULE_DELAY = 15 * 60 * 1000;
 // page is detected. See scheduleBadgeUpdate().
 var BADGE_UPDATE_DELAY = 10 * 1000;
 
+// Sound alert URL. Can't keep local due to a (Windows-only) Chrome bug.
+var SOUND_ALERT_PATH = 'http://work.max99x.com/bell.ogg';
+
 // Browser action icon.
 var BROWSER_ICON = 'img/browser_icon.png';
 
@@ -25,6 +28,7 @@ var SETTINGS = {
   badge_color: 'badge_color',
   version: 'version',
   pages_list: 'pages',
+  sound_alert: 'sound_alert',
   page: {
     name: 'name',
     regex: 'regex',
@@ -263,30 +267,45 @@ function getAllUpdatedPages() {
                                 Badge Updating
 *******************************************************************************/
 
-// Checks if any pages are marked as updated, and if so, displays their count on
-// the browser action badge, highlighting it. If no pages are updated and the
-// badge is displayed, removes it and switches to the "incative" icon".
-function updateBadge() {
-  var updated_count = getAllUpdatedPages().length;
-  var updated_message = (updated_count === 0) ? '' : updated_count.toString();
-
-  chrome.browserAction.setBadgeBackgroundColor({
-    color: getSetting(SETTINGS.badge_color)
-  });
-  chrome.browserAction.setBadgeText({ text: updated_message });
-  chrome.browserAction.setIcon({ path: BROWSER_ICON });
-}
-
-// Schedules a badgeUpdate() call within BADGE_UPDATE_DELAY milliseconds. If
-// called before the timeout is reached, it is cancelled and rescheduled again.
 (function() {
+  // Some update-related state.
+  var last_badge_text = '';
   var badge_update_timeout_id = null;
+
+  // Checks if any pages are marked as updated, and if so, displays their count
+  // on the browser action badge, highlighting it. If no pages are updated and
+  // the badge is displayed, removes it and switches to the "incative" icon".
+  updateBadge = function() {
+    // Make sure this is running on the background page. If not, redirect.
+    var bg = chrome.extension.getBackgroundPage();
+    if (bg != window) {
+      return bg.updateBadge();
+    }
+    
+    var updated_count = getAllUpdatedPages().length;
+    var updated_message = (updated_count > 0) ? updated_count.toString() : '';
+
+    chrome.browserAction.setBadgeBackgroundColor({
+      color: getSetting(SETTINGS.badge_color)
+    });
+    chrome.browserAction.setBadgeText({ text: updated_message });
+    chrome.browserAction.setIcon({ path: BROWSER_ICON });
   
+    if (getSetting(SETTINGS.sound_alert) &&
+        updated_message != '' && last_badge_text == '') {
+      (new Audio(SOUND_ALERT_PATH)).play();
+    }
+    
+    last_badge_text = updated_message;
+  }
+
+  // Schedules a badgeUpdate() call within BADGE_UPDATE_DELAY milliseconds. If
+  // called before the timeout is reached, it is cancelled and rescheduled again.
   scheduleBadgeUpdate = function() {
     // Make sure this is running on the background page. If not, redirect.
     var bg = chrome.extension.getBackgroundPage();
     if (bg != window) {
-      return bg.checkPage(url, callback);
+      return bg.scheduleBadgeUpdate();
     }
     
     if (badge_update_timeout_id !== null) {
