@@ -345,6 +345,7 @@
               } else {
                 alert('No matches.');
               }
+              setPageSetting(url, SETTINGS.page.html, results || '');
             },
             error: function() {
               alert('Could not retrieve selected page.');
