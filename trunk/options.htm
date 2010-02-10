@@ -350,7 +350,7 @@
               alert('Could not retrieve selected page.');
             },
             complete: function() {
-              button.value = 'Test';
+              button.val('Test');
               button.closest('.regex').find('input').attr({ disabled: false });
             }
           });
