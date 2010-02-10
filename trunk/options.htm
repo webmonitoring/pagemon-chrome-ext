@@ -170,10 +170,40 @@
       }
     }
     
+    function initializeSoundSelector() {
+      var select = $('#sound_alert');
+      var button = $('#sound_alert').siblings('input[type="button"]');
+      
+      select.change(function() {
+        var audio_file = select.val();
+        
+        setSetting(SETTINGS.sound_alert, audio_file);
+        
+        button.attr({ disabled: audio_file == '' });
+      });
+      
+      button.click(function() {
+        select.attr({ disabled: true });
+        button.attr({ disabled: true });
+        
+        var audio = new Audio(select.val());
+        
+        audio.addEventListener('ended', function() {
+          select.attr({ disabled: false });
+          button.attr({ disabled: false });
+        });
+        audio.play();
+      });
+      
+      select.val(getSetting(SETTINGS.sound_alert) || '');
+      select.change();
+    }
+    
     $(function() {
       // Set up the main color/timeout contols.
       initializeColorPicker();
       initializeTimeoutTextbox();
+      initializeSoundSelector();
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
@@ -338,10 +368,15 @@
       padding-bottom: 5.5em;
     }
     
+    .main_controls {
+      clear: both;
+      padding-bottom: 15px;
+    }
+    
     .main_controls .util, .main_controls .util:link, .main_controls .util:visited {
       float: right;
-      margin-left: 1.95em;
-      margin-right: 1.9em;
+      width: 250px;
+      height: 1.6em;
     }
     
     .color_picker {
@@ -431,10 +466,18 @@
       height: 1.25em;
     }
     
+    .main_controls input[type=text], .main_controls select {
+      border: 1px #a4bceb solid;
+    }
+    
+    #badge_color_picker_container {
+      position: relative;
+      top: 3px;
+    }
+    
     #global_timeout {
       width: 3em;
       text-align: center;
-      border: 1px #a4bceb solid;
     }
   </style>
 </head>
@@ -498,10 +541,6 @@
   </table>
   <hr />
   <p class="main_controls">
-    <span class="util" id="check_now">
-      <img src="img/refresh.png" />
-      Check All Now
-    </span>
     <span class="util inactive">
       <img src="img/clock.png" />
       Check every
@@ -509,14 +548,26 @@
       minutes.
     </span>
     <span class="util inactive">
+      <img src="img/sound.png" />
+      Sound Alert:
+      <select id="sound_alert">
+        <option value="">None</option>
+        <option value="http://work.max99x.com/cuckoo.ogg">Cuckoo</option>
+        <option value="http://work.max99x.com/bell.ogg">Chime</option>
+      </select>
+      <input type="button" value="Play" />
+    </span>
+    <span class="util inactive" id="badge_color_picker_container">
       <img src="img/color.png" />
       Badge color:
       <input id="badge_color_picker" name="badge_color_picker" type="text" value="#00B400" />
     </span>
-    <a class="util" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
-      <img src="img/feedback.png" />
-      Feedback
-    </a>
+  </p>
+  <p class="main_controls">
+    <span class="util" id="check_now">
+      <img src="img/refresh.png" />
+      Check All Now
+    </span>
   </p>
 </body>
 </html>

@@ -16,9 +16,6 @@ var RESCHEDULE_DELAY = 15 * 60 * 1000;
 // page is detected. See scheduleBadgeUpdate().
 var BADGE_UPDATE_DELAY = 10 * 1000;
 
-// Sound alert URL. Can't keep local due to a (Windows-only) Chrome bug.
-var SOUND_ALERT_PATH = 'http://work.max99x.com/bell.ogg';
-
 // Browser action icon.
 var BROWSER_ICON = 'img/browser_icon.png';
 
@@ -291,9 +288,9 @@ function getAllUpdatedPages() {
     chrome.browserAction.setBadgeText({ text: updated_message });
     chrome.browserAction.setIcon({ path: BROWSER_ICON });
   
-    if (getSetting(SETTINGS.sound_alert) &&
-        updated_message != '' && last_badge_text == '') {
-      (new Audio(SOUND_ALERT_PATH)).play();
+    var sound_alert = getSetting(SETTINGS.sound_alert);
+    if (updated_message != '' && last_badge_text == '' && sound_alert) {
+      (new Audio(sound_alert)).play();
     }
     
     last_badge_text = updated_message;
