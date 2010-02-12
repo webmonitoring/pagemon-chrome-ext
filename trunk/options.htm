@@ -45,6 +45,11 @@
       
       var str_timeout = $(textbox).val().replace(/[^.0-9]/g, '');
       var new_timeout = parseFloat(str_timeout) || 1;
+      
+      if (new_timeout <= 5 / 60) {
+        new_timeout = 5 / 60;
+      }
+      
       if (str_timeout.match(/^0*\.|\.0*$/)) {
         $(textbox).val(str_timeout);
       } else {
