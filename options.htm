@@ -43,8 +43,13 @@
       var caret_pos = textbox.selectionStart;
       var caret_end = textbox.selectionEnd;
       
-      var new_timeout = parseInt($(textbox).val().replace(/[^0-9]/g, '')) || 1;
-      $(textbox).val(new_timeout);
+      var str_timeout = $(textbox).val().replace(/[^.0-9]/g, '');
+      var new_timeout = parseFloat(str_timeout) || 1;
+      if (str_timeout.match(/^0*\.|\.0*$/)) {
+        $(textbox).val(str_timeout);
+      } else {
+        $(textbox).val(new_timeout);
+      }
       
       textbox.selectionStart = caret_pos;
       textbox.selectionEnd = caret_end;
@@ -138,7 +143,7 @@
       if (timeout === null)  {
         deletePageSetting(url, SETTINGS.page.timeout);
       } else {
-        timeout = parseInt(timeout) * 60 * 1000;
+        timeout = parseFloat(timeout) * 60 * 1000;
         if (timeout) {
           setPageSetting(url, SETTINGS.page.timeout, timeout);
           schedulePageCheck(url);
