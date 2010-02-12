@@ -91,7 +91,7 @@ function describeTimeSince(timestamp) {
   
   if (days) label += days + ((days == 1) ? ' day ' : ' days ');
   if (hours) label += hours + ((hours == 1) ? ' hour ' : ' hours ');
-  if (minutes) label += minutes + ((minutes == 1) ? ' minute ' : ' minutes ');
+  if (!days && minutes) label += minutes + ((minutes == 1) ? ' minute ' : ' minutes ');
   if (!label) label += seconds + ((seconds == 1) ? ' second ' : ' seconds ');
   label += 'ago';
   

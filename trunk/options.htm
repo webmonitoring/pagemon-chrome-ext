@@ -46,8 +46,8 @@
       var new_timeout = parseInt($(textbox).val().replace(/[^0-9]/g, '')) || 1;
       $(textbox).val(new_timeout);
       
-      this.selectionStart = caret_pos;
-      this.selectionEnd = caret_end;
+      textbox.selectionStart = caret_pos;
+      textbox.selectionEnd = caret_end;
       
       return new_timeout;
     }
