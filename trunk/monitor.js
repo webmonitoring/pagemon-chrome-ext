@@ -14,7 +14,7 @@ var RESCHEDULE_DELAY = 15 * 60 * 1000;
 
 // The delay (in milliseconds) to wait before updating the badge when an updated
 // page is detected. See scheduleBadgeUpdate().
-var BADGE_UPDATE_DELAY = 10 * 1000;
+var BADGE_UPDATE_DELAY = 5 * 1000;
 
 // Browser action icon.
 var BROWSER_ICON = 'img/browser_icon.png';
