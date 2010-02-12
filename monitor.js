@@ -339,35 +339,36 @@ function checkPage(url, callback) {
       type: 'HEAD',
       url: RELIABLE_CHECKPOINT,
       timeout: RELIABILITY_TIMEOUT,
-      error: function() {
-        // Network down. Reschedule check.
-        clearTimeout(getPageSetting(url, SETTINGS.page.timeout_id));
-        var timeout_id = setTimeout(function() {
-          checkPage(url);
-        }, RESCHEDULE_DELAY);
-        setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
-        (callback || $.noop)();
-      },
-      success: function() {
-        // Network up do the check.
-        $.get(url, function(html) {
-          var regex = getPageSetting(url, SETTINGS.page.regex);
-          var crc = cleanAndHashPage(html, regex);
-          
-          if (crc != getPageSetting(url, SETTINGS.page.crc)) {
-            setPageSetting(url, SETTINGS.page.updated, true);
-            setPageSetting(url, SETTINGS.page.crc, crc);
-          } else {
-            setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-          }
-          
-          // Schedule next check and mark check time.
-          schedulePageCheck(url);
-          setPageSetting(url, SETTINGS.page.last_check, (new Date()).getTime());
-          
-          scheduleBadgeUpdate();
+      complete: function(xhr) {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          // Network up; do the check.
+          $.get(url, function(html) {
+            var regex = getPageSetting(url, SETTINGS.page.regex);
+            var crc = cleanAndHashPage(html, regex);
+            
+            if (crc != getPageSetting(url, SETTINGS.page.crc)) {
+              setPageSetting(url, SETTINGS.page.updated, true);
+              setPageSetting(url, SETTINGS.page.crc, crc);
+            } else {
+              setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+            }
+            
+            // Schedule next check and mark check time.
+            schedulePageCheck(url);
+            setPageSetting(url, SETTINGS.page.last_check, (new Date()).getTime());
+            
+            scheduleBadgeUpdate();
+            (callback || $.noop)();
+          });
+        } else {
+          // Network down. Reschedule check.
+          clearTimeout(getPageSetting(url, SETTINGS.page.timeout_id));
+          var timeout_id = setTimeout(function() {
+            checkPage(url);
+          }, RESCHEDULE_DELAY);
+          setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
           (callback || $.noop)();
-        });
+        }
       }
     });
   }
