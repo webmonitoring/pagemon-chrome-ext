@@ -68,7 +68,7 @@ var SETTINGS = {
 chrome.extension.getVersion = function() {
   if (!chrome.extension.version_) {
     var manifest = $.ajax({ url: 'manifest.json', async: false }).responseText;
-    manifest = JSON.parse(manifest);
+    manifest = JSON.parse(manifest || 'null');
     if (manifest) {
       chrome.extension.version_ = manifest.version;
     }
@@ -103,7 +103,7 @@ function describeTimeSince(timestamp) {
 *******************************************************************************/
 
 function getSetting(name) {
-  return JSON.parse(localStorage.getItem(name));
+  return JSON.parse(localStorage.getItem(name) || 'null');
 }
 
 function setSetting(name, value) {
