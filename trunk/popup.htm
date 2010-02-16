@@ -45,14 +45,13 @@
       var url = getNotificationUrl(this);
       var bg = chrome.extension.getBackgroundPage();
       
-      // Remember the page as it is now. Done on background in case the popup is
-      // closed too soon.
-      bg.$.get(url, function(html) {
-        setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-      });
-      
       setPageSetting(url, SETTINGS.page.updated, false);
       updateBadge();
+      
+      // Take a current snapshot. Automatically redirected to the background.
+      checkPage(url, function() {
+        setPageSetting(url, SETTINGS.page.updated, false);
+      });
       
       $(this).closest('.notification td').slideUp('slow', function() {
         if ($('#notifications .notification').length == 1) {
