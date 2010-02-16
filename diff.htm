@@ -3,13 +3,13 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en"> 
   <head> 
     <title>Page Monitor: View Changes</title>
-  <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
+    <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
     <script type="text/javascript" src="lib/difflib.js"></script>
     <script type="text/javascript" src="monitor.js"></script>
     <script type="text/javascript">
       function diff(url, src, dest) {
-        var src =  html2list(src.replace(/\s+/g, ' '));
-        var dest =  html2list(dest.replace(/\s+/g, ' '));
+        var src = html2list(src.replace(/\s+/g, ' '));
+        var dest = html2list(dest.replace(/\s+/g, ' '));
         var matcher = new difflib.SequenceMatcher(src, dest);
         var opcodes = matcher.get_opcodes();
         var out = [];
@@ -20,8 +20,6 @@
           var src_end = opcodes[i][2];
           var dest_start = opcodes[i][3];
           var dest_end = opcodes[i][4];
-          
-          //alert(opcode + '\n\n' + src.slice(src_start, src_end) + '\n\n' + dest.slice(dest_start, dest_end));
           
           switch (opcode) {
             case 'replace':
@@ -124,12 +122,16 @@
       
       function startDiff(url, src, dest) {
         function tryToGetBody(html) {
-          var body = html.match(/<body[^>]*>(.*)<\/body>/i);
+          var body = html.match(/<body[^>]*>([^]*)(<\/body>)?/i);
           if (body && body.length > 1) {
             return body[1];
           } else {
             return html;
           }
+        }
+        
+        function stripScripts(html) {
+          return html.replace(/<script\b[^>]*>([^]*?<\/script>)?/ig, '');
         }
       
         // Get base.
@@ -175,7 +177,8 @@
         }
         
         // Generate diffed body.
-        diff(url, tryToGetBody(src), tryToGetBody(dest));
+        diff(url, stripScripts(tryToGetBody(src)),
+                  stripScripts(tryToGetBody(dest)));
       }
       
       $(function() {
