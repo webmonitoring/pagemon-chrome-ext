@@ -120,13 +120,26 @@
             advanced_set = true;
           }
           
+          page_record.find('.mode input[type=radio]').attr({name: 'name' + crc(url) });
+          
+          var mode = getPageSetting(url, SETTINGS.page.mode);
           var regex = getPageSetting(url, SETTINGS.page.regex);
-          if (regex) {
-            page_record.find('.regex span').addClass('enabled').removeClass('disabled');
-            page_record.find('.regex input').attr({ disabled: false });
-            page_record.find('.regex input[type=checkbox]').attr({ checked: true });
-            page_record.find('.regex input[type=text]').val(regex);
+          var selector = getPageSetting(url, SETTINGS.page.selector);
+          if (!mode && regex) mode = 'regex';
+          if (mode != 'text') {
+            page_record.find('.mode span').first().addClass('enabled').removeClass('disabled');
+            page_record.find('.mode input').attr({ disabled: false });
+            page_record.find('.mode input[type=checkbox]').attr({ checked: true });
+            page_record.find('.mode input[type=radio][value=' + mode + ']')
+                       .click();
+            if (mode == 'regex') {
+              page_record.find('.mode input[type=text]').val(regex);
+            } else if (mode == 'selector') {
+              page_record.find('.mode input[type=text]').val(selector);
+            }
             advanced_set = true;
+          } else {
+            page_record.find('.mode input[type=radio]').first().attr({ checked: true });
           }
           
           if (advanced_set) {
@@ -159,23 +172,49 @@
     function setPageRegex(context, regex) {
       if (regex === null)  {
         deletePageSetting(findUrl(context), SETTINGS.page.regex);
+        setPageSetting(findUrl(context), SETTINGS.page.mode, 'text');
       } else {
         var is_valid_regex = true;
         try {
-          temp_regex = new RegExp(regex);
+          var temp_regex = new RegExp(regex);
         } catch (e) {
           is_valid_regex = false;
         }
       
-        var regex_textbox = $(context).closest('.page_record').find('.regex input[type=text]');
-        var regex_test_button = $(context).closest('.page_record').find('.regex input[type=button]');
+        var textbox = $(context).closest('.page_record').find('.mode input[type=text]');
+        var test_button = $(context).closest('.page_record').find('.mode input[type=button]');
         if (is_valid_regex) {
-          regex_textbox.removeClass('invalid');
-          regex_test_button.attr({ disabled: false });
+          textbox.removeClass('invalid');
+          test_button.attr({ disabled: false });
           setPageSetting(findUrl(context), SETTINGS.page.regex, regex);
         } else {
-          regex_test_button.attr({ disabled: true });
-          regex_textbox.addClass('invalid');
+          test_button.attr({ disabled: true });
+          textbox.addClass('invalid');
+        }
+      }
+    }
+    
+    function setPageSelector(context, selector) {
+      if (selector === null)  {
+        deletePageSetting(findUrl(context), SETTINGS.page.selector);
+        setPageSetting(findUrl(context), SETTINGS.page.mode, 'text');
+      } else {
+        var is_valid_selector = true;
+        try {
+          $(selector);
+        } catch (e) {
+          is_valid_selector = false;
+        }
+      
+        var textbox = $(context).closest('.page_record').find('.mode input[type=text]');
+        var test_button = $(context).closest('.page_record').find('.mode input[type=button]');
+        if (is_valid_selector) {
+          textbox.removeClass('invalid');
+          test_button.attr({ disabled: false });
+          setPageSetting(findUrl(context), SETTINGS.page.selector, selector);
+        } else {
+          test_button.attr({ disabled: true });
+          textbox.addClass('invalid');
         }
       }
     }
@@ -278,7 +317,7 @@
       });
       
       // Set up advanced option expansion events.
-      $('.advanced_toggle input').live('click', function() {
+      $('.advanced_toggle input[type=checkbox]').live('click', function() {
         if ($(this).is(':checked')) {
           $(this).closest('.page_record').find('.advanced_toggle').addClass('toggled');
           $(this).closest('.page_record').find('.advanced_controls').slideDown('fast');
@@ -321,11 +360,17 @@
         }
       });
       
-      $('.regex input[type=checkbox]').live('click', function() {
+      $('.mode input[type=checkbox]').live('click', function() {
+        var url = findUrl(this);
+        var record = $(this).closest('.page_record');
+        
         if ($(this).is(':checked')) {
-          setPageRegex(this, $(this).nextAll('span').find('input').val());
+          $('.mode input[type=radio]:checked', record).click();
+          $('.mode input[type=text]', record).keyup();
         } else {
-          setPageRegex(this, null);
+          setPageSetting(url, SETTINGS.page.mode, 'text');
+          deletePageSetting(url, SETTINGS.page.regex);
+          deletePageSetting(url, SETTINGS.page.selector);
         }
       });
       
@@ -333,36 +378,62 @@
       $('.timeout input[type=text]').live('keyup', function() {
         setPageTimeout(this, cleanTimeoutTextbox(this));
       });
-      $('.regex input[type=text]').live('keyup', function() {
-        setPageRegex(this, $(this).val());
+      $('.mode input[type=text]').live('keyup', function() {
+        var mode = $(this).closest('.page_record').find('input[type=radio]:checked').val();
+        if (mode == 'regex') {
+          setPageRegex(this, $(this).val());
+        } else if (mode == 'selector') {
+          setPageSelector(this, $(this).val());
+        }
       });
       
-      // Set up regex test click handler
-      $('.regex input[type=button]').live('click', function() {
+      // Set up mode radio box click handler
+      $('.mode input[type=radio]').live('click', function() {
         var url = findUrl(this);
+        var record = $(this).closest('.page_record');
+        var val = $(this).val();
+        
+        setPageSetting(url, SETTINGS.page.mode, val);
+        $('.mode input[type=text]', record).keyup();
+        
+        var label = val.replace(/^./, function(c) {return c.toUpperCase();}) + ':';
+        $('.mode_value span', record).text(label);
+      });
+      
+      // Set up regex/selector test click handler
+      $('.mode input[type=button]').live('click', function() {
+        var url = findUrl(this);
+        var mode = getPageSetting(url, SETTINGS.page.mode);
         var regex = getPageSetting(url, SETTINGS.page.regex);
+        var selector = getPageSetting(url, SETTINGS.page.selector);
         var button = $(this);
         
-        if (regex) {
+        if ((mode == 'regex' && regex) || (mode == 'selector' && selector)) {
           $(this).val('Testing...');
-          $(this).closest('.regex').find('input').attr({ disabled: true });
+          $(this).closest('.mode').find('input').attr({ disabled: true });
           $.ajax({
             url: url,
             success: function(html) {
-              results = findAndFormatRegexMatches(html, regex);
+              var results = '';
+              if (mode == 'regex') {
+                results = findAndFormatRegexMatches(html, regex);
+              } else {
+                results = findAndFormatSelectorMatches(html, selector);
+              }
               if (results) {
                 alert('Matched:\n' + results);
               } else {
                 alert('No matches.');
               }
-              setPageSetting(url, SETTINGS.page.crc, crc(results || ''));
+              setPageSetting(url, SETTINGS.page.crc,
+                             cleanAndHashPage(html, mode, regex, selector));
             },
             error: function() {
               alert('Could not retrieve selected page.');
             },
             complete: function() {
               button.val('Test');
-              button.closest('.regex').find('input').attr({ disabled: false });
+              button.closest('.mode').find('input').attr({ disabled: false });
             }
           });
         }
@@ -433,10 +504,12 @@
     
     .advanced_controls .disabled {
       color: #999999;
+      -webkit-transition: color 0.2s linear;
     }
     
     .advanced_controls .enabled {
       color: #849ccb;
+      -webkit-transition: color 0.2s linear;
     }
     
     .advanced_controls input[type=button] {
@@ -445,12 +518,13 @@
       top: 1px;
     }
     
-    .advanced_controls input[type=checkbox] {
+    .advanced_controls input[type=checkbox],
+    .advanced_controls input[type=radio] {
       position: relative;
       top: 2px;
     }
     
-    .regex input[type=text] {
+    .mode input[type=text] {
       width: 400px;
       padding-left: 1px;
       height: 1em;
@@ -479,6 +553,21 @@
     
     .main_controls input[type=text], .main_controls select {
       border: 1px #a4bceb solid;
+    }
+    
+    .mode_selector {
+      display:inline-block;
+      vertical-align: top;
+    }
+    
+    .mode_selector label {
+      display:inline-block;
+      margin-right: 80px;
+    }
+    
+    .mode_value span {
+      display:inline-block;
+      width: 100px;
     }
     
     #badge_color_picker_container {
@@ -528,12 +617,24 @@
                 minutes.
               </span>
             </div>
-            <div class="regex">
+            <div class="mode">
               <input type="checkbox" />
-              <span class="disabled">
-                Regex:
-                <input type="text" disabled="disabled" />
-                <input type="button" disabled="disabled" value="Test" />
+              <span class="mode_selector disabled">
+                Custom Mode:
+                <label>
+                  <input type="radio" name="mode" value="regex" disabled="disabled" />
+                  Regex
+                </label>
+                <label>
+                  <input type="radio" name="mode" value="selector" disabled="disabled" />
+                  Selector
+                </label>
+                <br />
+                <span class="mode_value">
+                  <span>Regex:</span>
+                  <input type="text" disabled="disabled" />
+                  <input type="button" disabled="disabled" value="Test" />
+                </span>
               </span>
             </div>
           </div>

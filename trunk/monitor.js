@@ -182,7 +182,7 @@ function findAndFormatSelectorMatches(html, selector) {
   var body = $('<body>').html(getStrippedBody(html));
   
   return $(selector, body).map(function() {
-    return $('<div>').append(this).html();
+    return '"' + $('<div>').append(this).html() + '"';
   }).get().join('\n');
 }
 
