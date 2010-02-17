@@ -125,7 +125,13 @@
           var mode = getPageSetting(url, SETTINGS.page.mode);
           var regex = getPageSetting(url, SETTINGS.page.regex);
           var selector = getPageSetting(url, SETTINGS.page.selector);
-          if (!mode && regex) mode = 'regex';
+          if (mode == null) {
+            if (regex) {
+              mode = 'regex';
+            } else {
+              mode = 'text';
+            }
+          }
           if (mode != 'text') {
             page_record.find('.mode span').first().addClass('enabled').removeClass('disabled');
             page_record.find('.mode input').attr({ disabled: false });
