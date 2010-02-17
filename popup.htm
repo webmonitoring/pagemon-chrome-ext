@@ -50,8 +50,8 @@
       
       // Take a current snapshot. Automatically redirected to the background.
       checkPage(url, function() {
-        setPageSetting(url, SETTINGS.page.updated, false);
-      });
+        bg.setPageSetting(url, SETTINGS.page.updated, false);
+      }, true);
       
       $(this).closest('.notification td').slideUp('slow', function() {
         if ($('#notifications .notification').length == 1) {

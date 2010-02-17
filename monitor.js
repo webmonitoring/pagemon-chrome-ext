@@ -28,7 +28,9 @@ var SETTINGS = {
   sound_alert: 'sound_alert',
   page: {
     name: 'name',
+    mode: 'mode',
     regex: 'regex',
+    selector: 'selector',
     timeout: 'timeout',
     timeout_id: 'timeout_id',
     html: 'html',
@@ -98,6 +100,19 @@ function describeTimeSince(timestamp) {
   return label;
 }
 
+// Takes a string representation of an HTML document, tries to crop everthing
+// outside the <body> element, then strips <script> tags.
+function getStrippedBody(html) {
+  var body = html.match(/<body[^>]*>([^]*)(<\/body>)?/i);
+  if (body && body.length > 1) {
+    body = body[1];
+  } else {
+    body = html;
+  }
+  
+  return body.replace(/<script\b[^>]*>([^]*?<\/script>)?/ig, '');
+}
+
 /*******************************************************************************
                              Settings Storage Interface
 *******************************************************************************/
@@ -161,12 +176,24 @@ function findAndFormatRegexMatches(text, regex) {
   return results.join('\n');
 }
 
+// Searches for all matches of selector in the html (a string) and returns them
+// in a formatted form.
+function findAndFormatSelectorMatches(html, selector) {
+  var body = $('<body>').html(getStrippedBody(html));
+  
+  return $(selector, body).map(function() {
+    return $('<div>').append(this).html();
+  }).get().join('\n');
+}
+
 // Returns the CRC of a page, after cleaning it. If the regex parameter is
 // specified, the page is cleaned by replacing it with all the matches of this
 // regex. Otherwise cleaning means that all tags and non-letters are stripped.
-function cleanAndHashPage(html, regex) {
-  if (regex) {
+function cleanAndHashPage(html, mode, regex, selector) {
+  if (mode == 'regex' && regex != null && regex != undefined) {
     html = findAndFormatRegexMatches(html, regex);
+  } else if (mode == 'selector' && selector != null && selector != undefined) {
+    html = findAndFormatSelectorMatches(html, selector);
   } else {
     html = html.toLowerCase();
     // Get rid of everything before and after the body.
@@ -175,12 +202,12 @@ function cleanAndHashPage(html, regex) {
     // Remove major non-text elements.
     html = html.replace(/<(script|style|object|embed|applet)[^>]*>[^]*?<\/\1>/g, '');
     // Replace images with their sources (to preserve after tag stripping).
-    html = html.replace(/<img[^>]*src\s*=\s*(.+?)\b[^>]*>/g, '{imgsrc:$1}');
+    html = html.replace(/<img[^>]*src\s*=\s*([^]+?)\b[^>]*>/g, '{imgsrc:$1}');
     // Strip tags.
     html = html.replace(/<[^>]*>/g, '');
     // Collapse whitespace.
     html = html.replace(/\s+/g, ' ');
-    // Remove numbers with common number prefixes. This helps with pages that
+    // Remove numbers with common number suffixes. This helps with pages that
     // print out the current date/time.
     html = html.replace(/\d+\s?(st|nd|rd|th|am|pm)\b/g, '');
     // Remove everything other than letters.
@@ -194,8 +221,7 @@ function cleanAndHashPage(html, regex) {
                               Adding & Removing Pages
 *******************************************************************************/
 
-// Registers a URL for monitoring, takes a snapshot of it, and calls the
-// optional callback once the snapshot is successfully taken.
+// Registers a URL for monitoring and takes a snapshot of it.
 function addPage(url, name, icon) {
   // Make sure this is running on the background page. If not, redirect.
   var bg = chrome.extension.getBackgroundPage();
@@ -209,11 +235,12 @@ function addPage(url, name, icon) {
   
   if (name) setPageSetting(url, SETTINGS.page.name, name);
   if (icon) setPageSetting(url, SETTINGS.page.icon, icon);
+  setPageSetting(url, SETTINGS.page.mode, 'text');
   setPageSetting(url, SETTINGS.page.updated, false);
   
   $.get(url, function(html) {
     setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-    setPageSetting(url, SETTINGS.page.crc, cleanAndHashPage(html));
+    setPageSetting(url, SETTINGS.page.crc, cleanAndHashPage(html, 'text'));
     setPageSetting(url, SETTINGS.page.last_check, (new Date()).getTime());
     
     var timeout = getSetting(SETTINGS.timeout);
@@ -323,11 +350,11 @@ function getAllUpdatedPages() {
 // Fetches the page, marks it as updated if necessary, and reschedules itself.
 // For the scheduling to work, it MUST run on the background page. Calls from
 // other pages are automatically redirected to the background page.
-function checkPage(url, callback) {
+function checkPage(url, callback, force_snapshot) {
   // Make sure this is running on the background page. If not, redirect.
   var bg = chrome.extension.getBackgroundPage();
   if (bg != window) {
-    return bg.checkPage(url, callback);
+    return bg.checkPage(url, callback, force_snapshot);
   }
   
   // If page is already marked as updated, skip check.
@@ -343,12 +370,20 @@ function checkPage(url, callback) {
         if (xhr.status >= 200 && xhr.status < 300) {
           // Network up; do the check.
           $.get(url, function(html) {
+            var mode = getPageSetting(url, SETTINGS.page.mode);
             var regex = getPageSetting(url, SETTINGS.page.regex);
-            var crc = cleanAndHashPage(html, regex);
+            var selector = getPageSetting(url, SETTINGS.page.selector);
+            
+            if (!mode && regex) mode = 'regex';
+            
+            var crc = cleanAndHashPage(html, mode, regex, selector);
             
             if (crc != getPageSetting(url, SETTINGS.page.crc)) {
               setPageSetting(url, SETTINGS.page.updated, true);
               setPageSetting(url, SETTINGS.page.crc, crc);
+              if (force_snapshot) {
+                setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+              }
             } else {
               setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
             }
