@@ -246,7 +246,7 @@ function addPage(url, name, icon) {
     var timeout = getSetting(SETTINGS.timeout);
     var timeout_id = setTimeout(function() { checkPage(url); }, timeout);
     setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
-  });
+  }, 'text');
 }
 
 // Removes a page from the monitoring registry and deletes all settings related
@@ -394,7 +394,7 @@ function checkPage(url, callback, force_snapshot) {
             
             scheduleBadgeUpdate();
             (callback || $.noop)();
-          });
+          }, 'text');
         } else {
           // Network down. Reschedule check.
           clearTimeout(getPageSetting(url, SETTINGS.page.timeout_id));
