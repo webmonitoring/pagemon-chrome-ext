@@ -7,6 +7,8 @@
     <script type="text/javascript" src="lib/difflib.js"></script>
     <script type="text/javascript" src="monitor.js"></script>
     <script type="text/javascript">
+      var SCROLL_MARGIN = 75;
+      
       function diff(url, src, dest) {
         var src = html2list(src.replace(/\s+/g, ' '));
         var dest = html2list(dest.replace(/\s+/g, ' '));
@@ -165,6 +167,35 @@
         
         // Generate and insert diffed body.
         diff(url, getStrippedBody(src), getStrippedBody(dest));
+        
+        // Scroll to the first change.
+        var insertions = document.getElementsByTagName('ins');
+        var first_insertion = insertions.length ? insertions[0] : null;
+        var deletions = document.getElementsByTagName('del');
+        var first_deletion = deletions.length ? deletions[0] : null;
+        var first_change = null;
+        if (first_insertion && first_deletion) {
+          var insertion_pos = findPos(first_insertion);
+          var deletion_pos = findPos(first_deletion);
+          first_change = (insertion_pos[1] < deletion_pos[1]) ? first_insertion : first_deletion;
+        } else if (first_insertion || first_deletion) {
+          first_change = first_insertion || first_deletion;
+        } else {
+          return;
+        }
+        var pos = findPos(first_change);
+        window.scrollTo(pos[0], pos[1] - SCROLL_MARGIN);
+      }
+      
+      function findPos(obj) {
+        var curleft = curtop = 0;
+        
+        do {
+            curleft += obj.offsetLeft;
+            curtop += obj.offsetTop;
+        } while (obj = obj.offsetParent);
+        
+        return [curleft, curtop];
       }
       
       $(function() {
