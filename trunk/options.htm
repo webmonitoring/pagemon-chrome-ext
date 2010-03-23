@@ -254,6 +254,45 @@
       select.change();
     }
     
+    function exportPagesList() {
+      var buffer = [];
+      var page_urls = getSetting(SETTINGS.pages_list);
+      var add_date = new Date().getTime();
+      
+      buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n<!-' +
+                  '- This is an automatically generated file.\n     It will' +
+                  ' be read and overwritten.\n     DO NOT EDIT! -' +
+                  '->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html;' +
+                  ' charset=UTF-8">\n<TITLE>Bookmarks</TITLE>\n<H1>' +
+                  'Bookmarks</H1>\n<DL><p>\n');
+      
+      for (var i in page_urls) {
+        var page_url = page_urls[i];
+        var page_name = getPageSetting(page_url, SETTINGS.page.name);
+        var page_icon = getPageSetting(page_url, SETTINGS.page.icon);
+        var icon_attr = page_icon ? ' ICON_URI="' + page_icon + '" ' : '';
+        buffer.push('        <DT><A HREF="' + page_url + '" ADD_DATE="' + add_date + '"' + icon_attr + '>' + page_name + '</A>\n');
+      }
+      
+      buffer.push('</DL><p>');
+      
+      return buffer.join('');
+    }
+    
+    function importPagesList(bookmarks) {
+      var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/g;
+      var page_links = bookmarks.match(PAGE_REGEX);
+      
+      for (var i in page_links) {
+        var page_link = $(page_links[i]);
+        var page_url = page_link.attr('HREF') || '';
+        var page_name = page_link.text() || 'Untitled Page (' + page_url + ')';
+        var page_icon = page_link.attr('ICON_URI') || null;
+        
+        if (page_url) addPage(page_url, page_name, page_icon);
+      }
+    }
+    
     $(function() {
       // Set up the main color/timeout contols.
       initializeColorPicker();
@@ -455,6 +494,10 @@
       margin: auto;
       padding-bottom: 5.5em;
       overflow-y: scroll;
+    }
+    
+    hr {
+      border-bottom: 1px #999 solid;
     }
     
     .main_controls {
