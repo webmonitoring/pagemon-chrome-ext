@@ -159,11 +159,16 @@ function getPageTimeout(url) {
 // Searches for all matches of regex in text and returns them in a formatted
 // form. WARNING: this is blocking, and may take a while.
 function findAndFormatRegexMatches(text, regex) {
+  if (!regex) return;
+
   var results = [];
   var match = null;
   regex = new RegExp(regex, 'g');
   
-  while (match = regex.exec(text, regex.lastIndex)) {
+  while (true) {
+    match = regex.exec(text, regex.lastIndex);
+    if (!match || match.join('').length == 0) break;
+    
     if (match.length == 1) {
       // If there were no captured groups, append the whole match.
       results.push('"' + match[0] + '"');
