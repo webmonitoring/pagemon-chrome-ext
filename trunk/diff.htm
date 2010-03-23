@@ -171,7 +171,13 @@
         var url = atob(window.location.hash.substr(1));
         var src = getPageSetting(url, SETTINGS.page.html);
         $.get(url, function(html) {
-          startDiff(url, src, html);
+          if (src) {
+            startDiff(url, src, html);
+          } else {
+            setPageSetting(url, SETTINGS.page.html, html);
+            $('img').hide();
+            $('div').html('Cache corruption detected and fixed.<br />Last snapshot discarded.<br /> Changes highlighting will be available on next update.');
+          }
         });
       });
     </script>
