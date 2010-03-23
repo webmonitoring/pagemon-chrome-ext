@@ -47,10 +47,23 @@
         
         $('body').html(compiled_html);
         
-        var link = url;
-        link = '<a href="' + link + '" title="View Original Page">Original</a>';
-        link = '<div id="chrome_page_monitor_ext_orig_link">' + link + '</div>';
-        $(link).appendTo('body');
+        var link = '<a href="' + url + '" title="View Original Page">Original</a>';
+        var toggler = '<a href="#" title="Hide Deletions">Hide Deletions</a>';
+        var ui = '<div id="chrome_page_monitor_ext_orig_link">' + link + '<br />' + toggler + '</div>';
+        var $ui = $(ui);
+        $('a[href="#"]', $ui).click(toggleDel);
+        $ui.appendTo('body');
+      }
+      
+      function toggleDel() {
+        if ($(this).text() == 'Hide Deletions') {
+          $('del').hide();
+          $(this).text('Show Deletions');
+        } else {
+          $('del').show();
+          $(this).text('Hide Deletions');
+        }
+        return false;
       }
       
       function wrapText(list, prefix, suffix) {
@@ -227,8 +240,8 @@
         position: fixed !important;
         bottom: 0px !important;
         right: 40px !important;
-        width: 150px !important;
-        height: 25px !important;
+        width: 140px !important;
+        height: 45px !important;
         background: white !important;
         border: 2px #849ccb solid !important;
         border-bottom: 0px !important;
