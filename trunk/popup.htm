@@ -28,7 +28,7 @@
       
       // Mark page monitored if it is (initially).
       chrome.tabs.getSelected(null, function(tab) {
-        setPageStatus(isPageMonitored(tab.url));
+        setPageMonitoredStatus(isPageMonitored(tab.url));
       });
       
       // Initially fill the notification table.
@@ -37,21 +37,16 @@
     
     // Returns the URL of the notification record given any element in it.
     function getNotificationUrl(context) {
-      return $(context).closest('.notification').find('.page_link').get()[0].href;
+      return $(context).closest('.notification').find('.page_link').attr('href');
     }
     
     // Hides a notification record given any element in it.
     function markPageVisited() {
       var url = getNotificationUrl(this);
-      var bg = chrome.extension.getBackgroundPage();
       
       setPageSetting(url, SETTINGS.page.updated, false);
-      updateBadge();
-      
-      // Take a current snapshot. Automatically redirected to the background.
-      checkPage(url, function() {
-        bg.setPageSetting(url, SETTINGS.page.updated, false);
-      }, true);
+      BG.updateBadge();
+      BG.takeSnapshot(url, BG.scheduleCheck);
       
       $(this).closest('.notification td').slideUp('slow', function() {
         if ($('#notifications .notification').length == 1) {
@@ -65,7 +60,7 @@
     }
     
     // Mark page as monitored/unmonitored with the relevant label/event changes.
-    function setPageStatus(monitored) {
+    function setPageMonitoredStatus(monitored) {
       if (monitored) {
         $('#monitor_page').unbind('click')
                           .addClass('inactive').addClass('emphasized')
@@ -79,13 +74,15 @@
     
     // Add current page to the monitored list.
     function monitorCurrentPage() {
+      $('#monitor_page').css('cursor', 'progress');
       chrome.tabs.getSelected(null, function(tab) {
         // If the page is still loading, try a little while later.
         if (tab.status == 'loading') {
           setTimeout(monitorCurrentPage, 100);
         } else {
           addPage(tab.url, tab.title, tab.favIconUrl);
-          setPageStatus(true);
+          setPageMonitoredStatus(true);
+          $('#monitor_page').css('cursor', 'auto');
         }
       });
     }
@@ -131,8 +128,6 @@
     function checkAllPages() {
       // Get all the URLs to check.
       var pages = getSetting(SETTINGS.pages_list);
-      // Keep track of how many pages have been checked already.
-      var pages_checked = 0;
       
       // If there are no pages to check, return.
       if (pages.length === 0 ||
@@ -161,34 +156,28 @@
         $(this).animate({ opacity: 1.0 }, 400);
       });
       
-      $.each(pages, function(i, url) {
-        checkPage(url, function() {
-          // A page has been checked. Increment the counter and check if we're done.
-          if (++pages_checked == pages.length) {
-            // Fade out the loader.
-            $('#notifications').animate({ opacity: 0 }, 400, function() {
-              // Fill the table - done at this point to get the final height.
-              fillNotifications();
-              updateBadge();
-              
-              // Remember the height and content of the table.
-              var height = $(this).height();
-              var html = $(this).html();
-              
-              // Remove the loader, empty the table, and reset its height back to
-              // 50px. The user does not see any change from the time the fade-out
-              // finished.
-              $(this).removeClass('loading').html('').height(50);
-              // Slide the table to our pre-calculated height.
-              $(this).animate({ height: height + 'px' }, 'slow', function() {
-                // Put the table contents back and fade it in.
-                $(this).css({ height: 'auto' });
-                $(this).html(html);
-                $(this).animate({ opacity: 1 }, 400);
-                $('#check_now').click(checkAllPages);
-              });
-            });
-          }
+      BG.check(true, function() {
+        // Fade out the loader.
+        $('#notifications').animate({ opacity: 0 }, 400, function() {
+          // Fill the table - done at this point to get the final height.
+          fillNotifications();
+          
+          // Remember the height and content of the table.
+          var height = $(this).height();
+          var html = $(this).html();
+          
+          // Remove the loader, empty the table, and reset its height back to
+          // 50px. The user does not see any change from the time the fade-out
+          // finished.
+          $(this).removeClass('loading').html('').height(50);
+          // Slide the table to our pre-calculated height.
+          $(this).animate({ height: height + 'px' }, 'slow', function() {
+            // Put the table contents back and fade it in.
+            $(this).css({ height: 'auto' });
+            $(this).html(html);
+            $(this).animate({ opacity: 1 }, 400);
+            $('#check_now').click(checkAllPages);
+          });
         });
       });
     }

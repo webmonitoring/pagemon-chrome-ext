@@ -1,23 +1,6 @@
 /*******************************************************************************
-                                 Global Constants
+                                    Constants
 *******************************************************************************/
-
-// The address to check when testing for network availability.
-var RELIABLE_CHECKPOINT = 'http://www.google.com/';
-
-// Maximum timeout (in milliseconds) when checking for network availability.
-var RELIABILITY_TIMEOUT = 10000;
-
-// The delay (in milliseconds) to wait after a check attempt that failed due to
-// the network being down.
-var RESCHEDULE_DELAY = 15 * 60 * 1000;
-
-// The delay (in milliseconds) to wait before updating the badge when an updated
-// page is detected. See scheduleBadgeUpdate().
-var BADGE_UPDATE_DELAY = 5 * 1000;
-
-// Browser action icon.
-var BROWSER_ICON = 'img/browser_icon.png';
 
 // Setting names.
 var SETTINGS = {
@@ -26,13 +9,14 @@ var SETTINGS = {
   version: 'version',
   pages_list: 'pages',
   sound_alert: 'sound_alert',
+  notifications_enabled: 'notifications_enabled',
+  notifications_timeout: 'notifications_timeout',
   page: {
     name: 'name',
     mode: 'mode',
     regex: 'regex',
     selector: 'selector',
     timeout: 'timeout',
-    timeout_id: 'timeout_id',
     html: 'html',
     crc: 'crc',
     icon: 'icon',
@@ -40,6 +24,9 @@ var SETTINGS = {
     last_check: 'last_check'
   }
 };
+
+// Reference to the background page.
+var BG = chrome.extension.getBackgroundPage();
 
 /*******************************************************************************
                                     Utilities
@@ -83,7 +70,7 @@ chrome.extension.getVersion = function() {
 // specified in the timestamp argument. Examples: '7 seconds ago', '1 hour ago',
 // '3 hours 27 minutes ago', '40 days 10 hours 17 minutes ago'.
 function describeTimeSince(timestamp) {
-  var time_delta = (new Date()).getTime() - timestamp;
+  var time_delta = new Date().getTime() - timestamp;
   var seconds = Math.floor(time_delta / 1000);
   var minutes = Math.floor(seconds / 60) % 60;
   var hours = Math.floor(seconds / (60 * 60)) % 24;
@@ -100,7 +87,7 @@ function describeTimeSince(timestamp) {
   return label;
 }
 
-// Takes a string representation of an HTML document, tries to crop everthing
+// Takes a string representation of an HTML document, tries to crop everything
 // outside the <body> element, then strips <script> tags.
 function getStrippedBody(html) {
   var body = html.match(/<body[^>]*>([^]*)(<\/body>)?/i);
@@ -191,10 +178,14 @@ function findAndFormatSelectorMatches(html, selector) {
   }).get().join('\n');
 }
 
-// Returns the CRC of a page, after cleaning it. If the regex parameter is
-// specified, the page is cleaned by replacing it with all the matches of this
-// regex. Otherwise cleaning means that all tags and non-letters are stripped.
+// Returns the CRC of a page, after cleaning it. If mode=regex and the regex
+// parameter is set, the page is cleaned by replacing it with all the matches of
+// this regex. If mode=selector and the selector parameter is set, the pages is
+// cleaned by replacing it with the innerHTML of all matches of that selector.
+// Otherwise cleaning means that all tags and non-letters are stripped.
 function cleanAndHashPage(html, mode, regex, selector) {
+  if (!mode) mode = regex ? 'regex' : 'text';
+  
   if (mode == 'regex' && regex != null && regex != undefined) {
     html = findAndFormatRegexMatches(html, regex);
   } else if (mode == 'selector' && selector != null && selector != undefined) {
@@ -226,14 +217,11 @@ function cleanAndHashPage(html, mode, regex, selector) {
                               Adding & Removing Pages
 *******************************************************************************/
 
-// Registers a URL for monitoring and takes a snapshot of it.
+// Registers a URL for monitoring and takes a snapshot of it. Redirects itself
+// to the background page if needed.
 function addPage(url, name, icon) {
-  // Make sure this is running on the background page. If not, redirect.
-  var bg = chrome.extension.getBackgroundPage();
-  if (bg != window) {
-    return bg.addPage(url, name, icon);
-  }
-  
+  if (window != BG) return BG.addPage(url, name, icon);
+
   var pages = getSetting(SETTINGS.pages_list);
   pages.push(url);
   setSetting(SETTINGS.pages_list, pages);
@@ -243,34 +231,34 @@ function addPage(url, name, icon) {
   setPageSetting(url, SETTINGS.page.mode, 'text');
   setPageSetting(url, SETTINGS.page.updated, false);
   
-  $.get(url, function(html) {
-    setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-    setPageSetting(url, SETTINGS.page.crc, cleanAndHashPage(html, 'text'));
-    setPageSetting(url, SETTINGS.page.last_check, (new Date()).getTime());
-    
-    var timeout = getSetting(SETTINGS.timeout);
-    var timeout_id = setTimeout(function() { checkPage(url); }, timeout);
-    setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
-  }, 'text');
+  $.ajax({
+    url: url,
+    dataType: 'text',
+    complete: function() {
+      setPageSetting(url, SETTINGS.page.last_check, new Date().getTime());
+      scheduleCheck();
+    },
+    success: function(html) {
+      setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+      setPageSetting(url, SETTINGS.page.crc, cleanAndHashPage(html, 'text'));
+    }
+  });
 }
 
 // Removes a page from the monitoring registry and deletes all settings related
 // to it.
 function removePage(url) {
-  var pages = getSetting(SETTINGS.pages_list);
-  var new_pages = [];
-  
-  $.each(pages, function(i, url2) {
-    if (url != url2) {
-      new_pages.push(url2);
-    }
+  var pages = $.grep(getSetting(SETTINGS.pages_list), function(url2, i) {
+    return url != url2;
   });
   
-  setSetting(SETTINGS.pages_list, new_pages);
+  setSetting(SETTINGS.pages_list, pages);
   
   $.each(SETTINGS.page, function(k, name) {
     deletePageSetting(url, name);
   });
+  
+  BG.scheduleCheck();
 }
 
 // Returns a boolean indicating whether the supplied URL is being monitored.
@@ -280,151 +268,53 @@ function isPageMonitored(url) {
 
 // Returns an array of URLs indicating all pages that are marked as updated.
 function getAllUpdatedPages() {
-  var pages = getSetting(SETTINGS.pages_list);
-  var updated_pages = [];
-  
-  $.each(pages, function(i, url) {
-    if (getPageSetting(url, SETTINGS.page.updated) === true) {
-      updated_pages.push(url);
-    }
+  return $.grep(getSetting(SETTINGS.pages_list), function(url, i) {
+    return getPageSetting(url, SETTINGS.page.updated) === true;
   });
-  
-  return updated_pages;
 }
 
 /*******************************************************************************
-                                Badge Updating
-*******************************************************************************/
-
-(function() {
-  // Some update-related state.
-  var last_badge_text = '';
-  var badge_update_timeout_id = null;
-
-  // Checks if any pages are marked as updated, and if so, displays their count
-  // on the browser action badge, highlighting it. If no pages are updated and
-  // the badge is displayed, removes it and switches to the "incative" icon".
-  updateBadge = function() {
-    // Make sure this is running on the background page. If not, redirect.
-    var bg = chrome.extension.getBackgroundPage();
-    if (bg != window) {
-      return bg.updateBadge();
-    }
-    
-    var updated_count = getAllUpdatedPages().length;
-    var updated_message = (updated_count > 0) ? updated_count.toString() : '';
-
-    chrome.browserAction.setBadgeBackgroundColor({
-      color: getSetting(SETTINGS.badge_color)
-    });
-    chrome.browserAction.setBadgeText({ text: updated_message });
-    chrome.browserAction.setIcon({ path: BROWSER_ICON });
-  
-    var sound_alert = getSetting(SETTINGS.sound_alert);
-    if (updated_message != '' && last_badge_text == '' && sound_alert) {
-      (new Audio(sound_alert)).play();
-    }
-    
-    last_badge_text = updated_message;
-  }
-
-  // Schedules a badgeUpdate() call within BADGE_UPDATE_DELAY milliseconds. If
-  // called before the timeout is reached, it is cancelled and rescheduled again.
-  scheduleBadgeUpdate = function() {
-    // Make sure this is running on the background page. If not, redirect.
-    var bg = chrome.extension.getBackgroundPage();
-    if (bg != window) {
-      return bg.scheduleBadgeUpdate();
-    }
-    
-    if (badge_update_timeout_id !== null) {
-      clearTimeout(badge_update_timeout_id);
-    }
-    
-    badge_update_timeout_id = setTimeout(function() {
-      updateBadge();
-      badge_update_timeout_id = null;
-    }, BADGE_UPDATE_DELAY);
-  };
-})();
-
-/*******************************************************************************
-                                 Actual Monitoring
+                                  Page Checking
 *******************************************************************************/
 
 // Fetches the page, marks it as updated if necessary, and reschedules itself.
 // For the scheduling to work, it MUST run on the background page. Calls from
 // other pages are automatically redirected to the background page.
 function checkPage(url, callback, force_snapshot) {
-  // Make sure this is running on the background page. If not, redirect.
-  var bg = chrome.extension.getBackgroundPage();
-  if (bg != window) {
-    return bg.checkPage(url, callback, force_snapshot);
-  }
-  
   // If page is already marked as updated, skip check.
   if (getPageSetting(url, SETTINGS.page.updated) == true) {
-    schedulePageCheck(url);
-    (callback || $.noop)();
+    (callback || $.noop)(url);
   } else {
     $.ajax({
-      type: 'HEAD',
-      url: RELIABLE_CHECKPOINT,
-      timeout: RELIABILITY_TIMEOUT,
-      complete: function(xhr) {
-        if (xhr.status >= 200 && xhr.status < 300) {
-          // Network up; do the check.
-          $.get(url, function(html) {
-            var mode = getPageSetting(url, SETTINGS.page.mode);
-            var regex = getPageSetting(url, SETTINGS.page.regex);
-            var selector = getPageSetting(url, SETTINGS.page.selector);
-            
-            if (!mode && regex) mode = 'regex';
-            
-            var crc = cleanAndHashPage(html, mode, regex, selector);
-            
-            if (crc != getPageSetting(url, SETTINGS.page.crc)) {
-              setPageSetting(url, SETTINGS.page.updated, true);
-              setPageSetting(url, SETTINGS.page.crc, crc);
-              if (force_snapshot) {
-                setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-              }
-            } else {
-              setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-            }
-            
-            // Schedule next check and mark check time.
-            schedulePageCheck(url);
-            setPageSetting(url, SETTINGS.page.last_check, (new Date()).getTime());
-            
-            scheduleBadgeUpdate();
-            (callback || $.noop)();
-          }, 'text');
+      url: url,
+      dataType: 'text',
+      complete: function() {
+        setPageSetting(url, SETTINGS.page.last_check, new Date().getTime());
+        (callback || $.noop)(url);
+      },
+      success: function(html) {
+        var mode = getPageSetting(url, SETTINGS.page.mode);
+        var regex = getPageSetting(url, SETTINGS.page.regex);
+        var selector = getPageSetting(url, SETTINGS.page.selector);
+        var crc = cleanAndHashPage(html, mode, regex, selector);
+        
+        if (crc != getPageSetting(url, SETTINGS.page.crc)) {
+          setPageSetting(url, SETTINGS.page.updated, true);
+          setPageSetting(url, SETTINGS.page.crc, crc);
+          if (force_snapshot) {
+            setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+          }
         } else {
-          // Network down. Reschedule check.
-          clearTimeout(getPageSetting(url, SETTINGS.page.timeout_id));
-          var timeout_id = setTimeout(function() {
-            checkPage(url);
-          }, RESCHEDULE_DELAY);
-          setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
-          (callback || $.noop)();
+          setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
         }
       }
     });
   }
 }
 
-// Schedules a check for the given page. Overrides pending checks. MUST run on
-// the background page; redirected if not.
-function schedulePageCheck(url) {
-  // Make sure this is running on the background page. If not, redirect.
-  var bg = chrome.extension.getBackgroundPage();
-  if (bg != window) {
-    return bg.schedulePageCheck(url);
-  }
-
-  clearTimeout(getPageSetting(url, SETTINGS.page.timeout_id));
-  var timeout = getPageTimeout(url);
-  var timeout_id = setTimeout(function() { checkPage(url); }, timeout);
-  setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
+function takeSnapshot(url, callback) {
+  checkPage(url, function() {
+    setPageSetting(url, SETTINGS.page.updated, false);
+    (callback || $.noop)();
+  }, true);
 }

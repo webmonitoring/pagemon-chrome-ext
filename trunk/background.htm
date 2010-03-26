@@ -2,6 +2,195 @@
   <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
   <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
+    /***************************************************************************
+                                      Constants
+    ***************************************************************************/
+
+    // The address to check when testing for network availability.
+    var RELIABLE_CHECKPOINT = 'http://www.google.com/';
+
+    // Maximum request timeout (in milliseconds).
+    var REQUEST_TIMEOUT = 10000;
+
+    // The delay in milliseconds to wait after a check attempt that failed due
+    // to the network being down.
+    var RESCHEDULE_DELAY = 15 * 60 * 1000;
+
+    // The minimum time in milliseconds between checks.
+    var MINIMUM_CHECK_SPACING = 1000;
+
+    // Browser action and notification icons.
+    var BROWSER_ICON = 'img/browser_icon.png';
+    var NOTIFICATION_ICON = 'http://static.max99x.com/chrome/page-monitor-icon.png';
+    
+    // The maximum time offset in the future in milliseconds to look for pages
+    // to update.
+    var EPSILON = 1000;
+    
+    /***************************************************************************
+                                 Global Monitoring Check
+    ***************************************************************************/
+    
+    var check_timeout_id = 0;
+
+    // Check each page then update the badge and call scheduleCheck().
+    function actualCheck(force, callback, page_callback) {
+      //console.log('Performing actual check.');
+      var pages = getSetting(SETTINGS.pages_list);
+      var current_time = new Date().getTime();
+      var pages_to_check;
+      
+      if (force) {
+        pages_to_check = pages;
+      } else {
+        pages_to_check = $.grep(pages, function(url) {
+          var last_check = getPageSetting(url, SETTINGS.page.last_check);
+          //console.log(url + ': ' + (last_check + getPageTimeout(url)) + ' <= ' + current_time);
+          return last_check + getPageTimeout(url) <= current_time + EPSILON;
+        });
+      }
+      
+      //console.log('Pages to check:');
+      //console.log(pages_to_check);
+      
+      var pages_checked = 0;
+      var notifyCheckFinished = function(url) {
+        (page_callback || $.noop)(url);
+        pages_checked++;
+        if (pages_checked >= pages_to_check.length) {
+          updateBadge();
+          scheduleCheck();
+          (callback || $.noop)();
+        }
+      };
+      
+      if (pages_to_check.length) {
+        $.each(pages_to_check, function(i, url) {
+          checkPage(url, notifyCheckFinished);
+        });
+      } else {
+        notifyCheckFinished();
+      }
+    }
+
+    // Check whether a network connection is available and if so, run an
+    // actualCheck(), otherwise reschedule a check after RESCHEDULE_DELAY.
+    function check(force, callback, page_callback) {
+      console.log('Performing check.');
+      // Make sure the network is up.
+      $.ajax({
+        type: 'HEAD',
+        url: RELIABLE_CHECKPOINT,
+        complete: function(xhr) {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            // Network up; do the check.
+            actualCheck(force, callback, page_callback);
+          } else {
+            // Network down. Do a constant reschedule.
+            clearTimeout(check_timeout_id);
+            check_timeout_id = setTimeout(check, RESCHEDULE_DELAY);
+            callback();
+          }
+        }
+      });
+    }
+
+    // Schedule the next check.
+    function scheduleCheck() {
+      var pages = getSetting(SETTINGS.pages_list);
+      var current_time = new Date().getTime();
+      
+      // No pages yet. No need for a check timeout.
+      if (pages.length == 0) return;
+      
+      // Get time-until-next-check for each page.
+      var times = $.map(pages, function(url) {
+        var updated = getPageSetting(url, SETTINGS.page.updated);
+        var last_check = getPageSetting(url, SETTINGS.page.last_check);
+        if (updated || !last_check) {
+          return current_time;
+        } else {
+          return last_check + getPageTimeout(url) - current_time;
+        }
+      });
+      
+      var min_time = Math.min.apply(Math, times);
+      
+      if (min_time < 0) {
+        min_time = 1;
+      } else if (min_time < MINIMUM_CHECK_SPACING) {
+        min_time = MINIMUM_CHECK_SPACING;
+      }
+      
+      clearTimeout(check_timeout_id);
+      //console.log(times);
+      console.log('Scheduling in: ' + describeTimeSince(current_time - min_time).slice(0,-4));
+      check_timeout_id = setTimeout(check, min_time);
+    }
+
+    /***************************************************************************
+                                    Badge Updating
+    ***************************************************************************/
+
+    (function() {
+      // The previous text on the badge, kept to detect cases where the
+      // updateBadge() function is called when no change to the badge has
+      // actually occurred.
+      var last_badge_text = '';
+      
+      // Checks if any pages are marked as updated, and if so, displays their count
+      // on the browser action badge. If no pages are updated and the badge is
+      // displayed, removes it. This also triggers sound alerts and/or desktop
+      // notifications if applicable.
+      updateBadge = function() {
+        var updated_pages = getAllUpdatedPages();
+        var updated_count = updated_pages.length;
+        var updated_message = (updated_count > 0) ? updated_count.toString() : '';
+
+        chrome.browserAction.setBadgeBackgroundColor({
+          color: getSetting(SETTINGS.badge_color)
+        });
+        chrome.browserAction.setBadgeText({ text: updated_message });
+        chrome.browserAction.setIcon({ path: BROWSER_ICON });
+      
+        // If a new update has just occurred.
+        if (updated_message != last_badge_text) {
+          var sound_alert = getSetting(SETTINGS.sound_alert);
+          if (sound_alert) {
+            new Audio(sound_alert).addEventListener('canplaythrough', function() {
+              this.play();
+            });
+          }
+          
+          var notifications_enabled = getSetting(SETTINGS.notifications_enabled);
+          if (notifications_enabled) {
+            try {
+              var content = $.map(updated_pages, function(url) {
+                return getPageSetting(url, SETTINGS.page.name);
+              }).join(', ').replace(/^([^]{,200})[^]*$/, '$1');
+              var title = updated_pages.length == 1 ? 'Page Updated' : 'Pages Updated';
+              var notifications_timeout = getSetting(SETTINGS.notifications_timeout);
+              var notif = webkitNotifications.createNotification(NOTIFICATION_ICON, title, content);
+
+              notif.show();
+              
+              setTimeout(function() {
+                notification.cancel();
+              }, notifications_timeout);
+            } catch(e) {
+              console.log(e);
+            }
+          }
+        }
+        
+        last_badge_text = updated_message;
+      }
+    })();
+
+    /***************************************************************************
+                                     Initialization
+    ***************************************************************************/
+
     // Initializations to perform when the extension is first installed or
     // updated from a 1.x version. Includes importing and converting the pages
     // list.
@@ -32,34 +221,12 @@
       }
     }
     
-    // Initializations to perform on every startup. Schedules page and badge
-    // updates.
-    function routineInit() {
-      var pages = getSetting(SETTINGS.pages_list);
-      
-      $.each(pages, function(i, url) {
-        var timeout = getPageTimeout(url);
-        var last_check = getPageSetting(url, SETTINGS.page.last_check);
-        var time_since_check = (new Date()).getTime() - last_check;
-        if (time_since_check >= timeout) {
-          checkPage(url);
-        } else {
-          var timeout_id = setTimeout(function() {
-            checkPage(url);
-          }, timeout - time_since_check);
-          setPageSetting(url, SETTINGS.page.timeout_id, timeout_id);
-        }
-      });
-      
-      scheduleBadgeUpdate();
-    }
-    
     // Main script.
-    $.ajaxSetup({ timeout: 15000 });
+    $.ajaxSetup({ timeout: REQUEST_TIMEOUT });
     var version = getSetting(SETTINGS.version);
     if (version === null || version === undefined || !version.match(/^2\./)) {
       firstRunInit();
     }
-    routineInit();
+    check();
   </script>
 </html>
