@@ -84,7 +84,7 @@
     // Check whether a network connection is available and if so, run an
     // actualCheck(), otherwise reschedule a check after RESCHEDULE_DELAY.
     function check(force, callback, page_callback) {
-      console.log('Performing check.');
+      //console.log('Performing check.');
       // Make sure the network is up.
       $.ajax({
         type: 'HEAD',
@@ -135,7 +135,7 @@
     function applySchedule(after) {
       var current_time = new Date().getTime();
       
-      console.log('Scheduling in: ' + describeTimeSince(current_time - after).slice(0,-4));
+      //console.log('Scheduling in: ' + describeTimeSince(current_time - after).slice(0,-4));
       
       projected_check_time = current_time + after;
       
