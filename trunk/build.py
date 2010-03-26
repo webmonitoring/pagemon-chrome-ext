@@ -2,7 +2,7 @@ import re
 import os
 import shutil
 import glob
-from BeautifulSoup import BeautifulSoup
+import lxml.html
 
 def compileJS(text):
     import httplib, urllib, sys
@@ -25,17 +25,17 @@ def compileCSS(text):
     return re.sub(r'/\*.*?\*/|(?<!\w)\s+|\s(?=\{)', '', text.strip())
 
 def compileHTML(text):
-    doc = BeautifulSoup(text)
+    doc = lxml.html.document_fromstring(text)
     
-    for script in doc.findAll('script'):
-        if script.contents:
-            script.setString(compileJS(''.join(script.contents)))
+    for script in doc.cssselect('script'):
+        if script.text:
+            script.text = compileJS(script.text)
     
-    for style in doc.findAll('style'):
-        if style.contents:
-            style.setString(compileCSS(''.join(style.contents)))
+    for style in doc.cssselect('style'):
+        if style.text:
+            style.text = compileCSS(style.text)
     
-    return doc.renderContents()
+    return lxml.html.tostring(doc)
 
 def stripSVN(src, names):
     return [i for i in names if i.startswith('.')]
@@ -78,3 +78,5 @@ for f in glob.glob('build/*.htm*'):
     print 'Compiling HTML:', f
     data = open(f).read()
     open(f, 'w').write(compileHTML(data))
+
+print 'Done'

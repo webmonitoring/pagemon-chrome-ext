@@ -249,6 +249,7 @@
         }
         if (count) {
           alert('Successfully imported ' + count + ' page' + (count == 1 ? '' : 's') + '.');
+          fillPagesList();
         } else {
           alert('No pages to import found in input.');
         }
@@ -481,12 +482,11 @@
       var page_urls = getSetting(SETTINGS.pages_list);
       var add_date = new Date().getTime();
       
-      buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n<!-' +
-                  '- This is an automatically generated file.\n     It will' +
-                  ' be read and overwritten.\n     DO NOT EDIT! -' +
-                  '->\n<META HTTP-EQUIV="Content-Type" CONTENT="text/html;' +
-                  ' charset=UTF-8">\n<TITLE>Bookmarks</TITLE>\n<H1>' +
-                  'Bookmarks</H1>\n<DL><p>\n');
+      buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<\!\-\- This is an' +
+                  ' automatically generated file.\n     It will be read and' +
+                  ' overwritten.\n     DO NOT EDIT! \-\-\>\n<META HTTP-EQUIV=' +
+                  '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
+                  'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
       
       for (var i in page_urls) {
         var page_url = page_urls[i];
@@ -502,7 +502,7 @@
     }
     
     function importPagesList(bookmarks) {
-      var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/g;
+      var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/ig;
       var page_links = bookmarks.match(PAGE_REGEX);
       var imported_count = 0;
       
@@ -582,6 +582,8 @@
         removePage(url);
         BG.updateBadge();
         
+        var scroll_position = scrollY;
+        
         $(this).closest('.page_record td').slideUp('slow', function() {
           if ($('#pages .page_record').length == 1) {
             $('#pages').animate(
@@ -589,6 +591,7 @@
             );
           } else {
             fillPagesList();
+            scrollTo(0, scroll_position);
           }
         });
       });
