@@ -294,13 +294,6 @@
       return $(context).closest('.page_record').find('.page_link').get()[0].href;
     }
     
-    // Returns the page record given its URL.
-    function findPageRecord(url) {
-      return $('.page_record').filter(function() {
-        return $(this).has('a[href=' + url + ']');
-      });
-    }
-    
     function fillPagesList() {
       var pages = getSetting(SETTINGS.pages_list);
       
@@ -543,7 +536,7 @@
         $('.last_check_time').text('checking..');
         
         BG.check(true, $.noop, function(url) {
-          $('.last_check_time', findPageRecord(url)).trigger('time_updated');
+          $('.last_check_time', $('#pages .page_record').has('a[href=' + url + ']')).trigger('time_updated');
         });
       });
       
