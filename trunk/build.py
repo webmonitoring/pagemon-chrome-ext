@@ -24,14 +24,14 @@ def compileJS(text):
 def compileCSS(text):
     return re.sub(r'/\*.*?\*/|(?<!\w)\s+|\s(?=\{)', '', text.strip())
 
-def compileHTML(text):
-    doc = lxml.html.document_fromstring(text)
+def compileHTML(filename):
+    doc = lxml.html.parse(filename)
     
-    for script in doc.cssselect('script'):
+    for script in doc.getroot().cssselect('script'):
         if script.text:
             script.text = compileJS(script.text)
     
-    for style in doc.cssselect('style'):
+    for style in doc.getroot().cssselect('style'):
         if style.text:
             style.text = compileCSS(style.text)
     
@@ -76,7 +76,7 @@ for f in glob.glob('build/*.js'):
 # Compress HTML.
 for f in glob.glob('build/*.htm*'):
     print 'Compiling HTML:', f
-    data = open(f).read()
-    open(f, 'w').write(compileHTML(data))
+    data = compileHTML(f)
+    open(f, 'w').write(data)
 
 print 'Done'
