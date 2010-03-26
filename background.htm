@@ -182,8 +182,12 @@
             try {
               var content = $.map(updated_pages, function(url) {
                 return getPageSetting(url, SETTINGS.page.name);
-              }).join(', ').replace(/^([^]{,200})[^]*$/, '$1');
-              var title = updated_pages.length == 1 ? 'Page Updated' : 'Pages Updated';
+              }).join(', ');
+              if (content.length > 150) {
+                content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/, '$1...')
+              }
+              
+              var title = updated_pages.length == 1 ? 'Page Updated' : updated_pages.length + ' Pages Updated';
               var notifications_timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
               var notification = webkitNotifications.createNotification(NOTIFICATION_ICON, title, content);
 
