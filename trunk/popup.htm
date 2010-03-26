@@ -8,6 +8,9 @@
   <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
     $(function() {
+      // Turn off animations if they are disabled.
+      if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
+    
       // "Monitor this page" handler.
       $('#monitor_page').click(monitorCurrentPage);
       

@@ -296,10 +296,20 @@
     }
     
     $(function() {
+      // Turn off animations if they are disabled.
+      if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
+      
       // Set up the main color/timeout contols.
       initializeColorPicker();
       initializeTimeoutTextbox();
       initializeSoundSelector();
+      
+      // Set up animation toggler.
+      $('#animation select').change(function() {
+        var disabled = ($(this).val() != 'enabled');
+        setSetting(SETTINGS.animations_disabled, disabled);
+        $.fx.off = disabled;
+      }).val(getSetting(SETTINGS.animations_disabled) ? 'disabled' : 'enabled');
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {

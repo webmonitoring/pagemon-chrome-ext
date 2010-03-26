@@ -11,6 +11,7 @@ var SETTINGS = {
   sound_alert: 'sound_alert',
   notifications_enabled: 'notifications_enabled',
   notifications_timeout: 'notifications_timeout',
+  animations_disabled: 'animations_disabled',
   page: {
     name: 'name',
     mode: 'mode',
