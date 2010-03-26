@@ -27,7 +27,7 @@
                                           parseInt(color.slice(3,5), 16),
                                           parseInt(color.slice(5,7), 16),
                                           255]);
-        updateBadge();
+        BG.updateBadge();
       }).colorPicker();
     }
     
@@ -97,19 +97,19 @@
             src: getPageSetting(url, SETTINGS.page.icon) || 'img/page.png'
           });
           
-          var last_check_updater = function() {
+          var last_check_span = page_record.find('.last_check_time');
+          last_check_span.bind('time_updated', function() {
             var last_check = getPageSetting(url, SETTINGS.page.last_check);
-            var last_check_span = page_record.find('.last_check_time');
             var last_check_message = last_check ? describeTimeSince(last_check) : 'never';
             
-            if (last_check_message != last_check_span.text()) {
-              last_check_span.fadeOut('slow', function() {
+            if (last_check_message != $(this).text()) {
+              $(this).fadeOut('slow', function() {
                 $(this).text(last_check_message).fadeIn('slow');
               });
             }
-          }
-          last_check_updater();
-          setInterval(last_check_updater, 15000);
+          });
+          last_check_span.trigger('time_updated');
+          setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
           
           var timeout = getPageTimeout(url) / (60 * 1000);
           page_record.find('.timeout input[type=text]').val(timeout);
@@ -170,9 +170,10 @@
         timeout = parseFloat(timeout) * 60 * 1000;
         if (timeout) {
           setPageSetting(url, SETTINGS.page.timeout, timeout);
-          schedulePageCheck(url);
         }
       }
+      
+      BG.scheduleCheck();
     }
     
     function setPageRegex(context, regex) {
@@ -302,16 +303,12 @@
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
         var pages = getSetting(SETTINGS.pages_list);
-          var pages_checked = 0;
+        var pages_checked = 0;
         
         $('.last_check_time').text('checking..');
         
-        $.each(pages, function(i, url) {
-          checkPage(url, function() {
-            if (++pages_checked == pages.length) {
-              updateBadge();
-            }
-          });
+        BG.check(true, $.noop, function(url) {
+          $('.last_check_time', findPageRecord(url)).trigger('time_updated');
         });
       });
       
@@ -348,7 +345,7 @@
         var url = findUrl(this);
         
         removePage(url);
-        updateBadge();
+        BG.updateBadge();
         
         $(this).closest('.page_record td').slideUp('slow', function() {
           if ($('#pages .page_record').length == 1) {
