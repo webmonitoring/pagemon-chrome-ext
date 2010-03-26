@@ -68,13 +68,7 @@ a:hover {
 /* Util buttons/links */
 
 .util, .util:link, .util:visited {
-  color: #849CCB;
-  cursor: pointer;
   text-decoration: none;
-}
-
-.util:hover {
-  text-shadow: #849ccb 0px -1px 0px;
 }
 
 .util img {
@@ -84,11 +78,16 @@ a:hover {
 }
 
 .util.inactive {
-  cursor: default;
+  color: #8EA7D7;
 }
 
-.util.inactive:hover {
-  text-shadow: none;
+.util.active {
+  color: #607fbf;
+  cursor: pointer;
+}
+
+.util.active:hover {
+  text-shadow: #849ccb 0px -1px 0px;
 }
 
 /* Favicon */
@@ -104,7 +103,7 @@ img.favicon {
   top: 2px;
 }
 
-/* Common Controls */
+/* Common Page Controls */
 
 .page_controls .util {
   margin-top: 10px;

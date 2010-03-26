@@ -1,0 +1,151 @@
+body {
+  width: 780px;
+  margin: auto;
+  padding-bottom: 5.5em;
+  overflow-y: scroll;
+}
+
+hr {
+  border-bottom: 1px #999 solid;
+  margin-bottom: 0px;
+  margin-top: 20px;
+}
+
+.page_record:last-child td {
+  border-bottom: 1px #999 solid;
+}
+
+.color_picker {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+}
+
+.toggled {
+  position: relative;
+  left: -1px;
+  border: 1px solid #9eafd1;
+  border-radius: 5px 5px 0px 0px;
+  border-bottom: 1px white solid;
+  margin-right: -2px;
+  z-index: 1;
+}
+
+.advanced_controls {
+  position: relative;
+  top: -1px;
+  left: -1px;
+  border: 1px solid #9eafd1;
+  margin-left: 50px;
+  padding: 10px;
+  padding-left: 20px;
+  display: none;
+  border-radius: 0px 5px 5px 5px;
+}
+
+.advanced_toggle input {
+  position: relative;
+  top: 2px;
+}
+
+.page_info {
+  margin-bottom: 10px;
+}
+
+.advanced_controls div {
+  margin-top: 5px;
+}
+
+.advanced_controls .disabled {
+  color: #999999;
+  -webkit-transition: color 0.2s linear;
+}
+
+.advanced_controls .enabled {
+  color: #849ccb;
+  -webkit-transition: color 0.2s linear;
+}
+
+.advanced_controls input[type=button] {
+  height: 1.6em;
+  position: relative;
+  top: 1px;
+}
+
+.advanced_controls input[type=checkbox],
+.advanced_controls input[type=radio] {
+  position: relative;
+  top: 2px;
+}
+
+.mode input[type=text] {
+  width: 400px;
+  padding-left: 1px;
+  height: 1em;
+  border: 1px #bbb solid;
+  -webkit-transition: background-color 0.2s linear;
+}
+
+.invalid {
+  background: #fcc;
+}
+
+.timeout input[type=text] {
+  width: 3em;
+  text-align: center;
+}
+
+.page_info input {
+  position: relative;
+  top: -2px;
+}
+
+.page_info input[type=text] {
+  width: 600px;
+  height: 1.25em;
+}
+
+.mode_selector {
+  display:inline-block;
+  vertical-align: top;
+}
+
+.mode_selector label {
+  display:inline-block;
+  margin-right: 80px;
+}
+
+.mode_value span {
+  display:inline-block;
+  width: 100px;
+}
+
+.main_controls {
+  border-bottom: 1px #ddd solid;
+  padding-bottom: 35px;
+  padding-top: 10px;
+  margin: 0px;
+  background: #f4f4f4;
+  clear: both;
+}
+
+.main_controls .util {
+  float: right;
+  width: 250px;
+  height: 1.6em;
+}
+
+.util.doublewide {
+  width: 500px;
+}
+
+.util input[type=text], .util select {
+  margin-top: 0px;
+  margin-bottom: 0px;
+  border: 1px #a4bceb solid;
+}
+
+.util input[type=text] {
+  width: 3em;
+  text-align: center;
+}

@@ -6,6 +6,7 @@
   <link rel="shortcut icon" type="image/png" href="image/browser_icon.png" />
   <link rel="stylesheet" type="text/css" href="lib/colorPicker.css" />
   <link rel="stylesheet" type="text/css" href="styles.css" />
+  <link rel="stylesheet" type="text/css" href="styles_options.css" />
   <script type="text/javascript" src="lib/jquery-1.4.1.js"></script>
   <script type="text/javascript" src="lib/jquery.colorPicker.js"></script>
   <script type="text/javascript" src="monitor.js"></script>
@@ -20,7 +21,7 @@
                               toHex(badge_color[1]) +
                               toHex(badge_color[2]);
       
-      $('#badge_color_picker').val(badge_color).change(function() {
+      $('#badge_color input').val(badge_color).change(function() {
         var color = $(this).val();
       
         setSetting(SETTINGS.badge_color, [parseInt(color.slice(1,3), 16),
@@ -34,7 +35,7 @@
     function initializeTimeoutTextbox() {
       var timeout = Math.round(getSetting(SETTINGS.timeout) / (60 * 1000));
       
-      $('#global_timeout').val(timeout).keyup(function() {
+      $('#global_timeout input').val(timeout).keyup(function() {
         setSetting(SETTINGS.timeout, cleanTimeoutTextbox(this) * 60 * 1000);
       }).blur(function() { $(this).keyup(); });
     }
@@ -227,8 +228,8 @@
     }
     
     function initializeSoundSelector() {
-      var select = $('#sound_alert');
-      var button = $('#sound_alert').siblings('input[type="button"]');
+      var select = $('#sound_alert select');
+      var button = $('#sound_alert input[type="button"][value="Play"]');
       
       select.change(function() {
         var audio_file = select.val();
@@ -485,148 +486,6 @@
       fillPagesList();
     });
   </script>
-  <style type="text/css">
-    body {
-      width: 780px;
-      margin: auto;
-      padding-bottom: 5.5em;
-      overflow-y: scroll;
-    }
-    
-    hr {
-      border-bottom: 1px #999 solid;
-    }
-    
-    .main_controls {
-      clear: both;
-      padding-bottom: 15px;
-    }
-    
-    .main_controls .util, .main_controls .util:link, .main_controls .util:visited {
-      float: right;
-      width: 250px;
-      height: 1.6em;
-    }
-    
-    .color_picker {
-      display: inline-block;
-      position: relative;
-      top: 2px;
-    }
-    
-    .toggled {
-      position: relative;
-      left: -1px;
-      border: 1px solid #9eafd1;
-      border-radius: 5px 5px 0px 0px;
-      border-bottom: 1px white solid;
-      margin-right: -2px;
-      z-index: 1;
-    }
-    
-    .advanced_controls {
-      position: relative;
-      top: -1px;
-      left: -1px;
-      border: 1px solid #9eafd1;
-      margin-left: 50px;
-      padding: 10px;
-      padding-left: 20px;
-      display: none;
-      border-radius: 0px 5px 5px 5px;
-    }
-    
-    .advanced_toggle input {
-      position: relative;
-      top: 2px;
-    }
-    
-    .page_info {
-      margin-bottom: 10px;
-    }
-    
-    .advanced_controls div {
-      margin-top: 5px;
-    }
-    
-    .advanced_controls .disabled {
-      color: #999999;
-      -webkit-transition: color 0.2s linear;
-    }
-    
-    .advanced_controls .enabled {
-      color: #849ccb;
-      -webkit-transition: color 0.2s linear;
-    }
-    
-    .advanced_controls input[type=button] {
-      height: 1.6em;
-      position: relative;
-      top: 1px;
-    }
-    
-    .advanced_controls input[type=checkbox],
-    .advanced_controls input[type=radio] {
-      position: relative;
-      top: 2px;
-    }
-    
-    .mode input[type=text] {
-      width: 400px;
-      padding-left: 1px;
-      height: 1em;
-      border: 1px #bbb solid;
-      -webkit-transition: background-color 0.2s linear;
-    }
-    
-    .invalid {
-      background: #fcc;
-    }
-    
-    .timeout input[type=text] {
-      width: 3em;
-      text-align: center;
-    }
-    
-    .page_info input {
-      position: relative;
-      top: -2px;
-    }
-    
-    .page_info input[type=text] {
-      width: 600px;
-      height: 1.25em;
-    }
-    
-    .main_controls input[type=text], .main_controls select {
-      border: 1px #a4bceb solid;
-    }
-    
-    .mode_selector {
-      display:inline-block;
-      vertical-align: top;
-    }
-    
-    .mode_selector label {
-      display:inline-block;
-      margin-right: 80px;
-    }
-    
-    .mode_value span {
-      display:inline-block;
-      width: 100px;
-    }
-    
-    #badge_color_picker_container {
-      position: relative;
-      top: 3px;
-    }
-    
-    #global_timeout {
-      width: 3em;
-      text-align: center;
-    }
-  </style>
 </head>
 <body>
   <h1>Monitored Pages</h1>
@@ -638,16 +497,16 @@
           <a class="page_link" title="Visit Page" href="#" target="_blank">Page</a>
         </div>
         <div class="page_controls">
-          <label class="util advanced_toggle">
+          <label class="util active advanced_toggle">
             <!--img src="img/plus.png" /-->
             <input type="checkbox" />
             advanced
           </label>
-          <span class="util rename">
+          <span class="util active rename">
             <img src="img/rename.png" />
             rename page
           </span>
-          <span class="util stop_monitoring">
+          <span class="util active stop_monitoring">
             <img src="img/stop_monitoring.png" />
             stop monitoring
           </span>
@@ -700,32 +559,76 @@
   </table>
   <hr />
   <p class="main_controls">
-    <span class="util inactive">
+    <span class="util inactive doublewide" id="notifications">
+      <img src="img/notification.png" />
+      Desktop notifications are
+      <select>
+        <option>enabled</option>
+        <option>disabled</option>
+      </select>
+       and stay for 
+      <input type="text" value="30" maxlength="5" style="width: 3em; text-align: center;">
+      seconds.
+    </span>
+    <span class="util inactive" id="badge_color">
+      <img src="img/color.png" />
+      Badge color:
+      <input type="text" value="#00B400" />
+    </span>
+  </p>
+  <p class="main_controls">
+    <span class="util active" id="check_now">
+      <img src="img/refresh.png" />
+      Check All Now
+    </span>
+    <span class="util inactive" id="global_timeout">
       <img src="img/clock.png" />
       Check every
-      <input type="text" id="global_timeout" value="180" maxlength="5" />
+      <input type="text" value="180" maxlength="5" />
       minutes.
     </span>
-    <span class="util inactive">
+  </p>
+  <p class="main_controls">
+    <span class="util inactive doublewide" id="sound_alert">
       <img src="img/sound.png" />
       Sound Alert:
-      <select id="sound_alert">
+      <select>
         <option value="">None</option>
         <option value="http://work.max99x.com/cuckoo.ogg">Cuckoo</option>
         <option value="http://work.max99x.com/bell.ogg">Chime</option>
       </select>
+      <input type="button" value="New" />
       <input type="button" value="Play" />
-    </span>
-    <span class="util inactive" id="badge_color_picker_container">
-      <img src="img/color.png" />
-      Badge color:
-      <input id="badge_color_picker" name="badge_color_picker" type="text" value="#00B400" />
     </span>
   </p>
   <p class="main_controls">
-    <span class="util" id="check_now">
-      <img src="img/refresh.png" />
-      Check All Now
+    <span class="util inactive" id="sort">
+      <img src="img/sort.png" />
+      Sort page list by
+      <select>
+        <option>date added</option>
+        <option>name</option>
+        <option>URL</option>
+        <option>check interval</option>
+      </select>.
+    </span>
+    <span class="util inactive" id="animation">
+      <img src="img/animation.png" />
+      Animations are
+      <select>
+        <option>enabled</option>
+        <option>disabled</option>
+      </select>.
+    </span>
+  </p>
+  <p class="main_controls">
+    <span class="util active" id="import">
+      <img src="img/import.png" />
+      Import Pages
+    </span>
+    <span class="util active" id="export">
+      <img src="img/export.png" />
+      Export Pages
     </span>
   </p>
 </body>
