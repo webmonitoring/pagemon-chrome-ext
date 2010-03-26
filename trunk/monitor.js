@@ -23,7 +23,8 @@ var SETTINGS = {
     crc: 'crc',
     icon: 'icon',
     updated: 'updated',
-    last_check: 'last_check'
+    last_check: 'last_check',
+    last_changed: 'last_changed'
   }
 };
 
@@ -232,6 +233,7 @@ function addPage(url, name, icon) {
   if (icon) setPageSetting(url, SETTINGS.page.icon, icon);
   setPageSetting(url, SETTINGS.page.mode, 'text');
   setPageSetting(url, SETTINGS.page.updated, false);
+  setPageSetting(url, SETTINGS.page.last_changed, new Date().getTime());
   
   $.ajax({
     url: url,
@@ -302,6 +304,7 @@ function checkPage(url, callback, force_snapshot) {
         
         if (crc != getPageSetting(url, SETTINGS.page.crc)) {
           setPageSetting(url, SETTINGS.page.updated, true);
+          setPageSetting(url, SETTINGS.page.last_changed, new Date().getTime());
           setPageSetting(url, SETTINGS.page.crc, crc);
           if (force_snapshot) {
             setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));

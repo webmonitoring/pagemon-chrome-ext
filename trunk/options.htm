@@ -106,6 +106,9 @@
           } else if (sort_order == 'last check') {
             a = -getPageSetting(a, SETTINGS.page.last_check);
             b = -getPageSetting(b, SETTINGS.page.last_check);
+          } else if (sort_order == 'last changed') {
+            a = -getPageSetting(a, SETTINGS.page.last_changed) || 0;
+            b = -getPageSetting(b, SETTINGS.page.last_changed) || 0;
           }
           
           return (a < b) ? -1 : 1;
@@ -652,6 +655,7 @@
         <option>URL</option>
         <option>check interval</option>
         <option>last check</option>
+        <option>last changed</option>
       </select>.
     </span>
     <span class="util inactive" id="animation">
