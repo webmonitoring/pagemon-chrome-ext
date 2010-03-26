@@ -212,7 +212,7 @@
     function watchdog() {
       if (new Date().getTime() - projected_check_time > WATCHDOG_TOLERANCE) {
         console.log('WARNING: Watchdog recovered a lost timeout.');
-        schduleCheck();
+        scheduleCheck();
       }
     }
 
