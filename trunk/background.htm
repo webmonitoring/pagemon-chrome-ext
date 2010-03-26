@@ -247,9 +247,8 @@
         
         setSetting(SETTINGS.badge_color, badge_color);
         setSetting(SETTINGS.timeout, timeout);
-        setSetting(SETTINGS.version, chrome.extension.getVersion());
       } catch(e) {
-        // Import failed. Make sure we didn't lose the pages list.
+        // Import failed. Make sure we don't lose the pages list.
         setSetting('pages_to_check', pages);
       }
     }
@@ -259,7 +258,10 @@
     var version = getSetting(SETTINGS.version);
     if (version === null || version === undefined || !version.match(/^2\./)) {
       firstRunInit();
+    } else if (!version.match(/^2\.5\b/)) {
+      chrome.tabs.create({url: 'options.htm'});
     }
+    setSetting(SETTINGS.version, chrome.extension.getVersion());
     check();
     setInterval(watchdog, WATCHDOG_INTERVAL);
   </script>
