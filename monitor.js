@@ -12,6 +12,7 @@ var SETTINGS = {
   notifications_enabled: 'notifications_enabled',
   notifications_timeout: 'notifications_timeout',
   animations_disabled: 'animations_disabled',
+  sort_by: 'sort_by',
   page: {
     name: 'name',
     mode: 'mode',

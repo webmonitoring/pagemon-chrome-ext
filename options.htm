@@ -31,6 +31,21 @@
         BG.updateBadge();
       }).colorPicker();
     }
+      
+    function initializeAnimationToggler() {
+      $('#animation select').change(function() {
+        var disabled = ($(this).val() != 'enabled');
+        setSetting(SETTINGS.animations_disabled, disabled);
+        $.fx.off = disabled;
+      }).val(getSetting(SETTINGS.animations_disabled) ? 'disabled' : 'enabled');
+    }
+    
+    function initializeSorter() {
+      $('#sort select').change(function() {
+        setSetting(SETTINGS.sort_by, $(this).val());
+        fillPagesList();
+      }).val(getSetting(SETTINGS.sort_by) || 'date added');
+    }
     
     function initializeTimeoutTextbox() {
       var timeout = Math.round(getSetting(SETTINGS.timeout) / (60 * 1000));
@@ -78,8 +93,29 @@
     function fillPagesList() {
       var pages = getSetting(SETTINGS.pages_list);
       
+      // Sort the pages.
+      var sort_order = getSetting(SETTINGS.sort_by);
+      if (sort_order != 'date added') {
+        pages.sort(function(a, b) {
+          if (sort_order == 'name') {
+            a = getPageSetting(a, SETTINGS.page.name);
+            b = getPageSetting(b, SETTINGS.page.name);
+          } else if (sort_order == 'check interval') {
+            a = getPageTimeout(a);
+            b = getPageTimeout(b);
+          } else if (sort_order == 'last check') {
+            a = -getPageSetting(a, SETTINGS.page.last_check);
+            b = -getPageSetting(b, SETTINGS.page.last_check);
+          }
+          
+          return (a < b) ? -1 : 1;
+        });
+      }
+      
+      // Clear the list.
       $('#pages').html('');
       
+      // Fill the list.
       if (pages.length > 0) {
         $.each(pages, function(i, url) {
           var page_record = $('#templates .page_record').clone();
@@ -299,17 +335,12 @@
       // Turn off animations if they are disabled.
       if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
       
-      // Set up the main color/timeout contols.
+      // Set up the main color/timeout/animation contols.
       initializeColorPicker();
       initializeTimeoutTextbox();
       initializeSoundSelector();
-      
-      // Set up animation toggler.
-      $('#animation select').change(function() {
-        var disabled = ($(this).val() != 'enabled');
-        setSetting(SETTINGS.animations_disabled, disabled);
-        $.fx.off = disabled;
-      }).val(getSetting(SETTINGS.animations_disabled) ? 'disabled' : 'enabled');
+      initializeAnimationToggler();
+      initializeSorter();
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
@@ -620,6 +651,7 @@
         <option>name</option>
         <option>URL</option>
         <option>check interval</option>
+        <option>last check</option>
       </select>.
     </span>
     <span class="util inactive" id="animation">
