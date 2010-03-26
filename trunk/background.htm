@@ -25,13 +25,21 @@
     
     // The maximum time offset in the future in milliseconds to look for pages
     // to update.
-    var EPSILON = 1000;
+    var EPSILON = 500;
+    
+    // The interval in milliseconds between successive watchdog runs.
+    var WATCHDOG_INTERVAL = 15 * 60 * 1000;
+    
+    // The maximum amount of time between the projected check time and the
+    // actual before the watchdog is alerted.
+    var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     
     /***************************************************************************
                                  Global Monitoring Check
     ***************************************************************************/
     
     var check_timeout_id = 0;
+    var projected_check_time = 0;
 
     // Check each page then update the badge and call scheduleCheck().
     function actualCheck(force, callback, page_callback) {
@@ -87,8 +95,7 @@
             actualCheck(force, callback, page_callback);
           } else {
             // Network down. Do a constant reschedule.
-            clearTimeout(check_timeout_id);
-            check_timeout_id = setTimeout(check, RESCHEDULE_DELAY);
+            applySchedule(RESCHEDULE_DELAY);
             callback();
           }
         }
@@ -122,10 +129,18 @@
         min_time = MINIMUM_CHECK_SPACING;
       }
       
+      applySchedule(min_time);
+    }
+    
+    function applySchedule(after) {
+      var current_time = new Date().getTime();
+      
+      console.log('Scheduling in: ' + describeTimeSince(current_time - after).slice(0,-4));
+      
+      projected_check_time = current_time + after;
+      
       clearTimeout(check_timeout_id);
-      //console.log(times);
-      console.log('Scheduling in: ' + describeTimeSince(current_time - min_time).slice(0,-4));
-      check_timeout_id = setTimeout(check, min_time);
+      check_timeout_id = setTimeout(check, after);
     }
 
     /***************************************************************************
@@ -188,6 +203,20 @@
     })();
 
     /***************************************************************************
+                                     Watchdog
+    ***************************************************************************/
+
+    // Makes sure that we haven't lost the check timeout. If we have, restarts
+    // it. If everything goes well, this should never be needed, but better safe
+    // than sorry.
+    function watchdog() {
+      if (new Date().getTime() - projected_check_time > WATCHDOG_TOLERANCE) {
+        console.log('WARNING: Watchdog recovered a lost timeout.');
+        schduleCheck();
+      }
+    }
+
+    /***************************************************************************
                                      Initialization
     ***************************************************************************/
 
@@ -228,5 +257,6 @@
       firstRunInit();
     }
     check();
+    setInterval(watchdog, WATCHDOG_INTERVAL);
   </script>
 </html>
