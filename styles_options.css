@@ -149,3 +149,32 @@ hr {
   width: 3em;
   text-align: center;
 }
+
+#export_form, #import_form {
+  display: none;
+  position: fixed;
+  top: 20%;
+  left: auto;
+  border: 1px gray solid;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 738px;
+  z-index: 2;
+}
+
+#export_form textarea, #import_form textarea {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  margin-top: 10px;
+}
+
+#export_form button, #import_form button {
+  display: block;
+  margin-top: 10px;
+  margin-left: 20px;
+  margin-right: -7px;
+  margin-bottom: -6px;
+  float: right;
+}

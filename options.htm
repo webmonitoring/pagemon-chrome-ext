@@ -11,6 +11,44 @@
   <script type="text/javascript" src="lib/jquery.colorPicker.js"></script>
   <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
+    // Background graying function, based on: 
+    // http://www.hunlock.com/blogs/Snippets:_Howto_Grey-Out_The_Screen
+    function grayOut(show, id_prefix) {
+      // Pass true to gray out screen, false to ungray.
+      var dark_id = (id_prefix || '') + '_shader';
+      var dark = document.getElementById(dark_id);
+      var first_time = (dark == null);
+      
+      if (first_time) {
+        // First time - create shading layer.
+        var dark = document.createElement('div');
+        dark.id = dark_id;
+        
+        dark.style.position = 'absolute';
+        dark.style.top = '0px';
+        dark.style.left = '0px';
+        dark.style.overflow = 'hidden';
+        dark.style.opacity = '0';
+        dark.style['-webkit-transition'] = 'opacity 0.5s ease';
+        
+        document.body.appendChild(dark);
+      }
+      
+      if (show) {
+        // Set the shader to cover the entire page and make it visible.
+        dark.style.zIndex = 1;
+        dark.style.backgroundColor = '#000000';
+        dark.style.width = document.body.scrollWidth + 'px';
+        dark.style.height = document.body.scrollHeight + 'px';
+        dark.style.display = 'block';
+        
+        setTimeout(function() {dark.style.opacity = 0.7;}, 100);
+      } else if (dark.style.opacity != 0) {
+        setTimeout(function() {dark.style.opacity = 0;}, 100);
+        setTimeout(function() {dark.style.display = 'none';}, 600);
+      }
+    }
+
     function initializeColorPicker() {
       var toHex = function(d) {
         return d >= 16 ? d.toString(16) : '0' + d.toString(16);
@@ -111,6 +149,54 @@
       
       select.val(getSetting(SETTINGS.sound_alert) || '');
       select.change();
+    }
+    
+    function initializeExporter() {
+      var form = $('#export_form');
+      
+      $('#export').click(function() {
+        $('textarea', form).val(exportPagesList());
+        grayOut(true);
+        form.fadeIn();
+      });
+    
+      $('button', form).click(function() {
+        form.fadeOut();
+        grayOut(false);
+      });
+    }
+    
+    function initializeImporter() {
+      var form = $('#import_form');
+      
+      $('#import').click(function() {
+        grayOut(true);
+        form.fadeIn();
+      });
+        
+      $('#import_cancel', form).click(function() {
+        form.fadeOut();
+        grayOut(false);
+      });
+      
+      $('#import_perform', form).click(function() {
+        var count = 0;
+        try {
+          count = importPagesList($('textarea', form).val());
+        } catch (e) {
+          alert('Error encountered. Import may be incomplete.');
+          form.fadeOut();
+          grayOut(false);
+          return;
+        }
+        if (count) {
+          alert('Successfully imported ' + count + ' page' + (count == 1 ? '' : 's') + '.');
+        } else {
+          alert('No pages to import found in input.');
+        }
+        form.fadeOut();
+        grayOut(false);
+      });
     }
     
     function initializeTimeoutTextbox() {
@@ -360,6 +446,7 @@
     function importPagesList(bookmarks) {
       var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/g;
       var page_links = bookmarks.match(PAGE_REGEX);
+      var imported_count = 0;
       
       for (var i in page_links) {
         var page_link = $(page_links[i]);
@@ -367,8 +454,13 @@
         var page_name = page_link.text() || 'Untitled Page (' + page_url + ')';
         var page_icon = page_link.attr('ICON_URI') || null;
         
-        if (page_url) addPage(page_url, page_name, page_icon);
+        if (page_url && !isPageMonitored(page_url)) {
+          addPage(page_url, page_name, page_icon);
+          imported_count++;
+        }
       }
+      
+      return imported_count;
     }
     
     $(function() {
@@ -382,6 +474,8 @@
       initializeAnimationToggler();
       initializeSorter();
       initializeNotificationsChecker();
+      initializeExporter();
+      initializeImporter();
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
@@ -715,5 +809,16 @@
       Export Pages
     </span>
   </p>
+  <div id="export_form">
+    Copy this text into a file and save it as bookmarks.html:
+    <textarea wrap='off'>...</textarea>
+    <button>Close</button>
+  </div>
+  <div id="import_form">
+    Paste the context of your bookmarks.html here:
+    <textarea wrap='off'></textarea>
+    <button id="import_perform">Import</button>
+    <button id="import_cancel">Cancel</button>
+  </div>
 </body>
 </html>
