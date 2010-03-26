@@ -13,6 +13,7 @@ var SETTINGS = {
   notifications_timeout: 'notifications_timeout',
   animations_disabled: 'animations_disabled',
   sort_by: 'sort_by',
+  custom_sounds: 'custom_sounds',
   page: {
     name: 'name',
     mode: 'mode',

@@ -124,27 +124,85 @@
     
     function initializeSoundSelector() {
       var select = $('#sound_alert select');
-      var button = $('#sound_alert input[type="button"][value="Play"]');
+      var play_button = $('#sound_alert input[type="button"][value="Play"]');
+      var new_button = $('#sound_alert input[type="button"][value="New"]');
+      var new_form = $('#new_sound_form');
+      
+      new_form.css({
+        top: (window.innerHeight - new_form.height()) / 2,
+        left: (window.innerWidth - new_form.width()) / 2
+      });
+      
+      var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
+      $.each(custom_sounds, function(i, v) {
+        $('<option>').text(v.name).attr('value', v.url).appendTo(select);
+      });
       
       select.change(function() {
         var audio_file = select.val();
         
         setSetting(SETTINGS.sound_alert, audio_file);
         
-        button.attr({ disabled: audio_file == '' });
+        play_button.attr({ disabled: audio_file == '' });
       });
       
-      button.click(function() {
+      play_button.click(function() {
         select.attr({ disabled: true });
-        button.attr({ disabled: true });
+        play_button.attr({ disabled: true });
         
         var audio = new Audio(select.val());
         
         audio.addEventListener('ended', function() {
           select.attr({ disabled: false });
-          button.attr({ disabled: false });
+          play_button.attr({ disabled: false });
         });
         audio.play();
+      });
+      
+      new_button.click(function() {
+        $('input', new_form).val('');
+        grayOut(true);
+        new_form.fadeIn();
+      });
+      
+      $('#new_sound_cancel').click(function() {
+        grayOut(false);
+        new_form.fadeOut();
+      });
+      
+      $('#new_sound_create').click(function() {
+        var name = $('#new_sound_name').val();
+        var url = $('#new_sound_url').val();
+        var create_button = $(this);
+        
+        if (!(url && name)) {
+          alert('Please enter a name and a URL for the new sound.');
+          return;
+        }
+        
+        create_button.attr('disabled', true);
+        create_button.css('cursor', 'progress');
+        
+        var restoreCreateButton = function() {
+          create_button.attr('disabled', false);
+          create_button.css('cursor', 'auto');
+        }
+        
+        new Audio(url).addEventListener('error', function() {
+          alert('Chrome could not play the file at the specified URL.');
+          restoreCreateButton();
+        });
+        new Audio(url).addEventListener('canplaythrough', function() {
+          var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
+          custom_sounds.push({ name: name, url: url });
+          setSetting(SETTINGS.custom_sounds, custom_sounds);
+          
+          $('<option>').text(name).attr('value', url).appendTo(select);
+          
+          restoreCreateButton();
+          grayOut(false);
+          new_form.fadeOut();
+        });
       });
       
       select.val(getSetting(SETTINGS.sound_alert) || '');
@@ -819,6 +877,16 @@
     <textarea wrap='off'></textarea>
     <button id="import_perform">Import</button>
     <button id="import_cancel">Cancel</button>
+  </div>
+  <div id="new_sound_form">
+    <label>Name:</label>
+    <input type="text" id="new_sound_name" value="" />
+    <label>URL (MP3 or OGG file):</label>
+    <input type="text" id="new_sound_url" value="" />
+    <div id="new_sound_buttons">
+      <button id="new_sound_create">Create</button>
+      <button id="new_sound_cancel">Cancel</button>
+    </div>
   </div>
 </body>
 </html>
