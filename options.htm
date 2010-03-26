@@ -47,6 +47,72 @@
       }).val(getSetting(SETTINGS.sort_by) || 'date added');
     }
     
+    function initializeNotificationsChecker() {
+      if (window.webkitNotifications.checkPermission() != 0) {
+        setSetting(SETTINGS.notifications_enabled, false);
+      }
+      
+      $('#notifications select').change(function() {
+        var $this = $(this);
+      
+        var enabled = ($this.val() == 'enabled');
+        if (enabled) {
+          if (window.webkitNotifications.checkPermission() == 0) {
+            setSetting(SETTINGS.notifications_enabled, true);
+          } else {
+            $this.val('disabled');
+            webkitNotifications.requestPermission(function() {
+              if (window.webkitNotifications.checkPermission() == 0) {
+                setSetting(SETTINGS.notifications_enabled, true);
+                $this.val('enabled');
+              }
+            });
+          }
+        } else {
+          setSetting(SETTINGS.notifications_enabled, false);
+        }
+      }).val(getSetting(SETTINGS.notifications_enabled) ? 'enabled' : 'disabled');
+      
+      var timeout = (getSetting(SETTINGS.notifications_timeout) / 1000) || 30;
+      $('#notifications input').val(timeout).keyup(function() {
+        var new_timeout = cleanTimeoutTextbox(this);
+        if (new_timeout < 1) {
+          new_timeout = 1;
+          $(this).val(new_timeout);
+        }
+        setSetting(SETTINGS.notifications_timeout, new_timeout * 1000);
+      }).blur(function() { $(this).keyup(); });
+    }
+    
+    function initializeSoundSelector() {
+      var select = $('#sound_alert select');
+      var button = $('#sound_alert input[type="button"][value="Play"]');
+      
+      select.change(function() {
+        var audio_file = select.val();
+        
+        setSetting(SETTINGS.sound_alert, audio_file);
+        
+        button.attr({ disabled: audio_file == '' });
+      });
+      
+      button.click(function() {
+        select.attr({ disabled: true });
+        button.attr({ disabled: true });
+        
+        var audio = new Audio(select.val());
+        
+        audio.addEventListener('ended', function() {
+          select.attr({ disabled: false });
+          button.attr({ disabled: false });
+        });
+        audio.play();
+      });
+      
+      select.val(getSetting(SETTINGS.sound_alert) || '');
+      select.change();
+    }
+    
     function initializeTimeoutTextbox() {
       var timeout = Math.round(getSetting(SETTINGS.timeout) / (60 * 1000));
       
@@ -266,35 +332,6 @@
       }
     }
     
-    function initializeSoundSelector() {
-      var select = $('#sound_alert select');
-      var button = $('#sound_alert input[type="button"][value="Play"]');
-      
-      select.change(function() {
-        var audio_file = select.val();
-        
-        setSetting(SETTINGS.sound_alert, audio_file);
-        
-        button.attr({ disabled: audio_file == '' });
-      });
-      
-      button.click(function() {
-        select.attr({ disabled: true });
-        button.attr({ disabled: true });
-        
-        var audio = new Audio(select.val());
-        
-        audio.addEventListener('ended', function() {
-          select.attr({ disabled: false });
-          button.attr({ disabled: false });
-        });
-        audio.play();
-      });
-      
-      select.val(getSetting(SETTINGS.sound_alert) || '');
-      select.change();
-    }
-    
     function exportPagesList() {
       var buffer = [];
       var page_urls = getSetting(SETTINGS.pages_list);
@@ -344,6 +381,7 @@
       initializeSoundSelector();
       initializeAnimationToggler();
       initializeSorter();
+      initializeNotificationsChecker();
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
