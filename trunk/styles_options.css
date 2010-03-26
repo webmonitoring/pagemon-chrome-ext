@@ -178,3 +178,28 @@ hr {
   margin-bottom: -6px;
   float: right;
 }
+
+#new_sound_form {
+  display: none;
+  position: fixed;
+  border: 1px gray solid;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+  width: 200px;
+  z-index: 2;
+}
+
+#new_sound_form label {
+  display: block;
+}
+
+#new_sound_form input {
+  display: block;
+  width: 100%;
+}
+
+#new_sound_buttons {
+  margin-top: 10px;
+  margin-left: 40px;
+}
