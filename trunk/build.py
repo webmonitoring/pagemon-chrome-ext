@@ -27,6 +27,10 @@ def compileCSS(text):
 def compileHTML(filename):
     doc = lxml.html.parse(filename)
     
+    for e in doc.getroot().cssselect('*'):
+        if not e.tail or e.tail.isspace():
+            e.tail = ' '
+
     for script in doc.getroot().cssselect('script'):
         if script.text:
             script.text = compileJS(script.text)

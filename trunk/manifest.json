@@ -1,6 +1,6 @@
 {
   "name": "Page Monitor",
-  "version": "2.5.1",
+  "version": "2.5.2",
   "description": "Stays in the background and monitors web pages for changes.",
   "icons": {
     "128": "img/extension_icon.png",
