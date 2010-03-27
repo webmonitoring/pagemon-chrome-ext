@@ -161,6 +161,7 @@
         var updated_pages = getAllUpdatedPages();
         var updated_count = updated_pages.length;
         var updated_message = (updated_count > 0) ? updated_count.toString() : '';
+        var old_count = last_badge_text ? parseInt(last_badge_text) : 0;
 
         chrome.browserAction.setBadgeBackgroundColor({
           color: getSetting(SETTINGS.badge_color)
@@ -169,7 +170,7 @@
         chrome.browserAction.setIcon({ path: BROWSER_ICON });
       
         // If a new update has just occurred.
-        if (updated_message && updated_message != last_badge_text) {
+        if (updated_count > old_count) {
           var sound_alert = getSetting(SETTINGS.sound_alert);
           if (sound_alert) {
             new Audio(sound_alert).addEventListener('canplaythrough', function() {
