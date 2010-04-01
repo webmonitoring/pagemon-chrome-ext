@@ -254,6 +254,24 @@
       }
     }
     
+    // Initializations to perform each time the extension is loaded (on install,
+    // update or browser start). Currently only cleans up data that may have
+    // survived after deletion due to bugs.
+    function routineInit() {
+      var pages = getSetting(SETTINGS.pages_list);
+      var deleted = 0;
+      for(var name in localStorage) {
+        if (name.match(/^(ht|f)tps?:\/\/\S*\s/)) {
+          var url = name.split(' ')[0];
+          if ($.inArray(url,pages) == -1) {
+            delete localStorage[name];
+            deleted++;
+          }
+        }
+      }
+      if (deleted) console.log('WARNING: Deleted ' + deleted + ' unused values from localStorage.');
+    }
+    
     // Main script.
     $.ajaxSetup({ timeout: REQUEST_TIMEOUT });
     var version = getSetting(SETTINGS.version);
@@ -262,6 +280,7 @@
     } else if (!version.match(/^2\.5\b/)) {
       chrome.tabs.create({url: 'options.htm'});
     }
+    routineInit();
     setSetting(SETTINGS.version, chrome.extension.getVersion());
     check();
     setInterval(watchdog, WATCHDOG_INTERVAL);

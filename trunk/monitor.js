@@ -209,7 +209,7 @@ function cleanAndHashPage(html, mode, regex, selector) {
     html = html.replace(/\s+/g, ' ');
     // Remove numbers with common number suffixes. This helps with pages that
     // print out the current date/time.
-    html = html.replace(/\d+\s?(st|nd|rd|th|am|pm|days?|months?)\b/g, '');
+    html = html.replace(/\d+\s?(st|nd|rd|th|am|pm|days?|weeks?|months?)\b/g, '');
     // Remove everything other than letters.
     html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
   }
