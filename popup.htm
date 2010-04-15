@@ -19,8 +19,8 @@
       
       // Handlers to mark the page visited.
       $('.mark_visited').live('click', markPageVisited);
-      $('.view_diff').live('click', markPageVisited);
-      $('.page_link').live('click', markPageVisited);
+      $('.view_diff').live('click', openExternalLink);
+      $('.page_link').live('click', openExternalLink);
       
       // "Stop monitoring" live click handler.
       $('.stop_monitoring').live('click', function() {
@@ -41,6 +41,12 @@
     // Returns the URL of the notification record given any element in it.
     function getNotificationUrl(context) {
       return $(context).closest('.notification').find('.page_link').attr('href');
+    }
+    
+    function openExternalLink() {
+      markPageVisited.call(this);
+      chrome.tabs.create({ url: this.href, selected: false });
+      return false;
     }
     
     // Hides a notification record given any element in it.
@@ -90,6 +96,7 @@
         } else {
           addPage({ url: tab.url, name: tab.title, icon: tab.favIconUrl }, function() {
             setPageMonitoredStatus(true);
+            $('#monitor_page').css('cursor', 'auto');
           });
         }
       });
@@ -111,9 +118,7 @@
               name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
             }
             
-            notification.find('.page_link').attr({
-              href: page.url
-            }).text(name);
+            notification.find('.page_link').attr('href', page.url).text(name);
             
             notification.find('.favicon').attr({
               src: page.icon || 'img/page.png'
@@ -238,7 +243,7 @@
       <td>
         <div class="page_info">
           <img class="favicon" src="img/page.png" />
-          <a class="page_link" href="#" target="_blank">Page</a>
+          <a class="page_link" href="#">Page</a>
         </div>
         <div class="page_controls">
           <span class="util active stop_monitoring">
