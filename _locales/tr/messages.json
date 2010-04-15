@@ -1,0 +1,318 @@
+{
+  "name": {
+    "message": "Page Monitor",
+    "description": "The name of the extension."
+  },
+  "description": {
+    "message": "Arka planda kalır ve web sayfalarındaki değişiklikleri izler.",
+    "description": "The global description of the extension."
+  },
+  "page_updated_single": {
+    "message": "Sayfa Güncellendi",
+    "description": "Notification title: a single page has been updated."
+  },
+  "page_updated_multi": {
+    "message": "$1 Sayfa Güncellendi",
+    "description": "Notification title: multiple pages have been updated."
+  },
+  "diff_title": {
+    "message": "Değişiklikleri Gör",
+    "description": "The title of the diff page."
+  },
+  "diff_error": {
+    "message": "Farkları tarama hatası. Lütfen bunu bize bildirin.",
+    "description": "A diff failure error message on the diff page."
+  },
+  "diff_show_deletions": {
+    "message": "Silinenleri Göster",
+    "description": "Link to show deletions on the diff page."
+  },
+  "diff_hide_deletions": {
+    "message": "Silinenleri Gizle",
+    "description": "Link to hide deletions on the diff page."
+  },
+  "diff_original": {
+    "message": "Orijinal",
+    "description": "Text of the link to the original page on the diff page."
+  },
+  "diff_corruption": {
+    "message": "Önbellekte bozukluk algılandı ve düzeltildi. En son bellek kopyası kayboldu. Değişiklikleri belirtme, bir sonraki güncellemede geçerli olacak.",
+    "description": "Cache corruption error message on the diff page."
+  },
+  "diff_progress": {
+    "message": "Fark taraması sürüyor.",
+    "description": "The message to show while fetching the page to diff."
+  },
+  "options_header": {
+    "message": "İzlenen Sayfalar",
+    "description": "The text of the pages list header on the options page."
+  },
+  "untitled": {
+    "message": "Başlıksız ($1)",
+    "description": "Default name for pages that have an empty name, with placeholder for the URL."
+  },
+  "check_in_progress": {
+    "message": "Denetleniyor",
+    "description": "The message to display while a check is in progress."
+  },
+  "stop_monitoring": {
+    "message": "izlemeyi durdur",
+    "description": "The text on the button that stops a page from being monitored."
+  },
+  "mark_visited": {
+    "message": "haberim var",
+    "description": "The text on the button that marks an updated page as visited."
+  },
+  "view_diff": {
+    "message": "değişiklikleri gör",
+    "description": "The text on the button that opens the diff page."
+  },
+  "no_changes": {
+    "message": "Hiçbir değişiklik bulunamadı.",
+    "description": "The popup text when no changes have been found."
+  },
+  "feedback": {
+    "message": "Geri Bildirim",
+    "description": "The text of the feedback link."
+  },
+  "options": {
+    "message": "Seçenekler",
+    "description": "The text of the options link."
+  },
+  "check_all": {
+    "message": "Tümünü Şimdi Denetle",
+    "description": "The text of the button that initiates a check of all pages."
+  },
+  "monitor": {
+    "message": "Bu Sayfayı İzle",
+    "description": "The text of the button that marks a page for monitoring."
+  },
+  "page_monitored": {
+    "message": "Sayfa İzleniyor",
+    "description": "This text appears in the popup when the current page is already monitored."
+  },
+  "new_sound_prompt": {
+    "message": "Lütfen yeni ses için birer isim ve adres girin.",
+    "description": "The prompt that appears when the user tries to add a new sound."
+  },
+  "new_sound_failed": {
+    "message": "Chrome belirtilen adresteki dosyayı çalamadı.",
+    "description": "The error message displayed when the URL specified for a new sound could not be played."
+  },
+  "import_error": {
+    "message": "Hata oluştu. İçe aktarımda eksiklik olabilir.",
+    "description": "The error message displayed when a page import fails."
+  },
+  "import_empty": {
+    "message": "İçe aktarılacak sayfa bulunamadı.",
+    "description": "The error message displayed when no pages are found during an import."
+  },
+  "import_success_single": {
+    "message": "1 sayfa başarıyla içe aktarıldı.",
+    "description": "The message displayed when 1 page was imported successfully."
+  },
+  "import_success_multi": {
+    "message": "$1 sayfa başarıyla içe aktarıldı.",
+    "description": "The message displayed when multiple pages were imported successfully."
+  },
+  "test_button": {
+    "message": "Test Et",
+    "description": "The text on the button that tests a given regex or selector on a page in advanced mode."
+  },
+  "test_progress": {
+    "message": "Test ediliyor...",
+    "description": "The message that appears while testing a regex or selector."
+  },
+  "test_matches": {
+    "message": "Eşleşen:",
+    "description": "The message that appears when a regex or selector test matches something."
+  },
+  "test_no_matches": {
+    "message": "Eşleşme yok.",
+    "description": "The message that appears when a regex or selector test does not match anything."
+  },
+  "test_fail": {
+    "message": "Seçilen sayfa alınamadı.",
+    "description": "The message that appears when a regex or selector test fails to retrieve the page to test."
+  },
+  "advanced": {
+    "message": "gelişmiş",
+    "description": "The text of the button to toggle advanced settings."
+  },
+  "rename_page": {
+    "message": "ad değiştir",
+    "description": "The text of the button to rename a page."
+  },
+  "last_check": {
+    "message": "Son Denetleme:",
+    "description": "The text of the label that specified when the page was last checked."
+  },
+  "unknown": {
+    "message": "bilinmiyor",
+    "description": "A placeholder for an unknown piece of data."
+  },
+  "second": {
+    "message": "saniye",
+    "description": "A single second, as a number suffix (e.g. '1 second')."
+  },
+  "seconds": {
+    "message": "saniye",
+    "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds')."
+  },
+  "minute": {
+    "message": "dakika",
+    "description": "A single minute, as a number suffix (e.g. '1 minute')."
+  },
+  "minutes": {
+    "message": "dakika",
+    "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes')."
+  },
+  "hour": {
+    "message": "saat",
+    "description": "A single hour, as a number suffix (e.g. '1 hour')."
+  },
+  "hours": {
+    "message": "saat",
+    "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
+  },
+  "day": {
+    "message": "gün",
+    "description": "A single day, as a number suffix (e.g. '1 day')."
+  },
+  "days": {
+    "message": "gün",
+    "description": "A plural number of days, as a number suffix (e.g. '7 days')."
+  },
+  "check_every": {
+    "message": "Aralığı kontrol edin (dakika):",
+    "description": "The label for the check interval textbox."
+  },
+  "custom_mode": {
+    "message": "Özel Mod:",
+    "description": "The label for custom checking mode (selector or regex)."
+  },
+  "regex": {
+    "message": "Düzenli İfade",
+    "description": "The label for regex mode."
+  },
+  "selector": {
+    "message": "Ayırıcı",
+    "description": "The label for selector mode."
+  },
+  "no_pages_monitored": {
+    "message": "İzlenen sayfa yok.",
+    "description": "The text that replaces the pages list on the options page when no pages are monitored."
+  },
+  "notifications": {
+    "message": "Masaüstü bildirimleri",
+    "description": "Label for the desktop notifications checkbox."
+  },
+  "disabled": {
+    "message": "devre dışı",
+    "description": "Generic label for disabled items."
+  },
+  "enabled": {
+    "message": "etkin",
+    "description": "Generic label for enabled items."
+  },
+  "notifications_timeout": {
+    "message": "Bildirim Süresi:",
+    "description": "Label for the desktop notifications timeout textbox."
+  },
+  "badge_color": {
+    "message": "Belirteç Rengi:",
+    "description": "Label for the badge color selector."
+  },
+  "sound_alert": {
+    "message": "Sesli Uyarı:",
+    "description": "Label for the sound alert drop-down."
+  },
+  "sound_none": {
+    "message": "Yok",
+    "description": "The value of the no-sound option in the sound alert drop-down."
+  },
+  "sort": {
+    "message": "Sayfaları Sırala:",
+    "description": "The label for the sort order drop-down."
+  },
+  "sort_date": {
+    "message": "eklenme tarihi",
+    "description": "The 'date added' option in the sort order drop-down."
+  },
+  "sort_name": {
+    "message": "isim",
+    "description": "The 'name' option in the sort order drop-down."
+  },
+  "sort_url": {
+    "message": "URL",
+    "description": "The 'URL' option in the sort order drop-down."
+  },
+  "sort_interval": {
+    "message": "denetleme sıklığı",
+    "description": "The 'check interval' option in the sort order drop-down."
+  },
+  "sort_last_check": {
+    "message": "son denetleme",
+    "description": "The 'last check' option in the sort order drop-down."
+  },
+  "sort_last_change": {
+    "message": "son değişiklik",
+    "description": "The 'last changed' option in the sort order drop-down."
+  },
+  "animations": {
+    "message": "Animasyonlar:",
+    "description": "The label for the checkbox to disable/enable animations."
+  },
+  "import": {
+    "message": "Sayfaları İçe Aktar",
+    "description": "The text of the button to import pages from a bookmarks.html."
+  },
+  "export": {
+    "message": "Sayfaları Dışa Aktar",
+    "description": "The text of the button to export pages into a bookmarks.html."
+  },
+  "export_prompt": {
+    "message": "Bu metni bir dosyaya kopyalayın ve bookmarks.html adıyla kaydedin:",
+    "description": "The prompt that appears before the exported pages textbox."
+  },
+  "import_prompt": {
+    "message": "bookmarks.html dosyasının içeriğini buraya yapıştırın:",
+    "description": "The prompt that appears before the bookmarks.html textbox when importing."
+  },
+  "import_button": {
+    "message": "İçe Aktar",
+    "description": "The text for the 'import' button in the import form."
+  },
+  "ok": {
+    "message": "Tamam",
+    "description": "The text for a generic 'ok' button."
+  },
+  "cancel": {
+    "message": "İptal",
+    "description": "The text for a generic 'cancel' button."
+  },
+  "close": {
+    "message": "Kapat",
+    "description": "The text for a generic 'close form' button."
+  },
+  "sound_name": {
+    "message": "İsim:",
+    "description": "The label for the sound name in the 'new sound' form."
+  },
+  "sound_url": {
+    "message": "URL:",
+    "description": "The label for the sound URL in the 'new sound' form."
+  },
+  "sound_create": {
+    "message": "Oluştur",
+    "description": "The text of the 'create' button in the 'new sound' form."
+  },
+  "sound_new": {
+    "message": "Yeni",
+    "description": "The text of the button that opens the 'new sound' form."
+  },
+  "sound_play": {
+    "message": "Çal",
+    "description": "The text of the button that plays the selected sound."
+  }
+}
