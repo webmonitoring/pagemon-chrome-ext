@@ -213,9 +213,11 @@
       var form = $('#export_form');
       
       $('#export').click(function() {
-        $('textarea', form).val(exportPagesList());
-        grayOut(true);
-        form.fadeIn();
+        exportPagesList(function(result) {
+          $('textarea', form).val(result);
+          grayOut(true);
+          form.fadeIn();
+        });
       });
     
       $('button', form).click(function() {
@@ -259,10 +261,10 @@
     }
     
     function initializeTimeoutTextbox() {
-      var timeout = Math.round(getSetting(SETTINGS.timeout) / (60 * 1000));
+      var timeout = Math.round(getSetting(SETTINGS.check_interval) / (60 * 1000));
       
       $('#global_timeout input').val(timeout).keyup(function() {
-        setSetting(SETTINGS.timeout, cleanTimeoutTextbox(this) * 60 * 1000);
+        setSetting(SETTINGS.check_interval, cleanTimeoutTextbox(this) * 60 * 1000);
       }).blur(function() { $(this).keyup(); });
     }
     
@@ -295,135 +297,128 @@
     }
     
     function fillPagesList() {
-      var pages = getSetting(SETTINGS.pages_list);
-      
-      // Sort the pages.
-      var sort_order = getSetting(SETTINGS.sort_by);
-      if (sort_order != 'date added') {
-        pages.sort(function(a, b) {
-          if (sort_order == 'name') {
-            a = getPageSetting(a, SETTINGS.page.name);
-            b = getPageSetting(b, SETTINGS.page.name);
-          } else if (sort_order == 'check interval') {
-            a = getPageTimeout(a);
-            b = getPageTimeout(b);
-          } else if (sort_order == 'last check') {
-            a = -getPageSetting(a, SETTINGS.page.last_check);
-            b = -getPageSetting(b, SETTINGS.page.last_check);
-          } else if (sort_order == 'last changed') {
-            a = -getPageSetting(a, SETTINGS.page.last_changed) || 0;
-            b = -getPageSetting(b, SETTINGS.page.last_changed) || 0;
-          }
-          
-          return (a < b) ? -1 : 1;
-        });
-      }
-      
-      // Clear the list.
-      $('#pages').html('');
-      
-      // Fill the list.
-      if (pages.length > 0) {
-        $.each(pages, function(i, url) {
-          var page_record = $('#templates .page_record').clone();
-          var advanced_set = false;
-      
-          var name = getPageSetting(url, SETTINGS.page.name) || 'Untitled (' + url + ')';
-          if (name.length > 60) {
-            name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
-          }
-          
-          page_record.find('.page_link').attr({
-            href: url
-          }).text(name);
-          
-          page_record.find('.favicon').attr({
-            src: getPageSetting(url, SETTINGS.page.icon) || 'img/page.png'
-          });
-          
-          var last_check_span = page_record.find('.last_check_time');
-          last_check_span.bind('time_updated', function() {
-            var last_check = getPageSetting(url, SETTINGS.page.last_check);
-            var last_check_message = last_check ? describeTimeSince(last_check) : 'never';
+      var global_check_interval = getSetting(SETTINGS.check_interval);
+      getAllPages(function(pages) {
+        // Sort the pages.
+        var sort_order = getSetting(SETTINGS.sort_by);
+        if (sort_order != 'date added') {
+          pages.sort(function(a, b) {
+            if (sort_order == 'name') {
+              a = a.name;
+              b = b.name;
+            } else if (sort_order == 'check interval') {
+              a = a.check_interval || global_check_interval;
+              b = b.check_interval || global_check_interval;
+            } else if (sort_order == 'last check') {
+              a = -a.last_check;
+              b = -b.last_check;
+            } else if (sort_order == 'last changed') {
+              a = -a.last_changed || 0;
+              b = -b.last_changed || 0;
+            }
             
-            if (last_check_message != $(this).text()) {
-              $(this).fadeOut('slow', function() {
-                $(this).text(last_check_message).fadeIn('slow');
-              });
-            }
+            return (a < b) ? -1 : 1;
           });
-          last_check_span.trigger('time_updated');
-          setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
-          
-          var timeout = getPageTimeout(url) / (60 * 1000);
-          page_record.find('.timeout input[type=text]').val(timeout);
-          if (getPageSetting(url, SETTINGS.page.timeout)) {
-            page_record.find('.timeout span').addClass('enabled').removeClass('disabled');
-            page_record.find('.timeout input').attr({ disabled: false });
-            page_record.find('.timeout input[type=checkbox]').attr({ checked: true });
-            advanced_set = true;
-          }
-          
-          page_record.find('.mode input[type=radio]').attr({name: 'name' + crc(url) });
-          
-          var mode = getPageSetting(url, SETTINGS.page.mode);
-          var regex = getPageSetting(url, SETTINGS.page.regex);
-          var selector = getPageSetting(url, SETTINGS.page.selector);
-          if (mode == null) {
-            if (regex) {
-              mode = 'regex';
+        }
+        
+        // Clear the list.
+        $('#pages').html('');
+        
+        // Fill the list.
+        if (pages.length > 0) {
+          $.each(pages, function(_, page) {
+            var page_record = $('#templates .page_record').clone();
+            var check_interval = page.check_interval || global_check_interval;
+            var advanced_set = false;
+        
+            var name = page.name || ('Untitled (' + page.url + ')');
+            if (name.length > 60) {
+              name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
+            }
+            
+            page_record.find('.page_link').attr({
+              href: page.url
+            }).text(name);
+            
+            page_record.find('.favicon').attr({
+              src: page.icon || 'img/page.png'
+            });
+            
+            var last_check_span = page_record.find('.last_check_time');
+            last_check_span.bind('time_updated', function() {
+              var $span = $(this);
+              getPage(page.url, function(page) {
+                var last_check = page.last_check ? describeTimeSince(page.last_check) : 'never';
+                
+                if (last_check != $span.text()) {
+                  $span.fadeOut('slow', function() {
+                    $span.text(last_check).fadeIn('slow');
+                  });
+                }
+              });
+            });
+            last_check_span.trigger('time_updated');
+            setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
+            
+            var timeout = check_interval / (60 * 1000);
+            page_record.find('.timeout input[type=text]').val(timeout);
+            if (page.check_interval) {
+              page_record.find('.timeout span').addClass('enabled').removeClass('disabled');
+              page_record.find('.timeout input').attr({ disabled: false });
+              page_record.find('.timeout input[type=checkbox]').attr({ checked: true });
+              advanced_set = true;
+            }
+            
+            page_record.find('.mode input[type=radio]').attr({name: 'name' + crc(page.url) });
+            
+            if (page.mode == null) {
+              if (page.regex) {
+                page.mode = 'regex';
+              } else {
+                page.mode = 'text';
+              }
+            }
+            if (page.mode == 'text') {
+              page_record.find('.mode input[type=radio]').first().attr({ checked: true });
             } else {
-              mode = 'text';
+              page_record.find('.mode span').first().addClass('enabled').removeClass('disabled');
+              page_record.find('.mode input').attr({ disabled: false });
+              page_record.find('.mode input[type=checkbox]').attr({ checked: true });
+              page_record.find('.mode input[type=radio][value=' + page.mode + ']')
+                         .click();
+              if (page.mode == 'regex') {
+                page_record.find('.mode input[type=text]').val(page.regex);
+              } else if (page.mode == 'selector') {
+                page_record.find('.mode input[type=text]').val(page.selector);
+              }
+              advanced_set = true;
             }
-          }
-          if (mode != 'text') {
-            page_record.find('.mode span').first().addClass('enabled').removeClass('disabled');
-            page_record.find('.mode input').attr({ disabled: false });
-            page_record.find('.mode input[type=checkbox]').attr({ checked: true });
-            page_record.find('.mode input[type=radio][value=' + mode + ']')
-                       .click();
-            if (mode == 'regex') {
-              page_record.find('.mode input[type=text]').val(regex);
-            } else if (mode == 'selector') {
-              page_record.find('.mode input[type=text]').val(selector);
+            
+            if (advanced_set) {
+              page_record.find('.advanced_toggle input[type=checkbox]').attr({ checked: true });
+              page_record.find('.advanced_toggle').addClass('toggled');
+              page_record.find('.advanced_controls').css({ display: 'block' });
             }
-            advanced_set = true;
-          } else {
-            page_record.find('.mode input[type=radio]').first().attr({ checked: true });
-          }
-          
-          if (advanced_set) {
-            page_record.find('.advanced_toggle input[type=checkbox]').attr({ checked: true });
-            page_record.find('.advanced_toggle').addClass('toggled');
-            page_record.find('.advanced_controls').css({ display: 'block' });
-          }
-          
-          page_record.appendTo('#pages');
-        });
-      } else {
-        $('#templates .empty').clone().appendTo('#pages');
-      }
+            
+            page_record.appendTo('#pages');
+          });
+        } else {
+          $('#templates .empty').clone().appendTo('#pages');
+        }
+      });
     }
     
     function setPageTimeout(context, timeout) {
       var url = findUrl(context);
       
-      if (timeout === null)  {
-        deletePageSetting(url, SETTINGS.page.timeout);
-      } else {
-        timeout = parseFloat(timeout) * 60 * 1000;
-        if (timeout) {
-          setPageSetting(url, SETTINGS.page.timeout, timeout);
-        }
-      }
+      if (timeout != null) timeout = parseFloat(timeout) * 60 * 1000;
       
-      BG.scheduleCheck();
+      setPageSettings(url, {check_interval: timeout}, BG.scheduleCheck);
     }
     
     function setPageRegex(context, regex) {
       if (regex === null)  {
-        deletePageSetting(findUrl(context), SETTINGS.page.regex);
-        setPageSetting(findUrl(context), SETTINGS.page.mode, 'text');
+        setPageSettings(findUrl(context), {regex: null, mode: 'text'});
       } else {
         var is_valid_regex = true;
         try {
@@ -437,7 +432,7 @@
         if (is_valid_regex) {
           textbox.removeClass('invalid');
           test_button.attr({ disabled: false });
-          setPageSetting(findUrl(context), SETTINGS.page.regex, regex);
+          setPageSettings(findUrl(context), {regex: regex});
         } else {
           test_button.attr({ disabled: true });
           textbox.addClass('invalid');
@@ -447,8 +442,7 @@
     
     function setPageSelector(context, selector) {
       if (selector === null)  {
-        deletePageSetting(findUrl(context), SETTINGS.page.selector);
-        setPageSetting(findUrl(context), SETTINGS.page.mode, 'text');
+        setPageSettings(findUrl(context), {selector: null, mode: 'text'});
       } else {
         var is_valid_selector = true;
         try {
@@ -462,7 +456,7 @@
         if (is_valid_selector) {
           textbox.removeClass('invalid');
           test_button.attr({ disabled: false });
-          setPageSetting(findUrl(context), SETTINGS.page.selector, selector);
+          setPageSettings(findUrl(context), {selector: selector});
         } else {
           test_button.attr({ disabled: true });
           textbox.addClass('invalid');
@@ -470,34 +464,31 @@
       }
     }
     
-    function exportPagesList() {
-      var buffer = [];
-      var page_urls = getSetting(SETTINGS.pages_list);
-      var add_date = new Date().getTime();
-      
-      buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<\!\-\- This is an' +
-                  ' automatically generated file.\n     It will be read and' +
-                  ' overwritten.\n     DO NOT EDIT! \-\-\>\n<META HTTP-EQUIV=' +
-                  '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
-                  'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
-      
-      for (var i in page_urls) {
-        var page_url = page_urls[i];
-        var page_name = getPageSetting(page_url, SETTINGS.page.name);
-        var page_icon = getPageSetting(page_url, SETTINGS.page.icon);
-        var icon_attr = page_icon ? ' ICON_URI="' + page_icon + '" ' : '';
-        buffer.push('        <DT><A HREF="' + page_url + '" ADD_DATE="' + add_date + '"' + icon_attr + '>' + page_name + '</A>\n');
-      }
-      
-      buffer.push('</DL><p>');
-      
-      return buffer.join('');
+    function exportPagesList(callback) {
+      getAllPages(function(pages) {
+        var buffer = [];
+        var add_date = new Date().getTime();
+        
+        buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<\!\-\- This is an' +
+                    ' automatically generated file.\n     It will be read and' +
+                    ' overwritten.\n     DO NOT EDIT! \-\-\>\n<META HTTP-EQUIV=' +
+                    '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
+                    'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
+        
+        for (var i in pages) {
+          var icon_attr = pages[i].icon ? ' ICON_URI="' + pages[i].icon + '" ' : '';
+          buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' + add_date + '"' + icon_attr + '>' + pages[i].name + '</A>\n');
+        }
+        
+        buffer.push('</DL><p>');
+        
+        (callback || $noop)(buffer.join(''));
+      });
     }
     
     function importPagesList(bookmarks) {
       var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/ig;
       var page_links = bookmarks.match(PAGE_REGEX);
-      var imported_count = 0;
       
       for (var i in page_links) {
         var page_link = $(page_links[i]);
@@ -505,13 +496,12 @@
         var page_name = page_link.text() || 'Untitled Page (' + page_url + ')';
         var page_icon = page_link.attr('ICON_URI') || null;
         
-        if (page_url && !isPageMonitored(page_url)) {
-          addPage(page_url, page_name, page_icon);
-          imported_count++;
+        if (page_url) {
+          addPage({ url: page_url, name: page_name, icon: page_icon });
         }
       }
       
-      return imported_count;
+      return page_links.length;
     }
     
     $(function() {
@@ -530,13 +520,12 @@
       
       // Set up the "Check All Now" button handler.
       $('#check_now').click(function() {
-        var pages = getSetting(SETTINGS.pages_list);
-        var pages_checked = 0;
-        
-        $('.last_check_time').text('checking..');
-        
-        BG.check(true, $.noop, function(url) {
-          $('.last_check_time', $('#pages .page_record').has('a[href=' + url + ']')).trigger('time_updated');
+        getAllPageURLs(function(pages) {
+          $('.last_check_time').text('checking..');
+          
+          BG.check(true, $.noop, function(url) {
+            $('.last_check_time', $('#pages .page_record').has('a[href=' + url + ']')).trigger('time_updated');
+          });
         });
       });
       
@@ -559,7 +548,7 @@
           
           ok_button.click(function() {
             page_link.text(textbox.val());
-            setPageSetting(findUrl(this), SETTINGS.page.name, textbox.val());
+            setPageSettings(findUrl(this), { name: textbox.val() });
             cancel_button.click();
           });
           
@@ -572,8 +561,7 @@
       $('.stop_monitoring').live('click', function() {
         var url = findUrl(this);
         
-        removePage(url);
-        BG.updateBadge();
+        removePage(url, BG.updateBadge);
         
         var scroll_position = scrollY;
         
@@ -641,9 +629,7 @@
           $('.mode input[type=radio]:checked', record).click();
           $('.mode input[type=text]', record).keyup();
         } else {
-          setPageSetting(url, SETTINGS.page.mode, 'text');
-          deletePageSetting(url, SETTINGS.page.regex);
-          deletePageSetting(url, SETTINGS.page.selector);
+          setPageSettings(url, { mode: 'text', regex: null, selector: null });
         }
       });
       
@@ -666,7 +652,7 @@
         var record = $(this).closest('.page_record');
         var val = $(this).val();
         
-        setPageSetting(url, SETTINGS.page.mode, val);
+        setPageSettings(url, { mode: val });
         $('.mode input[type=text]', record).keyup();
         
         var label = val.replace(/^./, function(c) {return c.toUpperCase();}) + ':';
@@ -676,40 +662,43 @@
       // Set up regex/selector test click handler
       $('.mode input[type=button]').live('click', function() {
         var url = findUrl(this);
-        var mode = getPageSetting(url, SETTINGS.page.mode);
-        var regex = getPageSetting(url, SETTINGS.page.regex);
-        var selector = getPageSetting(url, SETTINGS.page.selector);
-        var button = $(this);
-        
-        if ((mode == 'regex' && regex) || (mode == 'selector' && selector)) {
-          $(this).val('Testing...');
-          $(this).closest('.mode').find('input').attr({ disabled: true });
-          $.ajax({
-            url: url,
-            success: function(html) {
-              var results = '';
-              if (mode == 'regex') {
-                results = findAndFormatRegexMatches(html, regex);
-              } else {
-                results = findAndFormatSelectorMatches(html, selector);
+        getPage(url, function(page) {
+          var mode = page.mode;
+          var regex = page.regex;
+          var selector = page.selector;
+          var button = $(this);
+          
+          if ((mode == 'regex' && regex) || (mode == 'selector' && selector)) {
+            $(this).val('Testing...');
+            $(this).closest('.mode').find('input').attr({ disabled: true });
+            $.ajax({
+              url: url,
+              success: function(html) {
+                var results = '';
+                if (mode == 'regex') {
+                  results = findAndFormatRegexMatches(html, regex);
+                } else {
+                  results = findAndFormatSelectorMatches(html, selector);
+                }
+                
+                setPageSettings(url, { crc: cleanAndHashPage(html, mode, regex, selector) });
+                
+                if (results) {
+                  alert('Matched:\n' + results);
+                } else {
+                  alert('No matches.');
+                }
+              },
+              error: function() {
+                alert('Could not retrieve selected page.');
+              },
+              complete: function() {
+                button.val('Test');
+                button.closest('.mode').find('input').attr({ disabled: false });
               }
-              if (results) {
-                alert('Matched:\n' + results);
-              } else {
-                alert('No matches.');
-              }
-              setPageSetting(url, SETTINGS.page.crc,
-                             cleanAndHashPage(html, mode, regex, selector));
-            },
-            error: function() {
-              alert('Could not retrieve selected page.');
-            },
-            complete: function() {
-              button.val('Test');
-              button.closest('.mode').find('input').attr({ disabled: false });
-            }
-          });
-        }
+            });
+          }
+        });
       });
       
       // Finally, fill the pages list.
