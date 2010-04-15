@@ -79,6 +79,7 @@ a:hover {
 
 .util.inactive {
   color: #8EA7D7;
+  cursor: default;
 }
 
 .util.active {

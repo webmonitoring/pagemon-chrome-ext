@@ -4,33 +4,22 @@
 
 // Setting names.
 var SETTINGS = {
-  timeout: 'timeout',
+  check_interval: 'check_interval',
   badge_color: 'badge_color',
   version: 'version',
-  pages_list: 'pages',
   sound_alert: 'sound_alert',
   notifications_enabled: 'notifications_enabled',
   notifications_timeout: 'notifications_timeout',
   animations_disabled: 'animations_disabled',
   sort_by: 'sort_by',
-  custom_sounds: 'custom_sounds',
-  page: {
-    name: 'name',
-    mode: 'mode',
-    regex: 'regex',
-    selector: 'selector',
-    timeout: 'timeout',
-    html: 'html',
-    crc: 'crc',
-    icon: 'icon',
-    updated: 'updated',
-    last_check: 'last_check',
-    last_changed: 'last_changed'
-  }
+  custom_sounds: 'custom_sounds'
 };
 
 // Reference to the background page.
 var BG = chrome.extension.getBackgroundPage();
+
+// Reference to the database.
+var DB = openDatabase('pages', '1.0', 'Monitored Pages', 49 * 1024 * 1024);
 
 /*******************************************************************************
                                     Utilities
@@ -116,31 +105,81 @@ function setSetting(name, value) {
   localStorage.setItem(name, JSON.stringify(value));
 }
 
-function deleteSetting(name) {
-  delete localStorage[name];
-}
-
-function getPageSetting(url, name) {
-  return getSetting(url + ' ' + name);
-}
-
- function setPageSetting(url, name, value) {
-  setSetting(url + ' ' + name, value);
-}
-
-function deletePageSetting(url, name) {
-  deleteSetting(url + ' ' + name);
-}
-
-// Returns the page's timeout, or if not set, the global timeout.
-function getPageTimeout(url) {
-  var timeout = getPageSetting(url, SETTINGS.page.timeout);
+function getPage(url, callback) {
+  if (callback === null) return;
   
-  if (timeout === null || timeout === undefined) {
-    timeout = getSetting(SETTINGS.timeout);
-  }
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT * FROM pages WHERE url = ?', [url], function(_, result) {
+      if (result.rows.length == 1) {
+        var page = result.rows.item(0);
+        if (!page.check_interval) page.check_interval = getSetting(SETTINGS.check_interval);
+        callback(page);
+      } else {
+        callback(null);
+      }
+    });
+  });
+}
+
+// Returns an array of all monitored URLs.
+function getAllPageURLs(callback) {
+  if (callback === null) return;
   
-  return timeout;
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT url FROM pages', [], function(_, result) {
+      var pages = [];
+      for (var i = 0; i < result.rows.length; i++) {
+        pages.push(result.rows.item(i).url);
+      }
+      callback(pages);
+    });
+  });
+}
+
+// Returns an array of all monitored pages.
+function getAllPages(callback) {
+  if (callback === null) return;
+  
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT * FROM pages', [], function(_, result) {
+      var pages = [];
+      for (var i = 0; i < result.rows.length; i++) {
+        pages.push(result.rows.item(i));
+      }
+      callback(pages);
+    });
+  });
+}
+
+// Returns an array of pages that are marked as updated.
+function getAllUpdatedPages(callback) {
+  if (callback === null) return;
+  
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT * FROM pages WHERE updated = 1', [], function(_, result) {
+      var pages = [];
+      for (var i = 0; i < result.rows.length; i++) {
+        pages.push(result.rows.item(i));
+      }
+      callback(pages);
+    });
+  });
+}
+
+function setPageSettings(url, settings, callback) {
+  if (settings.length == 0) return;
+  
+  DB.transaction(function(transaction) {
+    buffer = [];
+    args = [];
+    for (var i in settings) {
+      buffer.push(i + ' = ?');
+      if (settings[i] === true || settings[i] === false) settings[i] += 0;
+      args.push(settings[i]);
+    }
+    args.push(url);
+    transaction.executeSql('UPDATE pages SET ' + buffer.join(', ') + ' WHERE url = ?', args);
+  }, $.noop, (callback || $.noop));
 }
 
 /*******************************************************************************
@@ -208,9 +247,9 @@ function cleanAndHashPage(html, mode, regex, selector) {
     // Collapse whitespace.
     html = html.replace(/\s+/g, ' ');
     // Remove numbers with common number suffixes. This helps with pages that
-    // print out the current date/time.
-    html = html.replace(/\d+\s?(st|nd|rd|th|am|pm|days?|weeks?|months?)\b/g, '');
-    // Remove everything other than letters.
+    // print out the current date/time or time since an item was posted.
+    html = html.replace(/\d+ ?(st|nd|rd|th|am|pm|seconds?|minutes?|hours?|days?|weeks?|months?)\b/g, '');
+    // Remove everything other than letters (note - unicode letters are preserved).
     html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
   }
   
@@ -223,58 +262,55 @@ function cleanAndHashPage(html, mode, regex, selector) {
 
 // Registers a URL for monitoring and takes a snapshot of it. Redirects itself
 // to the background page if needed.
-function addPage(url, name, icon) {
-  if (window != BG) return BG.addPage(url, name, icon);
+function addPage(page, callback) {
+  if (window != BG) return BG.addPage(page, callback);
 
-  var pages = getSetting(SETTINGS.pages_list);
-  pages.push(url);
-  setSetting(SETTINGS.pages_list, pages);
-  
-  if (name) setPageSetting(url, SETTINGS.page.name, name);
-  if (icon) setPageSetting(url, SETTINGS.page.icon, icon);
-  setPageSetting(url, SETTINGS.page.mode, 'text');
-  setPageSetting(url, SETTINGS.page.updated, false);
-  setPageSetting(url, SETTINGS.page.last_changed, new Date().getTime());
-  
+  var html = '';
   $.ajax({
-    url: url,
+    url: page.url,
     dataType: 'text',
     complete: function() {
-      setPageSetting(url, SETTINGS.page.last_check, new Date().getTime());
+      DB.transaction(function(transaction) {
+        transaction.executeSql('INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+          page.url,
+          page.name || 'Untitled (' + page.url + ')',
+          page.mode || 'text',
+          page.regex || null,
+          page.selector || null,
+          page.timeout || null,
+          page.html || html,
+          cleanAndHashPage(html, 'text'),
+          page.icon || null,
+          page.updated ? 1 : 0,
+          new Date().getTime(),
+          page.last_changed || null
+        ], (callback || $.noop));
+      });
       scheduleCheck();
     },
-    success: function(html) {
-      setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-      setPageSetting(url, SETTINGS.page.crc, cleanAndHashPage(html, 'text'));
+    success: function(x) {
+      html = x;
     }
   });
 }
 
 // Removes a page from the monitoring registry and deletes all settings related
 // to it.
-function removePage(url) {
-  var pages = $.grep(getSetting(SETTINGS.pages_list), function(url2, i) {
-    return url != url2;
+function removePage(url, callback) {
+  DB.transaction(function(transaction) {
+    transaction.executeSql('DELETE FROM pages WHERE url = ?', [url], function() {
+      BG.scheduleCheck();
+      (callback || $.noop)();
+    });
   });
-  
-  setSetting(SETTINGS.pages_list, pages);
-  
-  $.each(SETTINGS.page, function(k, name) {
-    deletePageSetting(url, name);
-  });
-  
-  BG.scheduleCheck();
 }
 
 // Returns a boolean indicating whether the supplied URL is being monitored.
-function isPageMonitored(url) {
-  return $.inArray(url, getSetting(SETTINGS.pages_list)) != -1;
-}
-
-// Returns an array of URLs indicating all pages that are marked as updated.
-function getAllUpdatedPages() {
-  return $.grep(getSetting(SETTINGS.pages_list), function(url, i) {
-    return getPageSetting(url, SETTINGS.page.updated) === true;
+function isPageMonitored(url, callback) {
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT COUNT(*) FROM pages WHERE url = ?', [url], function(_, result) {
+      (callback || $.noop)(result.rows.item(0)['COUNT(*)'] == 1);
+    });
   });
 }
 
@@ -286,41 +322,47 @@ function getAllUpdatedPages() {
 // For the scheduling to work, it MUST run on the background page. Calls from
 // other pages are automatically redirected to the background page.
 function checkPage(url, callback, force_snapshot) {
-  // If page is already marked as updated, skip check.
-  if (getPageSetting(url, SETTINGS.page.updated) == true) {
-    (callback || $.noop)(url);
-  } else {
-    $.ajax({
-      url: url,
-      dataType: 'text',
-      complete: function() {
-        setPageSetting(url, SETTINGS.page.last_check, new Date().getTime());
+  console.log('Checking ' + url);
+  DB.readTransaction(function(transaction) {
+    transaction.executeSql('SELECT updated FROM pages WHERE url = ?', [url], function(_, result) {
+      // If page is already marked as updated, skip check.
+      if (result.rows.item(0).updated) {
         (callback || $.noop)(url);
-      },
-      success: function(html) {
-        var mode = getPageSetting(url, SETTINGS.page.mode);
-        var regex = getPageSetting(url, SETTINGS.page.regex);
-        var selector = getPageSetting(url, SETTINGS.page.selector);
-        var crc = cleanAndHashPage(html, mode, regex, selector);
-        
-        if (crc != getPageSetting(url, SETTINGS.page.crc)) {
-          setPageSetting(url, SETTINGS.page.updated, true);
-          setPageSetting(url, SETTINGS.page.last_changed, new Date().getTime());
-          setPageSetting(url, SETTINGS.page.crc, crc);
-          if (force_snapshot) {
-            setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
+      } else {
+        $.ajax({
+          url: url,
+          dataType: 'text',
+          complete: function() {
+            setPageSettings(url, { last_check: new Date().getTime() }, function() {
+              (callback || $.noop)(url);
+            });
+          },
+          success: function(html) {
+            if (!html) return;
+            
+            getPage(url, function(page) {
+              var crc = cleanAndHashPage(html, page.mode, page.regex, page.selector);
+              
+              if (crc != page.crc) {
+                setPageSettings(url, {
+                  updated: true,
+                  crc: crc,
+                  html: force_snapshot ? html.replace(/\s+/g, ' ') : page.html,
+                  last_changed: new Date().getTime()
+                });
+              } else {
+                setPageSettings(url, { html: html.replace(/\s+/g, ' ') });
+              }
+            });
           }
-        } else {
-          setPageSetting(url, SETTINGS.page.html, html.replace(/\s+/g, ' '));
-        }
+        });
       }
     });
-  }
+  });
 }
 
 function takeSnapshot(url, callback) {
   checkPage(url, function() {
-    setPageSetting(url, SETTINGS.page.updated, false);
-    (callback || $.noop)();
+    setPageSettings(url, { updated: false }, callback);
   }, true);
 }
