@@ -1,0 +1,318 @@
+{
+  "name": {
+    "message": "Page Monitor",
+    "description": "The name of the extension."
+  },
+  "description": {
+    "message": "Stays in the background and monitors web pages for changes.",
+    "description": "The global description of the extension."
+  },
+  "page_updated_single": {
+    "message": "Page Updated",
+    "description": "Notification title: a single page has been updated."
+  },
+  "page_updated_multi": {
+    "message": "$1 Pages Updated",
+    "description": "Notification title: multiple pages have been updated."
+  },
+  "diff_title": {
+    "message": "View Changes",
+    "description": "The title of the diff page."
+  },
+  "diff_error": {
+    "message": "Diffing error. Please report this.",
+    "description": "A diff failure error message on the diff page."
+  },
+  "diff_show_deletions": {
+    "message": "Show Deletions",
+    "description": "Link to show deletions on the diff page."
+  },
+  "diff_hide_deletions": {
+    "message": "Hide Deletions",
+    "description": "Link to hide deletions on the diff page."
+  },
+  "diff_original": {
+    "message": "Original",
+    "description": "Text of the link to the original page on the diff page."
+  },
+  "diff_corruption": {
+    "message": "Cache corruption detected and fixed. Last snapshot discarded. Changes highlighting will be available on next update.",
+    "description": "Cache corruption error message on the diff page."
+  },
+  "diff_progress": {
+    "message": "Diffing in progress.",
+    "description": "The message to show while fetching the page to diff."
+  },
+  "options_header": {
+    "message": "Monitored Pages",
+    "description": "The text of the pages list header on the options page."
+  },
+  "untitled": {
+    "message": "Untitled ($1)",
+    "description": "Default name for pages that have an empty name, with placeholder for the URL."
+  },
+  "check_in_progress": {
+    "message": "Checking",
+    "description": "The message to display while a check is in progress."
+  },
+  "stop_monitoring": {
+    "message": "stop monitoring",
+    "description": "The text on the button that stops a page from being monitored."
+  },
+  "mark_visited": {
+    "message": "mark visited",
+    "description": "The text on the button that marks an updated page as visited."
+  },
+  "view_diff": {
+    "message": "view changes",
+    "description": "The text on the button that opens the diff page."
+  },
+  "no_changes": {
+    "message": "No changes found.",
+    "description": "The popup text when no changes have been found."
+  },
+  "feedback": {
+    "message": "Feedback",
+    "description": "The text of the feedback link."
+  },
+  "options": {
+    "message": "Options",
+    "description": "The text of the options link."
+  },
+  "check_all": {
+    "message": "Check All Now",
+    "description": "The text of the button that initiates a check of all pages."
+  },
+  "monitor": {
+    "message": "Monitor This Page",
+    "description": "The text of the button that marks a page for monitoring."
+  },
+  "page_monitored": {
+    "message": "Page Monitored",
+    "description": "This text appears in the popup when the current page is already monitored."
+  },
+  "new_sound_prompt": {
+    "message": "Please enter a name and a URL for the new sound.",
+    "description": "The prompt that appears when the user tries to add a new sound."
+  },
+  "new_sound_failed": {
+    "message": "Chrome could not play the file at the specified URL.",
+    "description": "The error message displayed when the URL specified for a new sound could not be played."
+  },
+  "import_error": {
+    "message": "Error encountered. Import may be incomplete.",
+    "description": "The error message displayed when a page import fails."
+  },
+  "import_empty": {
+    "message": "No pages to import found in input.",
+    "description": "The error message displayed when no pages are found during an import."
+  },
+  "import_success_single": {
+    "message": "Successfully imported 1 page.",
+    "description": "The message displayed when 1 page was imported successfully."
+  },
+  "import_success_multi": {
+    "message": "Successfully imported $1 pages.",
+    "description": "The message displayed when multiple pages were imported successfully."
+  },
+  "test_button": {
+    "message": "Test",
+    "description": "The text on the button that tests a given regex or selector on a page in advanced mode."
+  },
+  "test_progress": {
+    "message": "Testing...",
+    "description": "The message that appears while testing a regex or selector."
+  },
+  "test_matches": {
+    "message": "Matched:",
+    "description": "The message that appears when a regex or selector test matches something."
+  },
+  "test_no_matches": {
+    "message": "No matches.",
+    "description": "The message that appears when a regex or selector test does not match anything."
+  },
+  "test_fail": {
+    "message": "Could not retrieve selected page.",
+    "description": "The message that appears when a regex or selector test fails to retrieve the page to test."
+  },
+  "advanced": {
+    "message": "advanced",
+    "description": "The text of the button to toggle advanced settings."
+  },
+  "rename_page": {
+    "message": "rename page",
+    "description": "The text of the button to rename a page."
+  },
+  "last_check": {
+    "message": "Last Check:",
+    "description": "The text of the label that specified when the page was last checked."
+  },
+  "unknown": {
+    "message": "unknown",
+    "description": "A placeholder for an unknown piece of data."
+  },
+  "second": {
+    "message": "second",
+    "description": "A single second, as a number suffix (e.g. '1 second')."
+  },
+  "seconds": {
+    "message": "seconds",
+    "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds')."
+  },
+  "minute": {
+    "message": "minute",
+    "description": "A single minute, as a number suffix (e.g. '1 minute')."
+  },
+  "minutes": {
+    "message": "minutes",
+    "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes')."
+  },
+  "hour": {
+    "message": "hour",
+    "description": "A single hour, as a number suffix (e.g. '1 hour')."
+  },
+  "hours": {
+    "message": "hours",
+    "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
+  },
+  "day": {
+    "message": "day",
+    "description": "A single day, as a number suffix (e.g. '1 day')."
+  },
+  "days": {
+    "message": "days",
+    "description": "A plural number of days, as a number suffix (e.g. '7 days')."
+  },
+  "check_every": {
+    "message": "Check Interval (minutes):",
+    "description": "The label for the check interval textbox."
+  },
+  "custom_mode": {
+    "message": "Custom Mode:",
+    "description": "The label for custom checking mode (selector or regex)."
+  },
+  "regex": {
+    "message": "Regex",
+    "description": "The label for regex mode."
+  },
+  "selector": {
+    "message": "Selector",
+    "description": "The label for selector mode."
+  },
+  "no_pages_monitored": {
+    "message": "No pages are being monitored.",
+    "description": "The text that replaces the pages list on the options page when no pages are monitored."
+  },
+  "notifications": {
+    "message": "Desktop Notifications",
+    "description": "Label for the desktop notifications checkbox."
+  },
+  "disabled": {
+    "message": "disabled",
+    "description": "Generic label for disabled items."
+  },
+  "enabled": {
+    "message": "enabled",
+    "description": "Generic label for enabled items."
+  },
+  "notifications_timeout": {
+    "message": "Notifications stay for:",
+    "description": "Label for the desktop notifications timeout textbox."
+  },
+  "badge_color": {
+    "message": "Badge Color:",
+    "description": "Label for the badge color selector."
+  },
+  "sound_alert": {
+    "message": "Sound Alert:",
+    "description": "Label for the sound alert drop-down."
+  },
+  "sound_none": {
+    "message": "None",
+    "description": "The value of the no-sound option in the sound alert drop-down."
+  },
+  "sort": {
+    "message": "Sort Pages List By:",
+    "description": "The label for the sort order drop-down."
+  },
+  "sort_date": {
+    "message": "date added",
+    "description": "The 'date added' option in the sort order drop-down."
+  },
+  "sort_name": {
+    "message": "name",
+    "description": "The 'name' option in the sort order drop-down."
+  },
+  "sort_url": {
+    "message": "URL",
+    "description": "The 'URL' option in the sort order drop-down."
+  },
+  "sort_interval": {
+    "message": "check interval",
+    "description": "The 'check interval' option in the sort order drop-down."
+  },
+  "sort_last_check": {
+    "message": "last check",
+    "description": "The 'last check' option in the sort order drop-down."
+  },
+  "sort_last_change": {
+    "message": "last changed",
+    "description": "The 'last changed' option in the sort order drop-down."
+  },
+  "animations": {
+    "message": "Animations:",
+    "description": "The label for the checkbox to disable/enable animations."
+  },
+  "import": {
+    "message": "Import Pages",
+    "description": "The text of the button to import pages from a bookmarks.html."
+  },
+  "export": {
+    "message": "Export Pages",
+    "description": "The text of the button to export pages into a bookmarks.html."
+  },
+  "export_prompt": {
+    "message": "Copy this text into a file and save it as bookmarks.html:",
+    "description": "The prompt that appears before the exported pages textbox."
+  },
+  "import_prompt": {
+    "message": "Paste the context of your bookmarks.html here:",
+    "description": "The prompt that appears before the bookmarks.html textbox when importing."
+  },
+  "import_button": {
+    "message": "Import",
+    "description": "The text for the 'import' button in the import form."
+  },
+  "ok": {
+    "message": "Ok",
+    "description": "The text for a generic 'ok' button."
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "The text for a generic 'cancel' button."
+  },
+  "close": {
+    "message": "Close",
+    "description": "The text for a generic 'close form' button."
+  },
+  "sound_name": {
+    "message": "Name:",
+    "description": "The label for the sound name in the 'new sound' form."
+  },
+  "sound_url": {
+    "message": "URL:",
+    "description": "The label for the sound URL in the 'new sound' form."
+  },
+  "sound_create": {
+    "message": "Create",
+    "description": "The text of the 'create' button in the 'new sound' form."
+  },
+  "sound_new": {
+    "message": "New",
+    "description": "The text of the button that opens the 'new sound' form."
+  },
+  "sound_play": {
+    "message": "Play",
+    "description": "The text of the button that plays the selected sound."
+  }
+}
