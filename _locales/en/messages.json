@@ -16,7 +16,7 @@
     "description": "Notification title: multiple pages have been updated."
   },
   "diff_title": {
-    "message": "View Changes",
+    "message": "Page Monitor: View Changes",
     "description": "The title of the diff page."
   },
   "diff_error": {
@@ -34,6 +34,10 @@
   "diff_original": {
     "message": "Original",
     "description": "Text of the link to the original page on the diff page."
+  },
+  "diff_original_title": {
+    "message": "View Original Page",
+    "description": "Tooltip of the link to the original page on the diff page."
   },
   "diff_corruption": {
     "message": "Cache corruption detected and fixed. Last snapshot discarded. Changes highlighting will be available on next update.",
@@ -90,6 +94,10 @@
   "page_monitored": {
     "message": "Page Monitored",
     "description": "This text appears in the popup when the current page is already monitored."
+  },
+  "options_title": {
+    "message": "Page Monitor Options",
+    "description": "The title of the options page."
   },
   "new_sound_prompt": {
     "message": "Please enter a name and a URL for the new sound.",
@@ -151,37 +159,45 @@
     "message": "unknown",
     "description": "A placeholder for an unknown piece of data."
   },
+  "never": {
+    "message": "never",
+    "description": "A 'last checked' label for pages that have never been checked."
+  },
   "second": {
-    "message": "second",
+    "message": "1 second",
     "description": "A single second, as a number suffix (e.g. '1 second')."
   },
   "seconds": {
-    "message": "seconds",
+    "message": "$1 seconds",
     "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds')."
   },
   "minute": {
-    "message": "minute",
+    "message": "1 minute",
     "description": "A single minute, as a number suffix (e.g. '1 minute')."
   },
   "minutes": {
-    "message": "minutes",
+    "message": "$1 minutes",
     "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes')."
   },
   "hour": {
-    "message": "hour",
+    "message": "1 hour",
     "description": "A single hour, as a number suffix (e.g. '1 hour')."
   },
   "hours": {
-    "message": "hours",
+    "message": "$1 hours",
     "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
   },
   "day": {
-    "message": "day",
+    "message": "1 day",
     "description": "A single day, as a number suffix (e.g. '1 day')."
   },
   "days": {
-    "message": "days",
+    "message": "$1 days",
     "description": "A plural number of days, as a number suffix (e.g. '7 days')."
+  },
+  "ago": {
+    "message": "$1 ago",
+    "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
     "message": "Check Interval (minutes):",
@@ -204,7 +220,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Desktop Notifications",
+    "message": "Desktop Notifications:",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -216,7 +232,7 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Notifications stay for:",
+    "message": "Notifications stay (seconds):",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
@@ -232,7 +248,7 @@
     "description": "The value of the no-sound option in the sound alert drop-down."
   },
   "sort": {
-    "message": "Sort Pages List By:",
+    "message": "Sort Pages By:",
     "description": "The label for the sort order drop-down."
   },
   "sort_date": {
@@ -276,7 +292,7 @@
     "description": "The prompt that appears before the exported pages textbox."
   },
   "import_prompt": {
-    "message": "Paste the context of your bookmarks.html here:",
+    "message": "Paste the contents of your bookmarks.html here:",
     "description": "The prompt that appears before the bookmarks.html textbox when importing."
   },
   "import_button": {
@@ -300,7 +316,7 @@
     "description": "The label for the sound name in the 'new sound' form."
   },
   "sound_url": {
-    "message": "URL:",
+    "message": "URL (MP3 or OGG file):",
     "description": "The label for the sound URL in the 'new sound' form."
   },
   "sound_create": {
@@ -314,5 +330,13 @@
   "sound_play": {
     "message": "Play",
     "description": "The text of the button that plays the selected sound."
+  },
+  "sound_chime": {
+    "message": "Chime",
+    "description": "The label of the default chime sound."
+  },
+  "sound_cuckoo": {
+    "message": "Cuckoo",
+    "description": "The label of the default cuckoo sound."
   }
 }

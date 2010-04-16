@@ -216,7 +216,12 @@
                   content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/, '$1...')
                 }
                 
-                var title = updated_pages.length == 1 ? 'Page Updated' : updated_pages.length + ' Pages Updated';
+                var title;
+                if (updated_pages.length == 1) {
+                  title = chrome.i18n.getMessage('page_updated_single');
+                } else {
+                  title = chrome.i18n.getMessage('page_updated_multi', updated_pages.length);
+                }
                 var notifications_timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
                 var notification = webkitNotifications.createNotification(NOTIFICATION_ICON, title, content);
 
@@ -325,16 +330,20 @@
       setSetting(SETTINGS.notifications_timeout, 30 * 1000);
       setSetting(SETTINGS.animations_disabled, false);
       setSetting(SETTINGS.sort_by, 'date added');
+    } else if (saved_version < 2.6) {
+      setSetting(SETTINGS.check_interval, getSetting('timeout'));
     }
+    
     if (saved_version < 2) {
       updateFromVersionOne();
     }
+    
     if (saved_version < 2.6) {
-      setSetting(SETTINGS.check_interval, getSetting('timeout'));
       migrateToDatabase(check);
     } else {
       check();
     }
+    
     setSetting(SETTINGS.version, chrome.extension.getVersion());
     setInterval(watchdog, WATCHDOG_INTERVAL);
     updateBadge();
