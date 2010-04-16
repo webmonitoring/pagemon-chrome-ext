@@ -279,8 +279,6 @@
         setSetting('pages_to_check', pages);
       }
       
-      setSetting(SETTINGS.timeout, getSetting('check_interval'));
-      delete localStorage['check_interval'];
       delete localStorage['last_check'];
     }
     
@@ -330,12 +328,10 @@
       setSetting(SETTINGS.notifications_timeout, 30 * 1000);
       setSetting(SETTINGS.animations_disabled, false);
       setSetting(SETTINGS.sort_by, 'date added');
-    } else if (saved_version < 2.6) {
-      setSetting(SETTINGS.check_interval, getSetting('timeout'));
-    }
-    
-    if (saved_version < 2) {
+    } else if (saved_version < 2) {
       updateFromVersionOne();
+    } else if (saved_version < 2.6) {
+      setSetting(SETTINGS.check_interval, getSetting('timeout') || DEFAULT_CHECK_INTERVAL);
     }
     
     if (saved_version < 2.6) {
