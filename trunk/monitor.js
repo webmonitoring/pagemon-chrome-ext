@@ -71,11 +71,28 @@ function describeTimeSince(timestamp) {
   
   var label = '';
   
-  if (days) label += days + ((days == 1) ? ' day ' : ' days ');
-  if (hours) label += hours + ((hours == 1) ? ' hour ' : ' hours ');
-  if (!days && minutes) label += minutes + ((minutes == 1) ? ' minute ' : ' minutes ');
-  if (!label) label += seconds + ((seconds == 1) ? ' second ' : ' seconds ');
-  label += 'ago';
+  if (days) {
+    var singular = chrome.i18n.getMessage('day');
+    var plural = chrome.i18n.getMessage('days', days.toString());
+    label += (days == 1) ? singular : plural;
+  }
+  if (hours) {
+    var singular = chrome.i18n.getMessage('hour');
+    var plural = chrome.i18n.getMessage('hours', hours.toString());
+    label += ' ' + ((hours == 1) ? singular : plural);
+  }
+  if (!days && minutes) {
+    var singular = chrome.i18n.getMessage('minute');
+    var plural = chrome.i18n.getMessage('minutes', minutes.toString());
+    label += ' ' + ((minutes == 1) ? singular : plural);
+  }
+  if (!label) {
+    var singular = chrome.i18n.getMessage('second');
+    var plural = chrome.i18n.getMessage('seconds', seconds.toString());
+    label += ' ' + ((seconds == 1) ? singular : plural);
+  }
+  
+  label = chrome.i18n.getMessage('ago', label.replace(/^\s+|\s+$/g, ''));
   
   return label;
 }
@@ -273,7 +290,7 @@ function addPage(page, callback) {
       DB.transaction(function(transaction) {
         transaction.executeSql('INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
           page.url,
-          page.name || 'Untitled (' + page.url + ')',
+          page.name || chrome.i18n.getMessage('untitled', page.url),
           page.mode || 'text',
           page.regex || null,
           page.selector || null,
@@ -332,27 +349,34 @@ function checkPage(url, callback, force_snapshot) {
         $.ajax({
           url: url,
           dataType: 'text',
-          complete: function() {
-            setPageSettings(url, { last_check: new Date().getTime() }, function() {
-              (callback || $.noop)(url);
-            });
-          },
           success: function(html) {
             if (!html) return;
             
             getPage(url, function(page) {
               var crc = cleanAndHashPage(html, page.mode, page.regex, page.selector);
+              var settings = {};
               
               if (crc != page.crc) {
-                setPageSettings(url, {
+                console.log('Setting updated = true');
+                settings = {
                   updated: true,
                   crc: crc,
                   html: force_snapshot ? html.replace(/\s+/g, ' ') : page.html,
                   last_changed: new Date().getTime()
-                });
+                }
               } else {
-                setPageSettings(url, { html: html.replace(/\s+/g, ' ') });
+                settings = { html: html.replace(/\s+/g, ' ') };
               }
+              
+              settings['last_check'] = new Date().getTime();
+              setPageSettings(url, settings, function() {
+                (callback || $.noop)(url);
+              });
+            });
+          },
+          error: function() {
+            setPageSettings(url, { last_check: new Date().getTime() }, function() {
+              (callback || $.noop)(url);
             });
           }
         });
@@ -363,6 +387,7 @@ function checkPage(url, callback, force_snapshot) {
 
 function takeSnapshot(url, callback) {
   checkPage(url, function() {
+    console.log('Setting updated = false');
     setPageSettings(url, { updated: false }, callback);
   }, true);
 }

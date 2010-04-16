@@ -16,7 +16,7 @@
     "description": "Notification title: multiple pages have been updated."
   },
   "diff_title": {
-    "message": "Değişiklikleri Gör",
+    "message": "Page Monitor: Değişiklikleri Gör",
     "description": "The title of the diff page."
   },
   "diff_error": {
@@ -34,6 +34,10 @@
   "diff_original": {
     "message": "Orijinal",
     "description": "Text of the link to the original page on the diff page."
+  },
+  "diff_original_title": {
+    "message": "Profili Orjinal Sayfa",
+    "description": "Tooltip of the link to the original page on the diff page."
   },
   "diff_corruption": {
     "message": "Önbellekte bozukluk algılandı ve düzeltildi. En son bellek kopyası kayboldu. Değişiklikleri belirtme, bir sonraki güncellemede geçerli olacak.",
@@ -86,6 +90,10 @@
   "monitor": {
     "message": "Bu Sayfayı İzle",
     "description": "The text of the button that marks a page for monitoring."
+  },
+  "options_title": {
+    "message": "Page Monitor: Seçenekler",
+    "description": "The title of the options page."
   },
   "page_monitored": {
     "message": "Sayfa İzleniyor",
@@ -151,37 +159,45 @@
     "message": "bilinmiyor",
     "description": "A placeholder for an unknown piece of data."
   },
+  "never": {
+    "message": "asla",
+    "description": "A 'last checked' label for pages that have never been checked."
+  },
   "second": {
-    "message": "saniye",
+    "message": "1 saniye",
     "description": "A single second, as a number suffix (e.g. '1 second')."
   },
   "seconds": {
-    "message": "saniye",
+    "message": "$1 saniye",
     "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds')."
   },
   "minute": {
-    "message": "dakika",
+    "message": "1 dakika",
     "description": "A single minute, as a number suffix (e.g. '1 minute')."
   },
   "minutes": {
-    "message": "dakika",
+    "message": "$1 dakika",
     "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes')."
   },
   "hour": {
-    "message": "saat",
+    "message": "1 saat",
     "description": "A single hour, as a number suffix (e.g. '1 hour')."
   },
   "hours": {
-    "message": "saat",
+    "message": "$1 saat",
     "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
   },
   "day": {
-    "message": "gün",
+    "message": "1 gün",
     "description": "A single day, as a number suffix (e.g. '1 day')."
   },
   "days": {
-    "message": "gün",
+    "message": "$1 gün",
     "description": "A plural number of days, as a number suffix (e.g. '7 days')."
+  },
+  "ago": {
+    "message": "$1 önce",
+    "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
     "message": "Aralığı kontrol edin (dakika):",
@@ -204,7 +220,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Masaüstü bildirimleri",
+    "message": "Masaüstü bildirimleri:",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -216,7 +232,7 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Bildirim Süresi:",
+    "message": "Bildirim Süresi (saniye):",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
@@ -300,7 +316,7 @@
     "description": "The label for the sound name in the 'new sound' form."
   },
   "sound_url": {
-    "message": "URL:",
+    "message": "URL (MP3/OGG):",
     "description": "The label for the sound URL in the 'new sound' form."
   },
   "sound_create": {
@@ -314,5 +330,13 @@
   "sound_play": {
     "message": "Çal",
     "description": "The text of the button that plays the selected sound."
+  },
+  "sound_chime": {
+    "message": "Uymak",
+    "description": "The label of the default chime sound."
+  },
+  "sound_cuckoo": {
+    "message": "Guguk",
+    "description": "The label of the default cuckoo sound."
   }
 }

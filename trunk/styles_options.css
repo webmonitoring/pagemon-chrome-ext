@@ -11,7 +11,8 @@ hr {
   margin-top: 20px;
 }
 
-.page_record:last-child td {
+.page_record:last-child td, .empty td {
+  padding-bottom: 10px;
   border-bottom: 1px #999 solid;
 }
 
@@ -106,17 +107,18 @@ hr {
 }
 
 .mode_selector {
-  display:inline-block;
+  display: inline-block;
   vertical-align: top;
 }
 
 .mode_selector label {
-  display:inline-block;
+  display: inline-block;
   margin-right: 80px;
+  margin-left: 30px;
 }
 
-.mode_value span {
-  display:inline-block;
+.mode_value>span {
+  display: inline-block;
   width: 100px;
 }
 

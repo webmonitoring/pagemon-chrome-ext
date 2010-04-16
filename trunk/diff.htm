@@ -38,7 +38,7 @@
               out = out.concat(dest.slice(dest_start, dest_end));
               break;
             default:
-              alert('Diffing error. Please report this.');
+              alert(chrome.i18n.getMessage('diff_error'));
               return;
           }
         }
@@ -47,8 +47,9 @@
         
         $('body').html(compiled_html);
         
-        var link = '<a href="' + url + '" title="View Original Page">Original</a>';
-        var toggler = '<a href="#" title="Hide Deletions">Hide Deletions</a>';
+        
+        var link = '<a href="' + url + '" title="' + chrome.i18n.getMessage('diff_original_title') + '">' + chrome.i18n.getMessage('diff_original') + '</a>';
+        var toggler = '<a href="#">' + chrome.i18n.getMessage('diff_hide_deletions') + '</a>';
         var ui = '<div id="chrome_page_monitor_ext_orig_link">' + link + '<br />' + toggler + '</div>';
         var $ui = $(ui);
         $('a[href="#"]', $ui).click(toggleDel);
@@ -56,12 +57,15 @@
       }
       
       function toggleDel() {
-        if ($(this).text() == 'Hide Deletions') {
+        var hide_message = chrome.i18n.getMessage('diff_hide_deletions');
+        var show_message = chrome.i18n.getMessage('diff_show_deletions');
+        
+        if ($(this).text() == hide_message) {
           $('del').hide();
-          $(this).text('Show Deletions');
+          $(this).text(show_message);
         } else {
           $('del').show();
-          $(this).text('Hide Deletions');
+          $(this).text(hide_message);
         }
         return false;
       }
@@ -212,6 +216,9 @@
       }
       
       $(function() {
+        $('title').text(chrome.i18n.getMessage('diff_title'));
+        $('#diff_in_progress').text(chrome.i18n.getMessage('diff_progress'));
+      
         var url = atob(window.location.hash.substr(1));
         getPage(url, function(page) {
           var src = page.html;
@@ -221,7 +228,7 @@
             } else {
               setPageSettings(url, {html: html});
               $('img').hide();
-              $('div').html('Cache corruption detected and fixed.<br />Last snapshot discarded.<br /> Changes highlighting will be available on next update.');
+              $('div').html(chrome.i18n.getMessage('diff_corruption'));
             }
           });
         });
@@ -242,7 +249,7 @@
         position: fixed !important;
         bottom: 0px !important;
         right: 40px !important;
-        width: 140px !important;
+        width: 190px !important;
         height: 45px !important;
         background: white !important;
         border: 2px #849ccb solid !important;
@@ -270,7 +277,7 @@
   </head> 
   <body>
     <div style="font-family: Calibri, Tahoma, sans-serif; margin: auto; text-align: center; margin-top: 300px;">
-      Diffing in progress...
+      <span id="diff_in_progress"></span>
       <br/>
       <img src="img/loader.gif">
     </div>

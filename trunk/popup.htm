@@ -8,6 +8,13 @@
   <script type="text/javascript" src="monitor.js"></script>
   <script type="text/javascript">
     $(function() {
+      // Insert translations.
+      $('.i18n').each(function() {
+        $(this).removeClass('i18n')
+               .text(chrome.i18n.getMessage($(this).attr('name')))
+               .attr('name', '');
+      });
+    
       // Turn off animations if they are disabled.
       if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
     
@@ -78,11 +85,11 @@
       if (monitored) {
         $('#monitor_page').unbind('click')
                           .addClass('inactive').removeClass('active').addClass('emphasized')
-                          .find('span').text('Page Monitored');
+                          .find('span').text(chrome.i18n.getMessage('page_monitored'));
       } else {
         $('#monitor_page').click(monitorCurrentPage)
                           .removeClass('inactive').addClass('active').removeClass('emphasized')
-                          .find('span').text('Monitor This Page');
+                          .find('span').text(chrome.i18n.getMessage('monitor'));
       }
     }
     
@@ -113,7 +120,7 @@
           $.each(pages, function(i, page) {
             var notification = $('#templates .notification').clone();
         
-            var name = page.name;
+            var name = page.name || chrome.i18n.getMessage('untitled', page.url);
             if (name.length > 60) {
               name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
             }
@@ -201,7 +208,7 @@
   </script>
   <style type="text/css">
     body {
-      width: 600px;
+      width: 680px;
       margin: none;
       padding-bottom: 1.5em;
       overflow: hidden;
@@ -209,7 +216,7 @@
 
     .util, .util:link, .util:visited {
       float: left;
-      width: 150px;
+      width: 170px;
       text-align: left;
       display: block;
       color: #849ccb !important;
@@ -248,22 +255,22 @@
         <div class="page_controls">
           <span class="util active stop_monitoring">
             <img src="img/stop_monitoring.png" />
-            stop monitoring
+            <span class="i18n" name="stop_monitoring"></span>
           </span>
           <span class="util active mark_visited">
             <img src="img/mark_visited.png" />
-            mark visited
+            <span class="i18n" name="mark_visited"></span>
           </span>
           <a class="util active view_diff" href="#" target="_blank">
             <img src="img/diff.png" />
-            view changes
+            <span class="i18n" name="view_diff"></span>
           </a>
         </div>
       </td>
     </tr>
     <tr class="empty">
       <td>
-        No changes found.
+        <span class="i18n" name="no_changes"></span>
       </td>
     </tr>
     <tr class="loading_spacer">
@@ -280,19 +287,19 @@
   <p class="main_controls">
     <a class="util active" href="https://chrome.google.com/extensions/detail/pemhgklkefakciniebenbfclihhmmfcd" target="_blank">
       <img src="img/feedback.png" />
-      <span>Feedback</span>
+      <span class="i18n" name="feedback"></span>
     </a>
     <a class="util active" href="options.htm" target="_blank">
       <img src="img/options.png" />
-      <span>Options</span>
+      <span class="i18n" name="options"></span>
     </a>
     <span class="util active" id="check_now">
       <img src="img/refresh.png" />
-      <span>Check All Now</span>
+      <span class="i18n" name="check_all"></span>
     </span>
     <span class="util active" id="monitor_page">
       <img src="img/monitor.png" />
-      <span>Monitor This Page</span>
+      <span class="i18n" name="monitor"></span>
     </span>
   </p>
 </body>
