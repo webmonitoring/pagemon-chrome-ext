@@ -251,7 +251,7 @@
         }
         if (count) {
           var singular = chrome.i18n.getMessage('import_success_single');
-          var plural = chrome.i18n.getMessage('import_success_multi', count);
+          var plural = chrome.i18n.getMessage('import_success_multi', count.toString());
           alert(count == 1 ? singular : plural);
           fillPagesList();
         } else {
@@ -480,6 +480,18 @@
         for (var i in pages) {
           var icon_attr = pages[i].icon ? ' ICON_URI="' + pages[i].icon + '" ' : '';
           buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' + add_date + '"' + icon_attr + '>' + pages[i].name + '</A>\n');
+          
+          var advanced_settings = {
+            mode: pages[i].mode,
+            regex: pages[i].regex,
+            selector: pages[i].selector,
+            check_interval: pages[i].check_interval,
+            crc: pages[i].crc,
+            last_check: pages[i].last_check,
+            last_changed: pages[i].last_changed,
+          }
+          var encoded_settings = JSON.stringify(advanced_settings).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          buffer.push('            \<\!\-\-PageMonitorAdvancedPageData=' + encoded_settings + '\-\-\>\n');
         }
         
         buffer.push('</DL><p>');
@@ -489,21 +501,29 @@
     }
     
     function importPagesList(bookmarks) {
-      var PAGE_REGEX = /<A[^<>]+>[^<>]+<\/A>/ig;
-      var page_links = bookmarks.match(PAGE_REGEX);
+      var page_regex = /(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\s*\<\!\-\-PageMonitorAdvancedPageData=(\{.*\})\-\-\>\n)?/g;
+      var match;
+      var matches_count = 0;
       
-      for (var i in page_links) {
-        var page_link = $(page_links[i]);
+      while (match = page_regex.exec(bookmarks, page_regex.lastIndex)) {
+        var page_link = $(match[1]);
         var page_url = page_link.attr('HREF') || '';
         var page_name = page_link.text() || chrome.i18n.getMessage('untitled', page_url);
         var page_icon = page_link.attr('ICON_URI') || null;
         
+        var advanced = {};
+        if (match[2]) {
+          advanced = JSON.parse(match[2].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
+        }
+        
         if (page_url) {
-          addPage({ url: page_url, name: page_name, icon: page_icon });
+          var page = $.extend({ url: page_url, name: page_name, icon: page_icon }, advanced);
+          addPage(page);
+          matches_count++;
         }
       }
       
-      return page_links.length;
+      return matches_count;
     }
     
     $(function() {
