@@ -199,6 +199,22 @@ function setPageSettings(url, settings, callback) {
   }, $.noop, (callback || $.noop));
 }
 
+function executeSql(sql, args, resultCallback, transactionCallback) {
+  DB.transaction(function(transaction) {
+    transaction.executeSql(sql, args, function(_, result) {
+      (resultCallback || $.noop)(result);
+    });
+  }, $.noop, (transactionCallback || $.noop));
+}
+
+function sqlResultToArray(result) {
+  var array = [];
+  for (var i = 0; i < result.rows.length; i++) {
+    array.push(result.rows.item(i));
+  }
+  return array;
+}
+
 /*******************************************************************************
                                Cleaning & Hashing
 *******************************************************************************/
