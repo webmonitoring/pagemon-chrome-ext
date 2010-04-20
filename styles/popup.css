@@ -1,0 +1,37 @@
+@import url("base.css");
+
+body {
+  width: 680px;
+  margin: none;
+  padding-bottom: 1.5em;
+  overflow: hidden;
+}
+
+.util, .util:link, .util:visited {
+  float: left;
+  width: 170px;
+  text-align: left;
+  display: block;
+  color: #849ccb !important;
+}
+
+.emphasized, .emphasized:hover {
+  text-shadow: #849ccb 0px -1px 0px !important;
+}
+
+.loading {
+  width: 100%;
+  background: url('../img/loader.gif') center 13px no-repeat;
+}
+
+.loading_spacer {
+  height: 49px;
+}
+
+.notification div {
+  width: 600px;
+}
+
+#monitor_page {
+  text-align: right;
+}

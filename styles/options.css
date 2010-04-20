@@ -1,3 +1,5 @@
+@import url("base.css");
+
 body {
   width: 780px;
   margin: auto;
@@ -170,6 +172,7 @@ hr {
   width: 100%;
   min-height: 200px;
   margin-top: 10px;
+  white-space: nowrap;
 }
 
 #export_form button, #import_form button {
@@ -204,4 +207,9 @@ hr {
 #new_sound_buttons {
   margin-top: 10px;
   margin-left: 40px;
+}
+
+#notifications input {
+  width: 3em;
+  text-align: center;
 }
