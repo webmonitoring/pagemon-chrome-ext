@@ -171,6 +171,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     projected_check_time = current_time + after;
     
     clearTimeout(check_timeout_id);
+    
     check_timeout_id = setTimeout(check, after);
   };
 
@@ -376,6 +377,8 @@ function bringUpToDate(from_version, callback) {
                                           DEFAULT_CHECK_INTERVAL);
       delete localStorage.timeout;
       importVersionTwoPages(updateDone);
+    } else {
+      updateDone();
     }
   });
 }
