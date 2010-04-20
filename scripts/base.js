@@ -21,6 +21,9 @@ var BG = chrome.extension.getBackgroundPage();
 // Reference to the database.
 var DB = openDatabase('pages', '1.0', 'Monitored Pages', 49 * 1024 * 1024);
 
+// The maximum amount of time a regex match is allowed to take, in milliseconds.
+var REGEX_TIMEOUT = 7 * 1000;
+
 /*******************************************************************************
 *                                  Utilities                                   *
 *******************************************************************************/
@@ -205,20 +208,22 @@ function getAllUpdatedPages(callback) {
 // to the callback. An empty settings object will result in an immediate call to
 // the callback.
 function setPageSettings(url, settings, callback) {
-  if (settings.length == 0) {
-    var buffer = [];
-    var args = [];
-    
-    for (var name in settings) {
-      buffer.push(name + ' = ?');
-      if (settings[name] === true || settings[name] === false) settings[i] += 0;
-      args.push(settings[name]);
+  var buffer = [];
+  var args = [];
+  
+  for (var name in settings) {
+    buffer.push(name + ' = ?');
+    if (typeof(settings[name]) == 'boolean') {
+      settings[name] = new Number(settings[name]);
     }
-    args.push(url);
-    
+    args.push(settings[name]);
+  }
+  args.push(url);
+  
+  if (buffer) {
     var query = 'UPDATE pages SET ' + buffer.join(', ') + ' WHERE url = ?';
     
-    executeSql(query, args, (callback || $.noop));
+    executeSql(query, args, null, (callback || $.noop));
   } else {
     (callback || $.noop)();
   }
@@ -228,53 +233,68 @@ function setPageSettings(url, settings, callback) {
 *                              Cleaning & Hashing                              *
 *******************************************************************************/
 
-// Searches for all matches of regex in text and returns them in a formatted
-// form. WARNING: this is blocking, and may take a while.
-function findAndFormatRegexMatches(text, regex) {
-  if (!regex) return '';
-
-  var results = [];
-  var match = null;
-  regex = new RegExp(regex, 'g');
+// Searches for all matches of regex in text, formats them into a single string,
+// then calls the callback with the result as an argument. If matching the regex
+// takes more than REGEX_TIMEOUT, the matching is cancelled and the callback is
+// called with a null argument.
+function findAndFormatRegexMatches(text, regex, callback) {
+  if (!callback) return;
+  if (!regex) return callback('');
   
-  while (true) {
-    match = regex.exec(text, regex.lastIndex);
-    if (!match || match.join('').length == 0) break;
-    
-    if (match.length == 1) {
-      // If there were no captured groups, append the whole match.
-      results.push('"' + match[0] + '"');
-    } else {
-      // Append all capture groups but not the whole match.
-      results.push('"' + match.slice(1).join('", "') + '"');
+  var called = false;
+  var worker = new Worker('scripts/regex.js');
+  
+  function finishMatching(result) {
+    if (!called) {
+      called = true;
+      worker.terminate();
+      (callback || $.noop)(result && result.data);
     }
   }
   
-  return results.join('\n');
-}
-
-// Searches for all matches of selector in the html (a string) and returns them
-// in a formatted form.
-function findAndFormatSelectorMatches(html, selector) {
-  var body = $('<body>').html(getStrippedBody(html));
+  worker.onmessage = finishMatching;
+  worker.postMessage(JSON.stringify({
+    command: 'run',
+    text: text,
+    regex: regex
+  }));
   
-  return $(selector, body).map(function() {
-    return '"' + $('<div>').append(this).html() + '"';
-  }).get().join('\n');
+  setTimeout(finishMatching, REGEX_TIMEOUT);
 }
 
-// Returns the CRC of a page, after cleaning it. If mode=regex and the regex
-// parameter is set, the page is cleaned by replacing it with all the matches of
-// this regex. If mode=selector and the selector parameter is set, the pages is
-// cleaned by replacing it with the innerHTML of all matches of that selector.
-// Otherwise cleaning means that all tags and non-letters are stripped.
-function cleanAndHashPage(html, mode, regex, selector) {
-  if (!mode) mode = regex ? 'regex' : 'text';
+// Searches for all matches of selector in the html string, formats them into a
+// single string, then calls the callback with the result as an argument. If
+// called with an invalid selector, the callback is called with a null.
+function findAndFormatSelectorMatches(html, selector, callback) {
+  try {
+    var body = $('<body>').html(getStrippedBody(html));
+    var result = $(selector, body).map(function() {
+      return '"' + $('<div>').append(this).html() + '"';
+    }).get().join('\n');
+    
+    (callback || $.noop)(result);
+  } catch (e) {
+    (callback || $.noop)(null);
+  }
+}
+
+// Calculates the CRC of a page, after cleaning it, and calls the callback with
+// this CRC as an argument. If mode=regex and the regex parameter is set, the
+// page is cleaned by replacing it with all the matches of this regex. If
+// mode=selector and the selector parameter is set, the pages is cleaned by
+// replacing it with the outerHTML of all matches of that selector. Otherwise
+// cleaning means that all tags and non-letters are stripped.
+function cleanAndHashPage(html, mode, regex, selector, callback) {
+  if (!callback) return;
+  
+  function callBackWithCrc(result) {
+    (callback || $.noop)(crc(result || ''));
+  }
   
   if (mode == 'regex' && regex != null && regex != undefined) {
-    html = findAndFormatRegexMatches(html, regex);
+    findAndFormatRegexMatches(html, regex, callBackWithCrc);
   } else if (mode == 'selector' && selector != null && selector != undefined) {
-    html = findAndFormatSelectorMatches(html, selector);
+    findAndFormatSelectorMatches(html, selector, callBackWithCrc);
   } else {
     html = html.toLowerCase();
     // Get rid of everything before and after the body.
@@ -293,27 +313,30 @@ function cleanAndHashPage(html, mode, regex, selector) {
     html = html.replace(/\d+ ?(st|nd|rd|th|am|pm|seconds?|minutes?|hours?|days?|weeks?|months?)\b/g, '');
     // Remove everything other than letters (note - unicode letters are preserved).
     html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
+    
+    callBackWithCrc(html);
   }
-  
-  return crc(html);
 }
 
 /*******************************************************************************
-                              Adding & Removing Pages
+*                           Adding & Removing Pages                            *
 *******************************************************************************/
 
 // Registers a URL for monitoring and takes a snapshot of it. Redirects itself
-// to the background page if needed.
+// to the background page if needed. Calls BG.scheduleCheck() then the callback
+// after the new page is successfully added (if it is).
 function addPage(page, callback) {
-  if (window != BG) return BG.addPage(page, callback);
+  if (window != BG) BG.addPage(page, callback);
 
+  var query = 'INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
   var html = '';
+  
   $.ajax({
     url: page.url,
     dataType: 'text',
     complete: function() {
-      DB.transaction(function(transaction) {
-        transaction.executeSql('INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)', [
+      cleanAndHashPage(page.html || html, 'text', null, null, function(crc) {
+        executeSql(query, [
           page.url,
           page.name || chrome.i18n.getMessage('untitled', page.url),
           page.mode || 'text',
@@ -321,14 +344,16 @@ function addPage(page, callback) {
           page.selector || null,
           page.timeout || null,
           page.html || html,
-          cleanAndHashPage(html, 'text'),
+          crc,
           page.icon || null,
           page.updated ? 1 : 0,
           new Date().getTime(),
           page.last_changed || null
-        ], (callback || $.noop));
+        ], null, function() {
+          BG.scheduleCheck();
+          (callback || $.noop)();
+        });
       });
-      scheduleCheck();
     },
     success: function(response) {
       html = response;
@@ -336,83 +361,89 @@ function addPage(page, callback) {
   });
 }
 
-// Removes a page from the monitoring registry and deletes all settings related
-// to it.
+// Removes a page from the monitoring registry, then calls BG.scheduleCheck()
+// and the callback once the page is successfully removed (even if the page did
+// not exist in the first place.
 function removePage(url, callback) {
-  DB.transaction(function(transaction) {
-    transaction.executeSql('DELETE FROM pages WHERE url = ?', [url], function() {
-      BG.scheduleCheck();
-      (callback || $.noop)();
-    });
+  executeSql('DELETE FROM pages WHERE url = ?', [url], null, function() {
+    BG.scheduleCheck();
+    (callback || $.noop)();
   });
 }
 
-// Returns a boolean indicating whether the supplied URL is being monitored.
+// Calls the callback with a boolean indicating whether the supplied URL is
+// being monitored.
 function isPageMonitored(url, callback) {
-  DB.readTransaction(function(transaction) {
-    transaction.executeSql('SELECT COUNT(*) FROM pages WHERE url = ?', [url], function(_, result) {
-      (callback || $.noop)(result.rows.item(0)['COUNT(*)'] == 1);
-    });
+  executeSql('SELECT COUNT(*) FROM pages WHERE url = ?',
+             [url], function(result) {
+    var count = result.rows.item(0)['COUNT(*)'];
+    console.assert(count <= 1);
+    (callback || $.noop)(count == 1);
   });
 }
 
 /*******************************************************************************
-                                  Page Checking
+*                                Page Checking                                 *
 *******************************************************************************/
 
-// Fetches the page, marks it as updated if necessary, and reschedules itself.
-// For the scheduling to work, it MUST run on the background page. Calls from
-// other pages are automatically redirected to the background page.
+// Performs a check on the specified page, and updates its crc field with new
+// info. If a change is detected, sets the updated flag on that page. Once the
+// check is done and all updates are applied, the callback is called with the
+// URL of the checked page.
+// 
+// If the changes in the page did not result in a different CRC from the one
+// recorded (e.g. changes in numbers only, or in non-selected parts during
+// selective monitoring), or force_snapshot is checked, the html field of the
+// page is updated. It is not updated when the CRC changes so that the diff
+// viewer has a snapshot of the page before the latest update.
 function checkPage(url, callback, force_snapshot) {
-  console.log('Checking ' + url);
-  DB.readTransaction(function(transaction) {
-    transaction.executeSql('SELECT updated FROM pages WHERE url = ?', [url], function(_, result) {
-      // If page is already marked as updated, skip check.
-      if (result.rows.item(0).updated) {
-        (callback || $.noop)(url);
-      } else {
-        $.ajax({
-          url: url,
-          dataType: 'text',
-          success: function(html) {
-            if (!html) return;
+  executeSql('SELECT updated FROM pages WHERE url = ?',
+             [url], function(result) {
+    if (result.rows.length == 0 || result.rows.item(0).updated) {
+      (callback || $.noop)(url);
+      return;
+    }
+    
+    $.ajax({
+      url: url,
+      dataType: 'text',
+      success: function(html) {
+        getPage(url, function(page) {
+          cleanAndHashPage(html, page.mode, page.regex, page.selector,
+                           function(crc) {
+            var settings = {};
             
-            getPage(url, function(page) {
-              var crc = cleanAndHashPage(html, page.mode, page.regex, page.selector);
-              var settings = {};
-              
-              if (crc != page.crc) {
-                console.log('Setting updated = true');
-                settings = {
-                  updated: true,
-                  crc: crc,
-                  html: force_snapshot ? html.replace(/\s+/g, ' ') : page.html,
-                  last_changed: new Date().getTime()
-                }
-              } else {
-                settings = { html: html.replace(/\s+/g, ' ') };
+            if (crc != page.crc) {
+              settings = {
+                updated: true,
+                crc: crc,
+                html: force_snapshot ? html.replace(/\s+/g, ' ') : page.html,
+                last_changed: new Date().getTime()
               }
-              
-              settings['last_check'] = new Date().getTime();
-              setPageSettings(url, settings, function() {
-                (callback || $.noop)(url);
-              });
-            });
-          },
-          error: function() {
-            setPageSettings(url, { last_check: new Date().getTime() }, function() {
+            } else {
+              settings = { html: html.replace(/\s+/g, ' ') };
+            }
+            
+            settings.last_check = new Date().getTime();
+            setPageSettings(url, settings, function() {
               (callback || $.noop)(url);
             });
-          }
+          });
+        });
+      },
+      error: function() {
+        setPageSettings(url, { last_check: new Date().getTime() }, function() {
+          (callback || $.noop)(url);
         });
       }
     });
   });
 }
 
+// Updates the HTML snapshot of the specified page, and calls the callback once
+// it's saved.
 function takeSnapshot(url, callback) {
   checkPage(url, function() {
-    console.log('Setting updated = false');
     setPageSettings(url, { updated: false }, callback);
   }, true);
 }
