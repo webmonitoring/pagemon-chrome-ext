@@ -13,20 +13,7 @@
       $(function() {
         $('title').text(chrome.i18n.getMessage('diff_title'));
         $('#diff_in_progress').text(chrome.i18n.getMessage('diff_progress'));
-      
-        var url = atob(window.location.hash.substr(1));
-        getPage(url, function(page) {
-          var src = page.html;
-          $.get(url, function(html) {
-            if (src) {
-              startDiff(url, src, html);
-            } else {
-              setPageSettings(url, {html: html});
-              $('img').hide();
-              $('div').html(chrome.i18n.getMessage('diff_corruption'));
-            }
-          });
-        });
+        initiateDiff(atob(window.location.hash.substr(1)));
       });
     </script>
   </head> 
