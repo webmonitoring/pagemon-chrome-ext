@@ -1,3 +1,9 @@
+/*
+  Contains generic functions that all other parts of the system use. These
+  include basic utilities, storage interface, cleaning/hashing and single page
+  checking functions.
+*/
+
 /*******************************************************************************
 *                                  Constants                                   *
 *******************************************************************************/
@@ -229,6 +235,66 @@ function setPageSettings(url, settings, callback) {
   }
 }
 
+// Registers a URL for monitoring and takes a snapshot of it. Redirects itself
+// to the background page if needed. Calls BG.scheduleCheck() then the callback
+// after the new page is successfully added (if it is).
+function addPage(page, callback) {
+  if (window != BG) BG.addPage(page, callback);
+
+  var query = 'INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
+  var html = '';
+  
+  $.ajax({
+    url: page.url,
+    dataType: 'text',
+    complete: function() {
+      cleanAndHashPage(page.html || html, 'text', null, null, function(crc) {
+        executeSql(query, [
+          page.url,
+          page.name || chrome.i18n.getMessage('untitled', page.url),
+          page.mode || 'text',
+          page.regex || null,
+          page.selector || null,
+          page.timeout || null,
+          page.html || html,
+          crc,
+          page.icon || null,
+          page.updated ? 1 : 0,
+          new Date().getTime(),
+          page.last_changed || null
+        ], null, function() {
+          BG.scheduleCheck();
+          (callback || $.noop)();
+        });
+      });
+    },
+    success: function(response) {
+      html = response;
+    }
+  });
+}
+
+// Removes a page from the monitoring registry, then calls BG.scheduleCheck()
+// and the callback once the page is successfully removed (even if the page did
+// not exist in the first place.
+function removePage(url, callback) {
+  executeSql('DELETE FROM pages WHERE url = ?', [url], null, function() {
+    BG.scheduleCheck();
+    (callback || $.noop)();
+  });
+}
+
+// Calls the callback with a boolean indicating whether the supplied URL is
+// being monitored.
+function isPageMonitored(url, callback) {
+  executeSql('SELECT COUNT(*) FROM pages WHERE url = ?',
+             [url], function(result) {
+    var count = result.rows.item(0)['COUNT(*)'];
+    console.assert(count <= 1);
+    (callback || $.noop)(count == 1);
+  });
+}
+
 /*******************************************************************************
 *                              Cleaning & Hashing                              *
 *******************************************************************************/
@@ -316,70 +382,6 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
     
     callBackWithCrc(html);
   }
-}
-
-/*******************************************************************************
-*                           Adding & Removing Pages                            *
-*******************************************************************************/
-
-// Registers a URL for monitoring and takes a snapshot of it. Redirects itself
-// to the background page if needed. Calls BG.scheduleCheck() then the callback
-// after the new page is successfully added (if it is).
-function addPage(page, callback) {
-  if (window != BG) BG.addPage(page, callback);
-
-  var query = 'INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  var html = '';
-  
-  $.ajax({
-    url: page.url,
-    dataType: 'text',
-    complete: function() {
-      cleanAndHashPage(page.html || html, 'text', null, null, function(crc) {
-        executeSql(query, [
-          page.url,
-          page.name || chrome.i18n.getMessage('untitled', page.url),
-          page.mode || 'text',
-          page.regex || null,
-          page.selector || null,
-          page.timeout || null,
-          page.html || html,
-          crc,
-          page.icon || null,
-          page.updated ? 1 : 0,
-          new Date().getTime(),
-          page.last_changed || null
-        ], null, function() {
-          BG.scheduleCheck();
-          (callback || $.noop)();
-        });
-      });
-    },
-    success: function(response) {
-      html = response;
-    }
-  });
-}
-
-// Removes a page from the monitoring registry, then calls BG.scheduleCheck()
-// and the callback once the page is successfully removed (even if the page did
-// not exist in the first place.
-function removePage(url, callback) {
-  executeSql('DELETE FROM pages WHERE url = ?', [url], null, function() {
-    BG.scheduleCheck();
-    (callback || $.noop)();
-  });
-}
-
-// Calls the callback with a boolean indicating whether the supplied URL is
-// being monitored.
-function isPageMonitored(url, callback) {
-  executeSql('SELECT COUNT(*) FROM pages WHERE url = ?',
-             [url], function(result) {
-    var count = result.rows.item(0)['COUNT(*)'];
-    console.assert(count <= 1);
-    (callback || $.noop)(count == 1);
-  });
 }
 
 /*******************************************************************************
