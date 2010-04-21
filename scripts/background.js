@@ -1,3 +1,9 @@
+/*
+  Contains functions used for monitoring, badge manipulation, initialization and
+  convertion between page list formats from older versions. All of these
+  functions must run on the background page to avoid being interrupted.
+*/
+
 /*******************************************************************************
 *                                  Constants                                   *
 *******************************************************************************/
