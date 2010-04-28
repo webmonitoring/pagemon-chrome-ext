@@ -4,7 +4,7 @@
     "description": "The name of the extension."
   },
   "description": {
-    "message": "Остается в фоновом режиме и следит за изменениями на веб-страницах.",
+    "message": "Остаётся на заднем плане и следит за изменениями на веб-страницах.",
     "description": "The global description of the extension."
   },
   "page_updated_single": {
@@ -12,7 +12,7 @@
     "description": "Notification title: a single page has been updated."
   },
   "page_updated_multi": {
-    "message": "Страницы Обновлены",
+    "message": "Страниц(ы) Обновленo",
     "description": "Notification title: multiple pages have been updated."
   },
   "diff_title": {
@@ -20,7 +20,7 @@
     "description": "The title of the diff page."
   },
   "diff_error": {
-    "message": "Ошибка при вычислении изменений. Пожалуйста, сообщите об этом.",
+    "message": "Ошибка при поиске изменений. Пожалуйста, сообщите об этом.",
     "description": "A diff failure error message on the diff page."
   },
   "diff_show_deletions": {
@@ -40,15 +40,15 @@
     "description": "Tooltip of the link to the original page on the diff page."
   },
   "diff_corruption": {
-    "message": "Коррупция кэша обнаружена и исправлена. Последний снимок был отброшен. Подсветка изменений будет доступна после следующей проверки.",
+    "message": "Ошибка кэша обнаружена и исправлена. Последний снимок был отброшен. Подсветка изменений будет доступна после следующей проверки.",
     "description": "Cache corruption error message on the diff page."
   },
   "diff_progress": {
-    "message": "Изменения вычисляются...",
+    "message": "Поиск изменений в процессе...",
     "description": "The message to show while fetching the page to diff."
   },
   "options_header": {
-    "message": "Наблюдаемые Страницы",
+    "message": "Отслеживаемые Страницы",
     "description": "The text of the pages list header on the options page."
   },
   "untitled": {
@@ -56,15 +56,15 @@
     "description": "Default name for pages that have an empty name, with placeholder for the URL."
   },
   "check_in_progress": {
-    "message": "Ведется проверка",
+    "message": "Проверяется",
     "description": "The message to display while a check is in progress."
   },
   "stop_monitoring": {
-    "message": "остановить слежение",
+    "message": "перестать следить",
     "description": "The text on the button that stops a page from being monitored."
   },
   "mark_visited": {
-    "message": "пометить как посешёное",
+    "message": "пометить просмотренной",
     "description": "The text on the button that marks an updated page as visited."
   },
   "view_diff": {
@@ -76,7 +76,7 @@
     "description": "The popup text when no changes have been found."
   },
   "feedback": {
-    "message": "Отзывы",
+    "message": "Обратная Связь",
     "description": "The text of the feedback link."
   },
   "options": {
@@ -88,11 +88,11 @@
     "description": "The text of the button that initiates a check of all pages."
   },
   "monitor": {
-    "message": "Пронаблюдаеть",
+    "message": "Отследить",
     "description": "The text of the button that marks a page for monitoring."
   },
   "page_monitored": {
-    "message": "Наблюдается",
+    "message": "Страница Отслеживается",
     "description": "This text appears in the popup when the current page is already monitored."
   },
   "options_title": {
@@ -100,11 +100,11 @@
     "description": "The title of the options page."
   },
   "new_sound_prompt": {
-    "message": "Пожалуйста, введите имя и URL для нового звука.",
+    "message": "Пожалуйста, введите название и URL для нового звука.",
     "description": "The prompt that appears when the user tries to add a new sound."
   },
   "new_sound_failed": {
-    "message": "Chrome не может воспроизвести файл по указанному URL.",
+    "message": "Chrome не смог воспроизвести файл по указанному URL.",
     "description": "The error message displayed when the URL specified for a new sound could not be played."
   },
   "import_error": {
@@ -120,7 +120,7 @@
     "description": "The message displayed when 1 page was imported successfully."
   },
   "import_success_multi": {
-    "message": "Успешно импортировано 7 страниц(ы).",
+    "message": "Успешно импортировано $1 страниц(ы).",
     "description": "The message displayed when multiple pages were imported successfully."
   },
   "test_button": {
@@ -132,11 +132,11 @@
     "description": "The message that appears while testing a regex or selector."
   },
   "test_matches": {
-    "message": "Найдено:",
+    "message": "Совпадает:",
     "description": "The message that appears when a regex or selector test matches something."
   },
   "test_no_matches": {
-    "message": "Ничего не найдено.",
+    "message": "Нет совпадений.",
     "description": "The message that appears when a regex or selector test does not match anything."
   },
   "test_fail": {
@@ -144,7 +144,7 @@
     "description": "The message that appears when a regex or selector test fails to retrieve the page to test."
   },
   "advanced": {
-    "message": "расширенное",
+    "message": "дополнительно",
     "description": "The text of the button to toggle advanced settings."
   },
   "rename_page": {
@@ -184,7 +184,7 @@
     "description": "A single hour, as a number suffix (e.g. '1 hour')."
   },
   "hours": {
-    "message": "$1 часа/часов",
+    "message": "$1 часа(ов)",
     "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
   },
   "day": {
@@ -192,7 +192,7 @@
     "description": "A single day, as a number suffix (e.g. '1 day')."
   },
   "days": {
-    "message": "$1 дня/дней",
+    "message": "$1 дня(ей)",
     "description": "A plural number of days, as a number suffix (e.g. '7 days')."
   },
   "ago": {
@@ -216,7 +216,7 @@
     "description": "The label for selector mode."
   },
   "no_pages_monitored": {
-    "message": "Не идёт слежение ни за одной страницой.",
+    "message": "Ни одна страница не отслеживается.",
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
@@ -240,7 +240,7 @@
     "description": "Label for the badge color selector."
   },
   "sound_alert": {
-    "message": "Звук:",
+    "message": "Звуковое Уведомление:",
     "description": "Label for the sound alert drop-down."
   },
   "sound_none": {
@@ -272,7 +272,7 @@
     "description": "The 'last check' option in the sort order drop-down."
   },
   "sort_last_change": {
-    "message": "последнему изменению",
+    "message": "последней изменённой",
     "description": "The 'last changed' option in the sort order drop-down."
   },
   "animations": {
@@ -288,11 +288,11 @@
     "description": "The text of the button to export pages into a bookmarks.html."
   },
   "export_prompt": {
-    "message": "Скопируйте этот текст в файл и сохранить его под имененм bookmarks.html:",
+    "message": "Скопируйте этот текст в файл и сохранить как bookmarks.html:",
     "description": "The prompt that appears before the exported pages textbox."
   },
   "import_prompt": {
-    "message": "Скопируйте содержимое вашего bookmarks.хтмл файла сюда:",
+    "message": "Вставьте содержание вашего bookmarks.html сюда:",
     "description": "The prompt that appears before the bookmarks.html textbox when importing."
   },
   "import_button": {
