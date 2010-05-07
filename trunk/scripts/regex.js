@@ -1,3 +1,15 @@
+/*
+  A Web Worker script to allow interruptable regex searches. Expects the command
+  in the following format:
+  {
+    command: 'run',
+    text: 'the text to search in',
+    regex: 'the regex pattern string'
+  }
+  Returns a string of all the matches, separated by new lines (there may also be
+  embedded new lines inside the matches).
+*/
+
 onmessage = function(raw_message) {
   var message = JSON.parse(raw_message.data);
   
