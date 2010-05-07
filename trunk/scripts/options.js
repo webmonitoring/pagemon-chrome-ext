@@ -106,7 +106,7 @@ function initializeNotificationsChecker() {
       $(this).val(new_timeout);
     }
     setSetting(SETTINGS.notifications_timeout, new_timeout * 1000);
-  }).blur(function() { $(this).keyup(); });
+  }).change(function() { $(this).keyup(); });
 }
 
 function initializeSoundSelector() {
@@ -254,7 +254,7 @@ function initializeTimeoutTextbox() {
   
   $('#global_timeout input').val(timeout).keyup(function() {
     setSetting(SETTINGS.check_interval, cleanTimeoutTextbox(this) * 60 * 1000);
-  }).blur(function() { $(this).keyup(); });
+  }).change(function() { $(this).keyup(); });
 }
 
 function cleanTimeoutTextbox(textbox) {
