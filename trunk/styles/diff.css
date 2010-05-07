@@ -11,15 +11,13 @@ ins {
 #chrome_page_monitor_ext_orig_link {
   position: fixed !important;
   bottom: 0px !important;
-  right: 40px !important;
-  width: 190px !important;
-  height: 45px !important;
+  right: 30px !important;
   background: white !important;
   border: 2px #849ccb solid !important;
   border-bottom: 0px !important;
   border-radius: 20px 20px 0px 0px !important;
   margin: 0px !important;
-  padding: 0px !important;
+  padding: 5px 20px 5px 20px !important;
   padding-top: 5px !important;
   text-align: center !important;
 }
