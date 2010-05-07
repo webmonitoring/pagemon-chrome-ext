@@ -344,17 +344,49 @@ function findAndFormatSelectorMatches(html, selector, callback) {
   }
 }
 
+// Extract the text out of the HTML page, then calls the callback with the
+// result as an argument. The extraction includes:
+// 1. Trimming everything outside of <body>.
+// 2. Removing scripts and styles.
+// 3. Removing all tags.
+// 4. Removing time, date and cardinality number suffixes (1st, 5pm, 3 weeks).
+// 5. Removing all ASCII non-letter characters.
+function cleanHtmlPage(html, callback) {
+  html = html.toLowerCase();
+  // Get rid of everything outside the body.
+  html = getStrippedBody(html);
+  // Remove major non-text elements.
+  html = html.replace(/<(script|style|object|embed|applet)[^>]*>[^]*?<\/\1>/g, '');
+  // Replace images with their sources (to preserve after tag stripping).
+  html = html.replace(/<img[^>]*src\s*=\s*['"]?([^<>"' ]+)['"]?[^>]*>/g,
+                     '{startimg:$1:endimg}');
+  // Strip tags.
+  html = html.replace(/<[^>]*>/g, '');
+  // Collapse whitespace.
+  html = html.replace(/\s+/g, ' ');
+  // Unescape HTML entities (&nbsp;, &amp;, numeric unicode entities, etc.).
+  html = $('<div/>').html(html).text();
+  // Remove numbers with common number suffixes. This helps with pages that
+  // print out the current date/time or time since an item was posted.
+  html = html.replace(/\d+ ?(st|nd|rd|th|am|pm|seconds?|minutes?|hours?|days?|weeks?|months?)\b/g, '');
+  // Remove everything other than letters (unicode letters are preserved).
+  html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
+  
+  (callback || $.noop)(html);
+}
+
 // Calculates the CRC of a page, after cleaning it, and calls the callback with
 // this CRC as an argument. If mode=regex and the regex parameter is set, the
 // page is cleaned by replacing it with all the matches of this regex. If
 // mode=selector and the selector parameter is set, the pages is cleaned by
 // replacing it with the outerHTML of all matches of that selector. Otherwise
-// cleaning means that all tags and non-letters are stripped.
+// cleaning means calling cleanHtmlPage() which pretty much extracts the text
+// out of the HTML (see the function for more details).
 function cleanAndHashPage(html, mode, regex, selector, callback) {
   if (!callback) return;
   
   function callBackWithCrc(result) {
-    (callback || $.noop)(crc(result || ''));
+    callback(crc(result || ''));
   }
   
   if (mode == 'regex' && regex != null && regex != undefined) {
@@ -362,25 +394,7 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
   } else if (mode == 'selector' && selector != null && selector != undefined) {
     findAndFormatSelectorMatches(html, selector, callBackWithCrc);
   } else {
-    html = html.toLowerCase();
-    // Get rid of everything before and after the body.
-    html = html.replace(/[^]*<body[^>]*>/, '');
-    html = html.replace(/([^]*)<\/body[^>]*>[^>]*/, '$1');
-    // Remove major non-text elements.
-    html = html.replace(/<(script|style|object|embed|applet)[^>]*>[^]*?<\/\1>/g, '');
-    // Replace images with their sources (to preserve after tag stripping).
-    html = html.replace(/<img[^>]*src\s*=\s*([^]+?)\b[^>]*>/g, '{imgsrc:$1}');
-    // Strip tags.
-    html = html.replace(/<[^>]*>/g, '');
-    // Collapse whitespace.
-    html = html.replace(/\s+/g, ' ');
-    // Remove numbers with common number suffixes. This helps with pages that
-    // print out the current date/time or time since an item was posted.
-    html = html.replace(/\d+ ?(st|nd|rd|th|am|pm|seconds?|minutes?|hours?|days?|weeks?|months?)\b/g, '');
-    // Remove everything other than letters (note - unicode letters are preserved).
-    html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
-    
-    callBackWithCrc(html);
+    cleanHtmlPage(html, callBackWithCrc);
   }
 }
 
