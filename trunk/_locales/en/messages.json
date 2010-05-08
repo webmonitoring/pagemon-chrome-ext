@@ -342,5 +342,25 @@
   "sound_cuckoo": {
     "message": "Cuckoo",
     "description": "The label of the default cuckoo sound."
+  },
+  "selector_gui_pick": {
+    "message": "Pick Element",
+    "description": "The 'pick element' button in the visual selector construction GUI."
+  },
+  "selector_gui_parent": {
+    "message": "Grow Selection",
+    "description": "The button which switches from a selected element to its parent in the visual selector construction GUI."
+  },
+  "selector_gui_done": {
+    "message": "Done",
+    "description": "The button which accepts the selection and closes the page in the visual selector construction GUI."
+  },
+  "selector_gui_help": {
+    "message": "Help",
+    "description": "The caption of the help button in the visual selector construction GUI."
+  },
+  "selector_gui_help_text": {
+    "message": "These controls will allow you to visually select the page element you want to monitor.\n\nStart by moving your mouse around and notice that the elements over which you pass are outlined in blue. Once the outline matches the element you want (or some part of it), click to select it.\n\nIf you're happy with your selection, simply click Done to return to the options page.\n\nIf the element you selected is only part of the element you would like to monitor, you can click on 'Grow Selection' to extend the selection over to the element in which your selection resides. You can repeat this until you are satisfied with the result of until you reach a top-level part of the page.\n\nIf you'd like to start from scratch and select a new element, click 'Pick Element'.",
+    "description": "The help message in the visual selector construction GUI."
   }
 }
