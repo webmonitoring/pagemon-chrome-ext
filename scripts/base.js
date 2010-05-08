@@ -51,24 +51,6 @@ var REGEX_TIMEOUT = 7 * 1000;
   };
 })();
 
-(function() {
-  var version = null;
-  
-  // Returns the extension version, as defined in the manifest.
-  getExtensionVersion = function() {
-    if (!version) {
-      var manifest = $.ajax({
-        url: 'manifest.json',
-        async: false
-      }).responseText;
-      manifest = JSON.parse(manifest || 'null');
-      if (manifest) version = manifest.version;
-    }
-    
-    return version; 
-  };
-})();
-
 // Returns a string describing the amount of time that has passed since the time
 // specified in the timestamp argument. Examples: '7 seconds ago', '1 hour ago',
 // '3 hours 27 minutes ago', '40 days 10 hours ago'. The exact words returned

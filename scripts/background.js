@@ -253,6 +253,26 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 *                                Initialization                                *
 *******************************************************************************/
 
+(function() {
+  var version = null;
+  
+  // A utility function that returns the extension version, as defined in the
+  // manifest.
+  getExtensionVersion = function() {
+    if (!version) {
+      var manifest = $.ajax({
+        url: 'manifest.json',
+        async: false
+      }).responseText;
+      manifest = JSON.parse(manifest || 'null');
+      if (manifest) version = manifest.version;
+    }
+    
+    return version; 
+  };
+})();
+
+
 // Inserts the specified page objects into the pages table in the database. The
 // pages argument should be an array of pages, each an object with any of the
 // standard page properties (url, name, mode, regex, selector, timeout, html,
