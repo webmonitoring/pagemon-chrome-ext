@@ -1,3 +1,9 @@
+/*
+  The code behind the popup HTML page. Manages filling the notifications,
+  animating them, and responding to button clicks on both the main and
+  per-notification controls.
+*/
+
 // Returns the URL of the page referenced by a .notification record given any
 // element inside it.
 function getNotificationUrl(context) {
