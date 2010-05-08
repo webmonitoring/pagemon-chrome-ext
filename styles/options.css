@@ -1,5 +1,38 @@
 @import url("base.css");
 
+
+.util, .util:link, .util:visited {
+  text-decoration: none;
+}
+
+.util img {
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+.util.inactive {
+  color: #8EA7D7;
+  cursor: default;
+}
+
+.util.active {
+  color: #607fbf;
+  cursor: pointer;
+}
+
+.util.active:hover {
+  text-shadow: #849ccb 0px -1px 0px;
+}
+
+.page_controls .util {
+  margin-top: 10px;
+  margin-left: 50px;
+  width: auto;
+  text-align: right;
+}
+
+
 body {
   width: 780px;
   margin: auto;

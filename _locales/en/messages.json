@@ -83,6 +83,10 @@
     "message": "Options",
     "description": "The text of the options link."
   },
+  "view_all": {
+    "message": "View All Updates",
+    "description": "The text of the button that opens all updated pages in new tabs."
+  },
   "check_all": {
     "message": "Check All Now",
     "description": "The text of the button that initiates a check of all pages."

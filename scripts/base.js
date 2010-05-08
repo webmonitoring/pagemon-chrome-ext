@@ -18,7 +18,8 @@ var SETTINGS = {
   notifications_timeout: 'notifications_timeout',
   animations_disabled: 'animations_disabled',
   sort_by: 'sort_by',
-  custom_sounds: 'custom_sounds'
+  custom_sounds: 'custom_sounds',
+  view_all_action: 'originals'
 };
 
 // Reference to the background page.
@@ -54,7 +55,7 @@ var REGEX_TIMEOUT = 7 * 1000;
   var version = null;
   
   // Returns the extension version, as defined in the manifest.
-  chrome.extension.getVersion = function() {
+  getExtensionVersion = function() {
     if (!version) {
       var manifest = $.ajax({
         url: 'manifest.json',
