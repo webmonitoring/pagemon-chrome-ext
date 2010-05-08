@@ -235,15 +235,20 @@ function applyDiff(url, src, dest) {
 }
 
 // Retrieves a saved snapshot of the URL, then the current live version, and
-// runs a diff between them using applyDiff(). If no saved snapshot is
-// available, displays a diff_coruption error message in the first div of the
-// page.
+// runs a diff between them using applyDiff(). If the response received is of
+// the type text/plain, it's converted to HTML using textToHtml(). If no saved
+// snapshot is available, displays a diff_coruption error message in the first
+// div of the page.
 function initiateDiff(url) {
   getPage(url, function(page) {
     $.ajax({
       url: url,
       dataType: 'text',
-      success: function(new_html) {
+      success: function(new_html, _, xhr) {
+        var type = xhr.getResponseHeader('Content-type');
+        new_html = canonizeHtml(new_html, type);
+        page.html = canonizeHtml(page.html, type);
+          
         if (page.html) {
           applyDiff(url, page.html, new_html);
         } else {
