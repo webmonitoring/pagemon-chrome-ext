@@ -36,7 +36,7 @@
     "description": "Text of the link to the original page on the diff page."
   },
   "diff_original_title": {
-    "message": "Profili Orjinal Sayfa",
+    "message": "Orjinal Sayfayı Görüntüle",
     "description": "Tooltip of the link to the original page on the diff page."
   },
   "diff_corruption": {
@@ -84,7 +84,7 @@
     "description": "The text of the options link."
   },
   "view_all": {
-    "message": "Tüm Sitede aç",
+    "message": "Güncellenenleri Aç",
     "description": "The text of the button that opens all updated pages in new tabs."
   },
   "check_all": {
@@ -104,7 +104,7 @@
     "description": "This text appears in the popup when the current page is already monitored."
   },
   "new_sound_prompt": {
-    "message": "Lütfen yeni ses için birer isim ve adres girin.",
+    "message": "Lütfen yeni ses için bir isim ve adres girin.",
     "description": "The prompt that appears when the user tries to add a new sound."
   },
   "new_sound_failed": {
@@ -164,7 +164,7 @@
     "description": "A placeholder for an unknown piece of data."
   },
   "never": {
-    "message": "asla",
+    "message": "hiçbir zaman",
     "description": "A 'last checked' label for pages that have never been checked."
   },
   "second": {
@@ -204,7 +204,7 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Aralığı kontrol edin (dakika):",
+    "message": "Denetleme Sıklığı (dakika):",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
@@ -216,7 +216,7 @@
     "description": "The label for regex mode."
   },
   "selector": {
-    "message": "Ayırıcı",
+    "message": "Seçici",
     "description": "The label for selector mode."
   },
   "no_pages_monitored": {
@@ -224,7 +224,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Masaüstü bildirimleri:",
+    "message": "Masaüstü Bildirimleri:",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -336,11 +336,31 @@
     "description": "The text of the button that plays the selected sound."
   },
   "sound_chime": {
-    "message": "Uymak",
+    "message": "Çan",
     "description": "The label of the default chime sound."
   },
   "sound_cuckoo": {
     "message": "Guguk",
     "description": "The label of the default cuckoo sound."
+  },
+  "selector_gui_pick": {
+    "message": "Öğe Seç",
+    "description": "The 'pick element' button in the visual selector construction GUI."
+  },
+  "selector_gui_parent": {
+    "message": "Seçimi Genişlet",
+    "description": "The button which switches from a selected element to its parent in the visual selector construction GUI."
+  },
+  "selector_gui_done": {
+    "message": "Bitti",
+    "description": "The button which accepts the selection and closes the page in the visual selector construction GUI."
+  },
+  "selector_gui_help": {
+    "message": "Yardım",
+    "description": "The caption of the help button in the visual selector construction GUI."
+  },
+  "selector_gui_help_text": {
+    "message": "Bu denetimler, izlemeye almak istediğiniz sayfa öğelerini görsel olarak seçmenizi sağlar.\n\nFarenizi hareket ettirdiğinizde üstüne geldiğiniz öğenin maviyle vurgulandığını göreceksiniz. Vurgulanan kısım istediğiniz öğeyle (ya da bir bölümüyle) eşleştiğinde, seçmek için tıklayın.\n\nSeçiminizden memnunsanız Bitti'ye tıklayarak seçenekler sayfasına geri dönün.\n\nSeçtiğiniz öğe izlemeye almak istediğiniz öğenin bir kısmıysa, 'Seçimi Genişlet'e tıklayarak seçiminizi içinde bulunduğu alan içinde büyütebilirsiniz. Bu işlemi seçimden memnun olana ya da sayfanın tümüne ulaşana kadar tekrarlayabilirsiniz.\n\nBaştan başlamak ve yeni bir öğe seçmek isterseniz 'Öğe Seç'e tıklayın.",
+    "description": "The help message in the visual selector construction GUI."
   }
 }
