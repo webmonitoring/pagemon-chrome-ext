@@ -143,9 +143,11 @@ function calculateDiff(src, dest) {
 // returned value is a jQuery-wrapped div with the appropriate event(s) already
 // attached.
 function generateControls(url) {
-  var template = '<div id="chrome_page_monitor_ext_orig_link">' +
-                 '<a href="%url%" title="%title%">%original%</a>' +
-                 '<br /><a href="#">%hide%</a></div>';
+  var template = '<div id="chrome_page_monitor_ext_orig_link"> \
+                    <a href="%url%" title="%title%">%original%</a> \
+                    <br /> \
+                    <a href="#">%hide%</a> \
+                  </div>';
 
   var title = chrome.i18n.getMessage('diff_original_title');
   var original = chrome.i18n.getMessage('diff_original');
