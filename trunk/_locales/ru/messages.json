@@ -83,6 +83,10 @@
     "message": "Настройки",
     "description": "The text of the options link."
   },
+  "view_all": {
+    "message": "Просмотреть Все",
+    "description": "The text of the button that opens all updated pages in new tabs."
+  },
   "check_all": {
     "message": "Проверить Всё",
     "description": "The text of the button that initiates a check of all pages."

@@ -83,6 +83,10 @@
     "message": "Seçenekler",
     "description": "The text of the options link."
   },
+  "view_all": {
+    "message": "Tüm Sitede aç",
+    "description": "The text of the button that opens all updated pages in new tabs."
+  },
   "check_all": {
     "message": "Tümünü Şimdi Denetle",
     "description": "The text of the button that initiates a check of all pages."

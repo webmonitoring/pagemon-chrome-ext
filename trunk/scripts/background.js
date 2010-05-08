@@ -360,7 +360,7 @@ function removeUnusedSettings() {
 function bringUpToDate(from_version, callback) {
   createPagesTable(function() {
     function updateDone() {
-      setSetting(SETTINGS.version, chrome.extension.getVersion());
+      setSetting(SETTINGS.version, getExtensionVersion());
       removeUnusedSettings();
       (callback || $.noop)();
     }
@@ -374,14 +374,20 @@ function bringUpToDate(from_version, callback) {
       setSetting(SETTINGS.notifications_timeout, 30 * 1000);
       setSetting(SETTINGS.animations_disabled, false);
       setSetting(SETTINGS.sort_by, 'date added');
+      setSetting(SETTINGS.view_all_action, 'originals');
+      
       updateDone();
     } else if (from_version < 2) {
+      setSetting(SETTINGS.view_all_action, 'originals');
       delete localStorage.last_check;
+      
       importVersionOnePages(updateDone);
     } else if (from_version < 3) {
       setSetting(SETTINGS.check_interval, getSetting('timeout') ||
                                           DEFAULT_CHECK_INTERVAL);
+      setSetting(SETTINGS.view_all_action, 'originals');
       delete localStorage.timeout;
+      
       importVersionTwoPages(updateDone);
     } else {
       updateDone();

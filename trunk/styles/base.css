@@ -2,7 +2,7 @@
 
 body {
   font-family: Calibri, Tahoma, Arial, sans-serif;
-  padding: none;
+  padding: 0;
 }
     
 h1 {
@@ -53,7 +53,7 @@ td {
   color: #999;
 }
 
-/* General links */
+/* Links */
 
 a:link, a:visited {
   color: #647CCB;
@@ -63,32 +63,6 @@ a:link, a:visited {
 a:hover {
   text-decoration: none;
   color: blue;
-}
-
-/* Util buttons/links */
-
-.util, .util:link, .util:visited {
-  text-decoration: none;
-}
-
-.util img {
-  vertical-align: middle;
-  position: relative;
-  top: -2px;
-}
-
-.util.inactive {
-  color: #8EA7D7;
-  cursor: default;
-}
-
-.util.active {
-  color: #607fbf;
-  cursor: pointer;
-}
-
-.util.active:hover {
-  text-shadow: #849ccb 0px -1px 0px;
 }
 
 /* Favicon */
@@ -102,15 +76,6 @@ img.favicon {
   height: 16px;
   position: relative;
   top: 2px;
-}
-
-/* Common Page Controls */
-
-.page_controls .util {
-  margin-top: 10px;
-  margin-left: 50px;
-  width: auto;
-  text-align: right;
 }
 
 /* Templates */

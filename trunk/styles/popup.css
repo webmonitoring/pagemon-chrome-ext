@@ -1,22 +1,47 @@
 @import url("base.css");
 
 body {
-  width: 680px;
-  margin: none;
-  padding-bottom: 1.5em;
   overflow: hidden;
 }
 
-.util, .util:link, .util:visited {
-  float: left;
-  width: 170px;
-  text-align: left;
-  display: block;
-  color: #849ccb !important;
+.main_controls {
+  text-align: center;
+  white-space: nowrap;
 }
 
-.emphasized, .emphasized:hover {
-  text-shadow: #849ccb 0px -1px 0px !important;
+.main_controls>span {
+  text-align: left;
+  color: #849ccb;
+  cursor: pointer;
+  margin: 0px 30px;
+}
+
+.page_controls>span {
+  color: #849ccb;
+  margin-top: 10px;
+  margin-left: 50px;
+  width: auto;
+  text-align: right;
+  cursor: pointer;
+}
+
+.main_controls>span:hover, .page_controls>span:hover {
+  text-shadow: #849ccb 0px -1px 0px;
+}
+
+.main_controls>span img, .page_controls>span img {
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+.main_controls>span.inactive {
+  color: #999;
+  cursor: default;
+}
+
+.main_controls>span.inactive:hover {
+  text-shadow: none;
 }
 
 .loading {
@@ -29,9 +54,10 @@ body {
 }
 
 .notification div {
-  width: 600px;
+  /* Needed to avoid jQuery animation stutter. */
+  min-width: 10px;
 }
 
-#monitor_page {
-  text-align: right;
+#monitor_page.inprogress {
+  cursor: progress;
 }

@@ -1,27 +1,21 @@
-// Returns the URL of the notification record given any element in it.
+// Returns the URL of the page referenced by a .notification record given any
+// element inside it.
 function getNotificationUrl(context) {
   return $(context).closest('.notification').find('.page_link').attr('href');
 }
 
-function openExternalLink() {
-  markPageVisited.call(this);
-  chrome.tabs.create({ url: this.href, selected: false });
-  return false;
-}
-
-// Hides a notification record given any element in it.
+// Marks an updated page as visited and hides its .notification record. Expects
+// this to point to an element inside the .notification. Calls
+// fillNotifications() once done marking and hiding.
 function markPageVisited() {
-  var $this = $(this);
-  
   var url = getNotificationUrl(this);
-  console.log('Marking visited: ' + url);
+  var that = this;
   
   setPageSettings(url, { updated: false }, function() {
     BG.updateBadge();
     BG.takeSnapshot(url, BG.scheduleCheck);
     
-    console.log('Marked visited; proceeding.');
-    $this.closest('.notification td').slideUp('slow', function() {
+    $(that).closest('.notification td').slideUp('slow', function() {
       if ($('#notifications .notification').length == 1) {
         $('#notifications').animate(
           { height: '50px', opacity: 1 }, 'slow', fillNotifications
@@ -33,39 +27,27 @@ function markPageVisited() {
   });
 }
 
-// Mark page as monitored/unmonitored with the relevant label/event changes.
-function setPageMonitoredStatus(monitored) {
-  if (monitored) {
-    $('#monitor_page').unbind('click')
-                      .addClass('inactive').removeClass('active').addClass('emphasized')
-                      .find('span').text(chrome.i18n.getMessage('page_monitored'));
-  } else {
-    $('#monitor_page').click(monitorCurrentPage)
-                      .removeClass('inactive').addClass('active').removeClass('emphasized')
-                      .find('span').text(chrome.i18n.getMessage('monitor'));
-  }
-}
-
-// Add current page to the monitored list.
+// Adds the page in the currently selected tab to the monitored list. While the
+// page is still loading, keeps retrying every 100 milliseconds.
 function monitorCurrentPage() {
-  $('#monitor_page').css('cursor', 'progress');
+  $('#monitor_page').addClass('inprogress');
   chrome.tabs.getSelected(null, function(tab) {
     // If the page is still loading, try a little while later.
     if (tab.status == 'loading') {
       setTimeout(monitorCurrentPage, 100);
     } else {
       addPage({ url: tab.url, name: tab.title, icon: tab.favIconUrl }, function() {
-        setPageMonitoredStatus(true);
-        $('#monitor_page').css('cursor', 'auto');
+        $('#monitor_page').removeClass('inprogress');
+        updateButtonsState();
       });
     }
   });
 }
 
 // Fill the notifications list with notifications for each updated page. If
-// no pages are updated, set teh appropriate message.
+// no pages are updated, set the appropriate message. Calls updateButtonsState()
+// when done constructing the table.
 function fillNotifications(callback) {
-  console.log('Filling list.');
   getAllUpdatedPages(function(pages) {
     $('#notifications').html('');
     
@@ -94,13 +76,62 @@ function fillNotifications(callback) {
       $('#templates .empty').clone().appendTo('#notifications');
     }
     
+    updateButtonsState();
+    
     (callback || $.noop)();
   });
 }
 
+// Updates the state of the three main buttons of the popup.
+// 1. If the page in the currently selected tab is being monitored, disables the
+//    Monitor This Page button and replaces its text with a localized variant of
+//    "Page is Monitored". Otherwise enables it and sets the text to a localized
+//    variant of "Monitor This Page".
+// 2. If there are any notifications displayed, enabled the View All button.
+//    Otherwise disables it.
+// 3. If there are any pages monitored at all, enabled the Check All button.
+//    Otherwise disables it.
+function updateButtonsState() {
+  // Mark page monitored if it is (initially).
+  chrome.tabs.getSelected(null, function(tab) {
+    isPageMonitored(tab.url, function(monitored) {
+      if (monitored) {
+        $('#monitor_page').unbind('click').addClass('inactive');
+        $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
+        $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+      } else {
+        $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
+        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
+        $('#monitor_page img').attr('src', 'img/monitor.png');
+      }
+    });
+  });
+  
+  // Enable/Disable the View All button.
+  if ($('#notifications .notification').length) {
+    $('#view_all').removeClass('inactive');
+    $('#view_all img').attr('src', 'img/view_all.png');
+  } else {
+    $('#view_all').addClass('inactive');
+    $('#view_all img').attr('src', 'img/view_all_inactive.png');
+  }
+  
+  // Enable/disable the Check All Now button.
+  executeSql('SELECT COUNT(*) FROM pages', [], function(result) {
+    if (result.rows.item(0)['COUNT(*)'] == 0) {
+      $('#check_now').addClass('inactive');
+      $('#check_now img').attr('src', 'img/refresh_inactive.png');
+    } else {
+      $('#check_now').removeClass('inactive');
+      $('#check_now img').attr('src', 'img/refresh.png');
+    }
+  });
+}
+
 // Force a check on all pages that are being monitored. Does some complex
-// animation to smoothly slide in the current notifications, display a
-// loader, then slide out the new notifications.
+// animation to smoothly slide in the current notifications or the "no changes"
+// message, display a loading bar while checking, then slide out the new
+// notifications or the "no changes" message.
 function checkAllPages() {
   getAllPageURLs(function(pages) {
     // If there are no pages to check, return.
@@ -113,7 +144,8 @@ function checkAllPages() {
     $('#check_now').unbind('click');
     
     // Slide in the notifications list.
-    // NOTE: Setting opacity to 0 leads to jumpiness (perhaps setting display: none?).
+    // NOTE: Setting opacity to 0 leads to jumpiness (maybe setting
+    //       display: none), so using 0.01 as a workaround.
     if ($('#notifications .notification').length > 0) {
       var fadeout_target = { height: '50px', opacity: 0.01 };
     } else {
@@ -123,15 +155,13 @@ function checkAllPages() {
     $('#notifications').animate(fadeout_target, 'slow', function() {
       // Once the list has slid into its minimal state, remove all contents
       // and fade in the loader.
-      $(this).html('');
-      $(this).addClass('loading');
+      $(this).html('').addClass('loading');
       $('#templates .loading_spacer').clone().appendTo($(this));
-      $(this).show();
-      $(this).animate({ opacity: 1.0 }, 400);
+      $(this).show().animate({ opacity: 1.0 }, 400);
     });
     
+    // Run the actual check.
     BG.check(true, function() {
-      console.log('Check successful. Refilling.');
       // Fade out the loader.
       $('#notifications').animate({ opacity: 0 }, 400, function() {
         var $this = $(this);
@@ -156,5 +186,32 @@ function checkAllPages() {
         });
       });
     });
+  });
+}
+
+// Sets up handlers for the various interactive parts of the popup, both the
+// three global button and the three per-notification buttons.
+function setUpHandlers() {
+  // Handlers for the main buttons.
+  $('#monitor_page').click(monitorCurrentPage);
+  $('#check_now').click(checkAllPages);
+  $('#view_all').click(function() {
+    var target = getSetting(SETTINGS.view_all_action) == 'diff' ?
+                 'view_diff' : 'page_link';
+    $('#notifications .' + target + '').click();
+  });
+  
+  // Live handlers for the per-notifications buttons.
+  $('.page_link,.mark_visited,.view_diff,.stop_monitoring').live('click', markPageVisited);
+  $('.page_link').live('click', function() {
+    chrome.tabs.create({ url: this.href, selected: false });
+    return false;
+  });
+  $('.view_diff').live('click', function() {
+    var diff_url = 'diff.htm#' + btoa(getNotificationUrl(this));
+    chrome.tabs.create({ url: diff_url, selected: false });
+  });
+  $('.stop_monitoring').live('click', function() {
+    BG.removePage(getNotificationUrl(this));
   });
 }
