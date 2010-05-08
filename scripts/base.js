@@ -118,6 +118,18 @@ function getStrippedBody(html) {
   return body.replace(/<script\b[^>]*>([^]*?<\/script>)?/ig, '');
 }
 
+// Takes all elements of the class "i18n" that have a title attribute from the
+// current page, then looks up a localization message with the title as the ID.
+// The result of the lookup is inserted into the element and the title is
+// removed.
+function applyLocalization() {
+  $('.i18n[title]').each(function() {
+    $(this).removeClass('i18n')
+           .text(chrome.i18n.getMessage($(this).attr('title')))
+           .attr('title', '');
+  });
+}
+
 /*******************************************************************************
 *                          Settings Storage Interface                          *
 *******************************************************************************/
@@ -299,6 +311,21 @@ function isPageMonitored(url, callback) {
 *                              Cleaning & Hashing                              *
 *******************************************************************************/
 
+// Takes a page (HTML or text) and a MIME type and converts the page to its
+// canonical form. For HTML, this means collapsing spaces, while for text it
+// means wrapping it in a set of <pre> tags and replacing newlines with <br />.
+function canonizeHtml(page, type) {
+  if (!page) return page;
+  
+  type = type.match(/^.*?(?=;|$)/);
+  
+  if (type == 'text/plain') {
+    return '<pre>' + page.replace(/(\r\n|\r|\n)/g, '<br />') + '</pre>';
+  } else {
+    return page.replace(/\s+/g, ' ');
+  }
+}
+
 // Searches for all matches of regex in text, formats them into a single string,
 // then calls the callback with the result as an argument. If matching the regex
 // takes more than REGEX_TIMEOUT, the matching is cancelled and the callback is
@@ -423,7 +450,8 @@ function checkPage(url, callback, force_snapshot) {
     $.ajax({
       url: url,
       dataType: 'text',
-      success: function(html) {
+      success: function(html, _, xhr) {
+        var type = xhr.getResponseHeader('Content-type');
         getPage(url, function(page) {
           cleanAndHashPage(html, page.mode, page.regex, page.selector,
                            function(crc) {
@@ -433,11 +461,11 @@ function checkPage(url, callback, force_snapshot) {
               settings = {
                 updated: true,
                 crc: crc,
-                html: force_snapshot ? html.replace(/\s+/g, ' ') : page.html,
+                html: force_snapshot ? canonizeHtml(html, type) : page.html,
                 last_changed: new Date().getTime()
               }
             } else {
-              settings = { html: html.replace(/\s+/g, ' ') };
+              settings = { html: canonizeHtml(html, type) };
             }
             
             settings.last_check = new Date().getTime();
