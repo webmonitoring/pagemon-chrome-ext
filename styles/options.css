@@ -34,16 +34,22 @@
 
 
 body {
-  width: 780px;
+  width: 820px;
   margin: auto;
   padding-bottom: 5.5em;
   overflow-y: scroll;
+  border-right: 1px #ccc solid;
+  border-left: 1px #ccc solid;
 }
 
 hr {
   border-bottom: 1px #999 solid;
   margin-bottom: 0px;
   margin-top: 20px;
+}
+
+.page_record td {
+  padding: 3px 20px;
 }
 
 .page_record:last-child td, .empty td {
