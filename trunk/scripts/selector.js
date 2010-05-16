@@ -79,7 +79,7 @@ function elementToSelector(element) {
     var selector = classname ? (tagname + '.' + classname) : tagname;
     
     if (element.siblings(selector).length > 0) {
-      selector += ':nth-child(' + element.index() + ')';
+      selector += ':nth-child(' + (element.index() + 1) + ')';
     }
     
     path.push(selector);
