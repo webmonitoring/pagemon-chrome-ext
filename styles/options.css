@@ -1,45 +1,22 @@
+/* Includes */
+
+@import url("../lib/colorPicker.css");
 @import url("base.css");
 
+/* General Page Styles */
 
-.util, .util:link, .util:visited {
-  text-decoration: none;
+html {
+  height: 100%;
+  overflow-y: scroll;
 }
-
-.util img {
-  vertical-align: middle;
-  position: relative;
-  top: -2px;
-}
-
-.util.inactive {
-  color: #8EA7D7;
-  cursor: default;
-}
-
-.util.active {
-  color: #607fbf;
-  cursor: pointer;
-}
-
-.util.active:hover {
-  text-shadow: #849ccb 0px -1px 0px;
-}
-
-.page_controls .util {
-  margin-top: 10px;
-  margin-left: 50px;
-  width: auto;
-  text-align: right;
-}
-
 
 body {
   width: 820px;
+  min-height: 100%;
   margin: auto;
-  padding-bottom: 5.5em;
-  overflow-y: scroll;
   border-right: 1px #ccc solid;
   border-left: 1px #ccc solid;
+  background: #f4f4f4;
 }
 
 hr {
@@ -47,6 +24,46 @@ hr {
   margin-bottom: 0px;
   margin-top: 20px;
 }
+
+img {
+  vertical-align: middle;
+  position: relative;
+  top: -2px;
+}
+
+input[type=checkbox], input[type=radio] {
+  position: relative;
+  top: 1px;
+}
+
+/* Header */
+    
+h1 {
+  margin-top: 0px;
+  color: #F8F8FF;
+  background-image: -webkit-gradient(linear, left top, left bottom, from(#BBBBBB), to(gray));
+  border-radius: 0px 0px 10px 10px;
+  padding: 5px 10px 10px 10px;
+  text-shadow: rgba(0, 0, 0, 0.3) 0px -1px 1px;
+  font-size: 150%;
+  text-align: center;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.15) 0px 3px 5px;
+}
+
+/* Background Shading Screen */
+
+#shader {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+  overflow: hidden;
+  z-index: 1;
+  background: #000000;
+  opacity: 0;
+}
+
+/* Page Table Styles */
 
 .page_record td {
   padding: 3px 20px;
@@ -57,8 +74,36 @@ hr {
   border-bottom: 1px #999 solid;
 }
 
-.color_picker {
-  display: inline-block;
+/* Normal Per-Page Controls */
+
+.page_controls>span {
+  color: #607fbf;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-left: 20px;
+  margin-right: 20px;
+  width: auto;
+  text-align: right;
+}
+
+.page_controls>span:hover {
+  text-shadow: #849ccb 0px -1px 0px;
+}
+
+.last_check, .last_check:hover {
+  color: #8EA7D7 !important;
+  cursor: default !important;
+  text-shadow: none !important;
+  white-space: nowrap;
+}
+
+.advanced_toggle label, .check_now {
+  cursor: pointer;
+}
+
+/* Advanced Per-Page Controls */
+
+.advanced_toggle input {
   position: relative;
   top: 2px;
 }
@@ -78,34 +123,28 @@ hr {
   top: -1px;
   left: -1px;
   border: 1px solid #9eafd1;
-  margin-left: 50px;
+  margin-left: 20px;
   padding: 10px;
   padding-left: 20px;
   display: none;
   border-radius: 0px 5px 5px 5px;
 }
 
-.advanced_toggle input {
-  position: relative;
-  top: 2px;
-}
-
-.page_info {
-  margin-bottom: 10px;
-}
-
 .advanced_controls div {
   margin-top: 5px;
 }
 
-.advanced_controls .disabled {
-  color: #999999;
+.advanced_controls span, .advanced_controls input, .advanced_controls select {
   -webkit-transition: color 0.2s linear;
+  -webkit-transition: background-color 0.2s linear;
 }
 
 .advanced_controls .enabled {
   color: #849ccb;
-  -webkit-transition: color 0.2s linear;
+}
+
+.advanced_controls .disabled {
+  color: #999999;
 }
 
 .advanced_controls input[type=button] {
@@ -114,27 +153,24 @@ hr {
   top: 1px;
 }
 
-.advanced_controls input[type=checkbox],
-.advanced_controls input[type=radio] {
-  position: relative;
-  top: 2px;
+.page_interval input[type=text] {
+  width: 3em;
+  text-align: center;
 }
 
-.mode input[type=text] {
-  width: 400px;
+.mode_string {
+  min-width: 270px;
   padding-left: 1px;
   height: 1em;
   border: 1px #bbb solid;
-  -webkit-transition: background-color 0.2s linear;
 }
 
 .invalid {
   background: #fcc;
 }
 
-.timeout input[type=text] {
-  width: 3em;
-  text-align: center;
+.page_info {
+  margin-bottom: 10px;
 }
 
 .page_info input {
@@ -147,51 +183,7 @@ hr {
   height: 1.25em;
 }
 
-.mode_selector {
-  display: inline-block;
-  vertical-align: top;
-}
-
-.mode_selector label {
-  display: inline-block;
-  margin-right: 80px;
-  margin-left: 30px;
-}
-
-.mode_value>span {
-  display: inline-block;
-  width: 100px;
-}
-
-.main_controls {
-  border-bottom: 1px #ddd solid;
-  padding-bottom: 35px;
-  padding-top: 10px;
-  margin: 0px;
-  background: #f4f4f4;
-  clear: both;
-}
-
-.main_controls .util {
-  float: right;
-  width: 250px;
-  height: 1.6em;
-}
-
-.util.doublewide {
-  width: 500px;
-}
-
-.util input[type=text], .util select {
-  margin-top: 0px;
-  margin-bottom: 0px;
-  border: 1px #a4bceb solid;
-}
-
-.util input[type=text] {
-  width: 3em;
-  text-align: center;
-}
+/* Forms */
 
 #export_form, #import_form {
   display: none;
@@ -235,7 +227,7 @@ hr {
 }
 
 #new_sound_form label {
-  display: block;
+  xdisplay: block;
 }
 
 #new_sound_form input {
@@ -248,7 +240,88 @@ hr {
   margin-left: 40px;
 }
 
-#notifications input {
+/* Basic Global Options */
+
+#basic_options {
+  border-bottom: 1px lightgray solid;
+}
+
+#basic_options td {
+  color: #8EA7D7;
+  width: auto;
+  padding-top: 1em;
+  padding-bottom: 1em;
+  padding: auto;
+  text-align: center;
+}
+
+#basic_interval input {
   width: 3em;
   text-align: center;
+}
+
+/* Advanced Global Options */
+
+#advanced_options {
+  color: #8EA7D7;
+  display: none;
+}
+
+#advanced_options p, #advanced_options div {
+  border-bottom: 1px lightgray solid;
+  margin: 0;
+  padding: 0.5em 0 0.5em 0;
+}
+
+#advanced_options p {
+  padding-left: 200px;
+}
+
+#advanced_options p>span {
+  min-width: 250px;
+  display: inline-block;
+}
+
+#notifications_timeout input, #interval input {
+  width: 3em;
+  text-align: center;
+}
+
+#actions {
+  margin: auto;
+  width: 100%;
+  text-align: center;
+  margin-top: 1em;
+}
+
+#actions>span {
+  color: #607fbf;
+  cursor: pointer;
+  width: 270px;
+  display: inline-block;
+}
+
+#actions span:hover {
+  text-shadow: #849ccb 0px -1px 0px;
+}
+
+.color_picker {
+  display: inline-block;
+  position: relative;
+  top: 2px;
+}
+
+/* Global Options Switch */
+
+#options_switch {
+  color: #607fbf;
+  cursor: pointer;
+  text-align: center;
+  display: block;
+  margin-top: 2em;
+  padding-bottom: 1em;
+}
+
+#options_switch:hover {
+  text-shadow: #849ccb 0px -1px 0px;
 }

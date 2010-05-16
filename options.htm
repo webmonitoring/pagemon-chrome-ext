@@ -5,229 +5,20 @@
     <title>Page Monitor Options</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="shortcut icon" type="image/png" href="image/browser_icon.png" />
-    <link rel="stylesheet" type="text/css" href="lib/colorPicker.css" />
     <link rel="stylesheet" type="text/css" href="styles/options.css" />
     <script type="text/javascript" src="lib/jquery-1.4.1.js"></script>
     <script type="text/javascript" src="lib/jquery.colorPicker.js"></script>
     <script type="text/javascript" src="scripts/base.js"></script>
     <script type="text/javascript" src="scripts/options.js"></script>
     <script type="text/javascript">
-      // <!--
-      $(function() {
-        // Set title.
-        $('title').text(chrome.i18n.getMessage('options_title'));
-        
-        // Apply translations.
-        $('.i18n').each(function() {
-          $(this).removeClass('i18n')
-                 .text(chrome.i18n.getMessage($(this).attr('title')))
-                 .attr('title', '');
-        });
-        
-        // Turn off animations if they are disabled.
-        if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
-        
-        // Set up the main color/timeout/animation contols.
-        initializeColorPicker();
-        initializeTimeoutTextbox();
-        initializeSoundSelector();
-        initializeAnimationToggler();
-        initializeSorter();
-        initializeNotificationsChecker();
-        initializeExporter();
-        initializeImporter();
-        
-        // Set up the "Check All Now" button handler.
-        $('#check_now').click(function() {
-          getAllPageURLs(function(pages) {
-            $('.last_check_time').text(chrome.i18n.getMessage('check_in_progress') + '..');
-            
-            BG.check(true, $.noop, function(url) {
-              $('.last_check_time', $('#pages .page_record').has('a[href=' + url + ']')).trigger('time_updated');
-            });
-          });
-        });
-        
-        // Set up "rename page" live click handlers.
-        $('.rename').live('click', function() {
-          var record = $(this).closest('.page_record');
-          var page_link = record.find('.page_link');
-          
-          if (!page_link.is(':hidden')) {
-            var textbox = $('<input type="text" value="' + page_link.text() + '" />');
-            var cancel_button = $('<input type="button" value="' + chrome.i18n.getMessage('cancel') + '" />');
-            var ok_button = $('<input type="button" value="' + chrome.i18n.getMessage('ok') + '" />');
-            
-            cancel_button.click(function() {
-              textbox.remove();
-              ok_button.remove();
-              cancel_button.remove();
-              page_link.show();
-            });
-            
-            ok_button.click(function() {
-              page_link.text(textbox.val());
-              setPageSettings(findUrl(this), { name: textbox.val() });
-              cancel_button.click();
-            });
-            
-            page_link.hide();
-            page_link.after(cancel_button).after(ok_button).after(textbox);
-          }
-        });
-        
-        // Set up "stop monitoring" live click handlers.
-        $('.stop_monitoring').live('click', function() {
-          var url = findUrl(this);
-          
-          removePage(url, BG.updateBadge);
-          
-          var scroll_position = scrollY;
-          
-          $(this).closest('.page_record td').slideUp('slow', function() {
-            if ($('#pages .page_record').length == 1) {
-              $('#pages').animate(
-                { height: '50px', opacity: 1 }, 'slow', fillPagesList
-              );
-            } else {
-              fillPagesList();
-              scrollTo(0, scroll_position);
-            }
-          });
-        });
-        
-        // Set up advanced option expansion events.
-        $('.advanced_toggle input[type=checkbox]').live('click', function() {
-          if ($(this).is(':checked')) {
-            $(this).closest('.page_record').find('.advanced_toggle').addClass('toggled');
-            $(this).closest('.page_record').find('.advanced_controls').slideDown('fast');
-            
-            // Apply previously-set advanced settings.
-            var timeout_div = $(this).closest('.page_record').find('.timeout');
-            if (timeout_div.find(':checked').length > 0) {
-              setPageTimeout(this, timeout_div.find('input[type=text]').val());
-            }
-            var regex_div = $(this).closest('.page_record').find('.regex');
-            if (regex_div.find(':checked').length > 0) {
-              setPageRegex(this, regex_div.find('input[type=text]').val());
-            }
-          } else {
-            $(this).closest('.page_record').find('.advanced_controls').slideUp('fast', function() {
-              $(this).closest('.page_record').find('.advanced_toggle').removeClass('toggled');
-            });
-            
-            setPageTimeout(this, null);
-            setPageRegex(this, null);
-          }
-        });
-        
-        // Set up advanced option enabling/disabling events.
-        $('.advanced_controls input[type=checkbox]').live('click', function() {
-          if ($(this).is(':checked')) {
-            $(this).nextAll('span').addClass('enabled').removeClass('disabled');
-            $(this).nextAll('span').find('input').attr({ disabled: false });
-          } else {
-            $(this).nextAll('span').addClass('disabled').removeClass('enabled');
-            $(this).nextAll('span').find('input').attr({ disabled: true });
-          }
-        });
-        
-        $('.timeout input[type=checkbox]').live('click', function() {
-          if ($(this).is(':checked')) {
-            setPageTimeout(this, $(this).nextAll('span').find('input').val());
-          } else {
-            setPageTimeout(this, null);
-          }
-        });
-        
-        $('.mode input[type=checkbox]').live('click', function() {
-          var url = findUrl(this);
-          var record = $(this).closest('.page_record');
-          
-          if ($(this).is(':checked')) {
-            $('.mode input[type=radio]:checked', record).click();
-            $('.mode input[type=text]', record).keyup();
-          } else {
-            setPageSettings(url, { mode: 'text', regex: null, selector: null });
-          }
-        });
-        
-        // Set advanced option editing events.
-        $('.timeout input[type=text]').live('keyup', function() {
-          setPageTimeout(this, cleanTimeoutTextbox(this));
-        });
-        $('.mode input[type=text]').live('keyup', function() {
-          var mode = $(this).closest('.page_record').find('input[type=radio]:checked').val();
-          if (mode == 'regex') {
-            setPageRegex(this, $(this).val());
-          } else if (mode == 'selector') {
-            setPageSelector(this, $(this).val());
-          }
-        });
-        
-        // Set up mode radio box click handler
-        $('.mode input[type=radio]').live('click', function() {
-          var url = findUrl(this);
-          var record = $(this).closest('.page_record');
-          var val = $(this).val();
-          
-          setPageSettings(url, { mode: val });
-          $('.mode input[type=text]', record).keyup();
-          
-          var label = chrome.i18n.getMessage(val);
-          $('.mode_value>span', record).text(label + ':');
-        });
-        
-        // Set up regex/selector test click handler
-        $('.mode input[type=button]').live('click', function() {
-          var url = findUrl(this);
-          getPage(url, function(page) {
-            var mode = page.mode;
-            var regex = page.regex;
-            var selector = page.selector;
-            var button = $(this);
-            
-            if ((mode == 'regex' && regex) || (mode == 'selector' && selector)) {
-              $(this).val(chrome.i18n.getMessage('test_progress'));
-              $(this).closest('.mode').find('input').attr({ disabled: true });
-              $.ajax({
-                url: url,
-                success: function(html) {
-                  var results = '';
-                  if (mode == 'regex') {
-                    results = findAndFormatRegexMatches(html, regex);
-                  } else {
-                    results = findAndFormatSelectorMatches(html, selector);
-                  }
-                  
-                  setPageSettings(url, { crc: cleanAndHashPage(html, mode, regex, selector) });
-                  
-                  if (results) {
-                    alert(chrome.i18n.getMessage('test_matches') +'\n' + results);
-                  } else {
-                    alert(chrome.i18n.getMessage('test_no_matches'));
-                  }
-                },
-                error: function() {
-                  alert(chrome.i18n.getMessage('test_fail'));
-                },
-                complete: function() {
-                  button.val(chrome.i18n.getMessage('test_button'));
-                  button.closest('.mode').find('input').attr({ disabled: false });
-                }
-              });
-            }
-          });
-        });
-        
-        // Finally, fill the pages list.
-        fillPagesList();
-      });
-      // -->
+      $(init);
     </script>
   </head>
   <body>
     <h1><span class="i18n" title="options_header"></span></h1>
+    
+    <!-- Templates for the page table. -->
+    
     <table id="templates">
       <tr class="page_record">
         <td>
@@ -236,50 +27,45 @@
             <a class="page_link" title="Visit Page" href="#">Page</a>
           </div>
           <div class="page_controls">
-            <label class="util active advanced_toggle">
-              <!--img src="img/plus.png" /-->
-              <input type="checkbox" />
-              <span class="i18n" title="advanced"></span>
-            </label>
-            <span class="util active rename">
+            <span class="advanced_toggle">
+              <label>
+                <input type="checkbox" />
+                <span class="i18n" title="advanced"></span>
+              </label>
+            </span>
+            <span class="rename">
               <img src="img/rename.png" alt="Rename" />
               <span class="i18n" title="rename_page"></span>
             </span>
-            <span class="util active stop_monitoring">
+            <span class="stop_monitoring">
               <img src="img/stop_monitoring.png" alt="Stop Monitoring" />
-              <span class="i18n" title="stop_monitoring"></span>
+              <span class="i18n" title="remove_page"></span>
             </span>
-            <span class="util last_check inactive">
+            <span class="last_check">
+              <img src="img/refresh.png" class="check_now" alt="Check Now" />
               <img src="img/monitor.png" alt="Last Check" />
-              <span class="i18n" title="last_check"></span>
+              <span class="i18n" title="last_check"></span>:
               <span class="last_check_time"><span class="i18n" title="unknown"></span></span>.
             </span>
             <div class="advanced_controls">
-              <div class="timeout">
+              <div class="page_interval">
                 <input type="checkbox" />
                 <span class="disabled">
-                  <span class="i18n" title="check_every"></span>
+                  <span class="i18n" title="check_every"></span>:
                   <input type="text" disabled="disabled" />
                 </span>
               </div>
               <div class="mode">
                 <input type="checkbox" />
-                <span class="mode_selector disabled">
-                  <span class="i18n" title="custom_mode"></span>
-                  <label>
-                    <input type="radio" name="mode" value="regex" disabled="disabled" />
-                    <span class="i18n" title="regex"></span>
-                  </label>
-                  <label>
-                    <input type="radio" name="mode" value="selector" disabled="disabled" />
-                    <span class="i18n" title="selector"></span>
-                  </label>
-                  <br />
-                  <span class="mode_value">
-                    <span><span class="i18n" title="regex"></span>:</span>
-                    <input type="text" disabled="disabled" />
-                    <input type="button" disabled="disabled" value="Test" />
-                  </span>
+                <span class="disabled">
+                  <span class="i18n" title="custom_mode"></span>:
+                  <select disabled="disabled">
+                    <option value="regex" class="i18n" title="regex"></option>
+                    <option value="selector" class="i18n" title="selector"></option>
+                  </select>
+                  <input type="text" disabled="disabled" class="mode_string" />
+                  <input type="button" disabled="disabled" value="Test" class="mode_test" />
+                  <input type="button" disabled="disabled" value="Pick" class="mode_pick" />
                 </span>
               </div>
             </div>
@@ -293,39 +79,63 @@
       </tr>
     </table>
     
-    <table id="pages" cellspacing="0">
-      <!-- Pages go here. -->
-    </table>
-    <p class="main_controls">
-      <span class="util inactive doublewide" id="notifications">
+    <!-- Pages table. -->
+    
+    <table id="pages" class="main_table"></table>
+    
+    <!-- Basic opetions. -->
+    
+    <div id="basic_options">
+      <table>
+        <tr>
+          <td id="basic_notifications">
+            <img src="img/notification.png" alt="Desktop Notifications" />
+            <span class="i18n" title="notifications"></span>:
+            <select>
+              <option value="enabled" class="i18n" title="enabled"></option>
+              <option value="disabled" class="i18n" title="disabled"></option>
+            </select>
+          </td>
+          <td id="basic_sound_alert">
+            <img src="img/sound.png" alt="Audio Alert" />
+            <span class="i18n" title="sound_alert"></span>:
+            <select>
+              <option value="" class="i18n" title="sound_none"></option>
+              <option value="http://work.max99x.com/cuckoo.ogg" class="i18n" title="sound_cuckoo"></option>
+              <option value="http://work.max99x.com/bell.ogg" class="i18n" title="sound_chime"></option>
+            </select>
+          </td>
+          <td id="basic_interval">
+            <img src="img/clock.png" alt="Check Interval" />
+            <span class="i18n" title="check_every"></span>:
+            <input type="text" value="180" maxlength="5" />
+          </td>
+        </tr>
+      </table>
+    </div>
+    
+    <!-- Advanced options. -->
+    
+    <div id="advanced_options">
+      <p id="notifications">
         <img src="img/notification.png" alt="Desktop Notifications" />
         <span class="i18n" title="notifications"></span>
         <select>
           <option value="enabled" class="i18n" title="enabled"></option>
           <option value="disabled" class="i18n" title="disabled"></option>
         </select>
+      </p>
+      <p id="notifications_timeout">
+        <img src="img/notification.png" alt="Desktop Notifications" />
         <span class="i18n" title="notifications_timeout"></span>
         <input type="text" value="30" maxlength="5" />
-      </span>
-      <span class="util inactive" id="badge_color">
-        <img src="img/color.png" alt="Badge Color" />
-        <span class="i18n" title="badge_color"></span>
-        <input type="text" value="#00B400" />
-      </span>
-    </p>
-    <p class="main_controls">
-      <span class="util active" id="check_now">
-        <img src="img/refresh.png" alt="Check Now" />
-        <span class="i18n" title="check_all"></span>
-      </span>
-      <span class="util inactive" id="global_timeout">
+      </p>
+      <p id="interval">
         <img src="img/clock.png" alt="Check Interval" />
         <span class="i18n" title="check_every"></span>
         <input type="text" value="180" maxlength="5" />
-      </span>
-    </p>
-    <p class="main_controls">
-      <span class="util inactive doublewide" id="sound_alert">
+      </p>
+      <p id="sound_alert">
         <img src="img/sound.png" alt="Audio Alert" />
         <span class="i18n" title="sound_alert"></span>
         <select>
@@ -335,10 +145,8 @@
         </select>
         <button id="play_sound"><span class="i18n" title="sound_play"></span></button>
         <button id="new_sound"><span class="i18n" title="sound_new"></span></button>
-      </span>
-    </p>
-    <p class="main_controls">
-      <span class="util inactive" id="sort">
+      </p>
+      <p id="sort">
         <img src="img/sort.png" alt="Sort By" />
         <span class="i18n" title="sort"></span>
         <select>
@@ -349,46 +157,77 @@
           <option value="last check" class="i18n" title="sort_last_check"></option>
           <option value="last change" class="i18n" title="sort_last_change"></option>
         </select>
-      </span>
-      <span class="util inactive" id="animation">
+      </p>
+      <p id="animation">
         <img src="img/animation.png" alt="Animation" />
         <span class="i18n" title="animations"></span>
         <select>
           <option value="enabled" class="i18n" title="enabled"></option>
           <option value="disabled" class="i18n" title="disabled"></option>
         </select>
-      </span>
-    </p>
-    <p class="main_controls">
-      <span class="util active" id="import">
-        <img src="img/import.png" alt="Import" />
-        <span class="i18n" title="import"></span>
-      </span>
-      <span class="util active" id="export">
-        <img src="img/export.png" alt="Export" />
-        <span class="i18n" title="export"></span>
-      </span>
-    </p>
+      </p>
+      <p id="view_all">
+        <img src="img/view_all.png" alt="View All" />
+        <span class="i18n" title="view_all_function"></span>
+        <select>
+          <option value="diff" class="i18n" title="view_diff"></option>
+          <option value="original" class="i18n" title="view_original"></option>
+        </select>
+      </p>
+      <p id="badge_color">
+        <img src="img/color.png" alt="Badge Color" />
+        <span class="i18n" title="badge_color"></span>
+        <input type="text" value="#00B400" />
+      </p>
+
+      <div id="actions">
+        <span id="import">
+          <img src="img/import.png" alt="Import" />
+          <span class="i18n" title="import"></span>
+        </span>
+        <span id="export">
+          <img src="img/export.png" alt="Export" />
+          <span class="i18n" title="export"></span>
+        </span>
+        <span id="check_all">
+          <img src="img/refresh.png" alt="Check Now" />
+          <span class="i18n" title="check_all"></span>
+        </span>
+      </div>
+    </div>
+    
+    <!-- Basic/Advanced options switch. -->
+    
+    <label id="options_switch">
+      <input type="checkbox" />
+      <span class="i18n" title="advanced"></span>
+    </label>
+    
+    <!-- Pop-up forms. -->
+    
     <div id="export_form">
       <span class="i18n" title="export_prompt"></span>
       <textarea rows="10" cols="80">...</textarea>
       <button><span class="i18n" title="close"></span></button>
     </div>
+    
     <div id="import_form">
       <span class="i18n" title="import_prompt"></span>
       <textarea rows="10" cols="80"></textarea>
       <button id="import_perform"><span class="i18n" title="import_button"></span></button>
       <button id="import_cancel"><span class="i18n" title="cancel"></span></button>
     </div>
+    
     <div id="new_sound_form">
-      <label><span class="i18n" title="sound_name"></span></label>
+      <label for="new_sound_name" class="i18n" title="sound_name"></label>:
       <input type="text" id="new_sound_name" value="" />
-      <label><span class="i18n" title="sound_url"></span></label>
+      <label for="new_sound_url" class="i18n" title="sound_url"></label>:
       <input type="text" id="new_sound_url" value="" />
       <div id="new_sound_buttons">
         <button id="new_sound_create"><span class="i18n" title="sound_create"></span></button>
         <button id="new_sound_cancel"><span class="i18n" title="cancel"></span></button>
       </div>
     </div>
+    
   </body>
 </html>

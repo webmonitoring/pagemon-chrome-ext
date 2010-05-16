@@ -1,41 +1,240 @@
-// Background graying function, based on: 
-// http://www.hunlock.com/blogs/Snippets:_Howto_Grey-Out_The_Screen
-function grayOut(show, id_prefix) {
-  // Pass true to gray out screen, false to ungray.
-  var dark_id = (id_prefix || '') + '_shader';
-  var dark = document.getElementById(dark_id);
-  var first_time = (dark == null);
-  
-  if (first_time) {
-    // First time - create shading layer.
-    var dark = document.createElement('div');
-    dark.id = dark_id;
-    
-    dark.style.position = 'absolute';
-    dark.style.top = '0px';
-    dark.style.left = '0px';
-    dark.style.overflow = 'hidden';
-    dark.style.opacity = '0';
-    dark.style['-webkit-transition'] = 'opacity 0.5s ease';
-    
-    document.body.appendChild(dark);
+/*
+  The code behind the options HTML page. Manages manipulating the pages list as
+  well as editing global and per-page settings.
+*/
+
+/*******************************************************************************
+*                                  Utilities                                   *
+*******************************************************************************/
+
+// Returns a boolean indicating whether the supplied string is a valid regex.
+function isValidRegex(regex) {
+  try {
+    new RegExp(regex);
+  } catch (e) {
+    return false;
   }
+  return true;
+}
+
+// Returns a boolean indicating whether the supplied string is a valid selector.
+function isValidSelector(selector) {
+  try {
+    $(selector);
+  } catch (e) {
+    return false;
+  }
+  return true;
+}
+
+// Returns a boolean indicating whether desktop notifications are allowed.
+function areNotificationsPermitted() {
+  return window.webkitNotifications.checkPermission() == 0;
+}
+
+// Fades the background (elements with z-index < 1) to gray and back, depending
+// on whether the "show" argument evaluates to boolean true or false.
+function shadeBackground(show) {
+  var dark = $('#shader');
+  if (dark.length == 0) dark = $('<div id="shader" />').appendTo('body');
+  dark.height($('body').get(0).scrollHeight);
   
   if (show) {
-    // Set the shader to cover the entire page and make it visible.
-    dark.style.zIndex = 1;
-    dark.style.backgroundColor = '#000000';
-    dark.style.width = document.body.scrollWidth + 'px';
-    dark.style.height = document.body.scrollHeight + 'px';
-    dark.style.display = 'block';
-    
-    setTimeout(function() {dark.style.opacity = 0.7;}, 100);
-  } else if (dark.style.opacity != 0) {
-    setTimeout(function() {dark.style.opacity = 0;}, 100);
-    setTimeout(function() {dark.style.display = 'none';}, 600);
+    dark.css('display', 'block').animate({ opacity: 0.7 });
+  } else {
+    dark.animate({ opacity: 0 }, function() {
+      dark.css('display', 'none' );
+    });
   }
 }
 
+// Returns the URL of the page record given any element in it.
+function findUrl(context) {
+  return $(context).closest('.page_record').find('.page_link').get()[0].href;
+}
+
+// Returns a jQuery-wrapped page_record element which contains the specified
+// context element of a link to the specified URL.
+function findPageRecord(url_or_context) {
+  if (typeof(url_or_context) == 'string') {
+    url_or_context = '.page_link[href="' + url_or_context + '"]';
+  }
+  return $(url_or_context).closest('.page_record');
+}
+
+// Validates that a time textbox contains a valid time value in minutes and
+// returns it as a number. If the value is invalid, it iss scrubbed and the
+// valid part (if any) is put back. Selection is preserved if possible. Valid
+// value are:
+// 1. Strings of numbers of length 1 or more.
+// 2. Strings of numbers with a single period.
+function cleanTimeTextbox(textbox) {
+  var caret_pos = textbox.selectionStart;
+  var caret_end = textbox.selectionEnd;
+  
+  var str_time = $(textbox).val().replace(/[^.0-9]/g, '');
+  var new_time = parseFloat(str_time) || 1;
+  
+  if (new_time <= 5 / 60) {
+    new_time = 5 / 60;
+  }
+  
+  if (str_time.match(/^0$|^0*\.|\.(.*0)?$/)) {
+    $(textbox).val(str_time);
+  } else {
+    $(textbox).val(new_time);
+  }
+  
+  textbox.selectionStart = caret_pos;
+  textbox.selectionEnd = caret_end;
+  
+  return new_time;
+}
+
+// Enables or disables the Test button and the regex/selector textbox for a
+// particular page record depending on whether the enable argument is non-false.
+function updatePageModeControls(page_record, enable) {
+  page_record.find('.mode input[type=text]').toggleClass('invalid', !enable);
+  page_record.find('.mode input[type=button]').attr({ disabled: !enable });
+}
+
+// Applies a per-page check interval to a page given its URL. The interval
+// should be a number in minutes or a null to disable custom interval for this
+// page. After the new value is applied, scheduleCheck() is called on the
+// background page.
+function setPageCheckInterval(url, minutes) {
+  var interval = (parseFloat(minutes) * 60 * 1000) || null;
+  setPageSettings(url, { check_interval: interval }, BG.scheduleCheck);
+}
+
+// Saves a regex or selector to a page's DB record given its URL. The mode
+// argument must be either "regex" or "selector". The value argument is either a
+// string or a null. If it's null, the page is switched to text mode and its
+// regex and selector fields are deleted. If it's a valid regex/selector string,
+// it is saved to teh page record. If the value is non-null,
+// updatePageModeControls() is called with the validity of the value as the
+// enable argument.
+function setPageRegexOrSelector(url, mode, value) {
+  if (mode != 'regex' && mode != 'selector') throw(new Error('Invalid mode.'));
+  
+  if (value === null)  {
+    setPageSettings(url, { mode: 'text', regex: null, selector: null });
+  } else {
+    var is_regex = (mode == 'regex');
+    var valid = value && (is_regex ? isValidRegex : isValidSelector)(value);
+    updatePageModeControls(findPageRecord(url), valid);
+    if (valid) {
+      setPageSettings(url, { mode: mode });
+      setPageSettings(url, is_regex ? { regex: value } : { selector: value });
+    }
+  }
+}
+
+/*******************************************************************************
+*                              Import & Export                                 *
+*******************************************************************************/
+
+// Assembles a netscape bookmark file containing all the pages currently being
+// monitored. Proprietary settings are put into a comment after each <DT>
+// element. The comment starts with "PageMonitorAdvancedPageData=" and is
+// followed by a JSON-encoded string of the page's advanced settings. The final
+// string is passed to the supplied calback.
+function exportPagesList(callback) {
+  if (!callback) return;
+  
+  getAllPages(function(pages) {
+    var buffer = [];
+    var add_date = new Date().getTime();
+    
+    buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<!-- This is an' +
+                ' automatically generated file.\n     It will be read and' +
+                ' overwritten.\n     DO NOT EDIT! -->\n<META HTTP-EQUIV=' +
+                '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
+                'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
+    
+    for (var i in pages) {
+      var icon_attr = pages[i].icon ? ' ICON_URI="' + pages[i].icon + '" ' : '';
+      buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' +
+                  add_date + '"' + icon_attr + '>' + pages[i].name + '</A>\n');
+      
+      var encoded_settings = JSON.stringify({
+        mode: pages[i].mode,
+        regex: pages[i].regex,
+        selector: pages[i].selector,
+        check_interval: pages[i].check_interval,
+        crc: pages[i].crc,
+        last_check: pages[i].last_check,
+        last_changed: pages[i].last_changed,
+      }).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      buffer.push('            <!--PageMonitorAdvancedPageData=' +
+                  encoded_settings + '-->\n');
+    }
+    
+    buffer.push('</DL><p>');
+    
+    callback(buffer.join(''));
+  });
+}
+
+// Takes the contents of a netscape bookmarks file and imports all the pages in
+// it for monitoring. IF any of the pages contain Page Monitor-specific settings
+// as written out by exportPagesList(), these are imported as well. Returns the
+// number of pages found.
+function importPagesList(bookmarks) {
+  var page_regex = new Regex('(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\s*\<!--' +
+                             'PageMonitorAdvancedPageData=' +
+                             '(\{.*?\})-->\n)?', 'g');
+  var match;
+  var matches_count = 0;
+  
+  while (match = page_regex.exec(bookmarks, page_regex.lastIndex)) {
+    var link = $(match[1]);
+    var url = link.attr('HREF') || '';
+    var name = link.text() || chrome.i18n.getMessage('untitled', url);
+    var icon = link.attr('ICON_URI') || null;
+    
+    var advanced = {};
+    if (match[2]) {
+      advanced = JSON.parse(match[2].replace(/&amp;/g, '&')
+                                    .replace(/&lt;/g, '<')
+                                    .replace(/&gt;/g, '>'));
+    }
+    
+    if (url) {
+      addPage($.extend({ url: url, name: name, icon: icon }, advanced));
+      matches_count++;
+    }
+  }
+  
+  return matches_count;
+}
+
+/*******************************************************************************
+*                         Global Controls Initialization                       *
+*******************************************************************************/
+
+// Initializes the global controls with saved values and event handlers.
+function initializeGlobalControls() {
+  initializeColorPicker();
+  initializeAnimationToggler();
+  initializeSorter();
+  initializeIntervalTextbox();
+  initializeNotificationsToggler();
+  initializeNotificationsTimeout();
+  initializeSoundSelector();
+  initializeSoundPlayer();
+  initializeSoundCreator();
+  initializeViewAllSelector();
+  initializeExporter();
+  initializeImporter();
+  initializeGlobalChecker();
+  initializeAdvancedSwitch();
+}
+
+// Initializes the color picker input.Fills it with the color from
+// SETTINGS.badge_color and applies the jQuery colorPicker plugin function on
+// it. Also binds a handler for the change event, which saves the new value and
+// calls updateBadge() on the background page.
 function initializeColorPicker() {
   var toHex = function(d) {
     return d >= 16 ? d.toString(16) : '0' + d.toString(16);
@@ -56,7 +255,10 @@ function initializeColorPicker() {
     BG.updateBadge();
   }).colorPicker();
 }
-  
+
+// Initializes the animation toggler drop-down. Updates its value from
+// SETTINGS.animations_disabled and binds a handler for the change event to save
+// the new value and enable or disable jQuery effects.
 function initializeAnimationToggler() {
   $('#animation select').change(function() {
     var disabled = ($(this).val() != 'enabled');
@@ -65,6 +267,9 @@ function initializeAnimationToggler() {
   }).val(getSetting(SETTINGS.animations_disabled) ? 'disabled' : 'enabled');
 }
 
+// Initializes the sorter drop-down. Updates its value from SETTINGS.sort_by and
+// binds a handler for the change event to save the new value and regenerate the
+// pages list.
 function initializeSorter() {
   $('#sort select').change(function() {
     setSetting(SETTINGS.sort_by, $(this).val());
@@ -72,24 +277,48 @@ function initializeSorter() {
   }).val(getSetting(SETTINGS.sort_by) || 'date added');
 }
 
-function initializeNotificationsChecker() {
-  if (window.webkitNotifications.checkPermission() != 0) {
+// Initializes the two check interval textboxes. Updates their value from
+// SETTINGS.check_interval and binds a handler for the change and keyup events
+// of both boxes that validates the contents, saves the new value and updates
+// the other textbox with the new value.
+function initializeIntervalTextbox() {
+  var interval = Math.round(getSetting(SETTINGS.check_interval) / (60 * 1000));
+  var textboxes = $('#interval input, #basic_interval input');
+  
+  textboxes.val(interval).keyup(function() {
+    var cleaned_value = cleanTimeTextbox(this);
+    textboxes.not(this).val(cleaned_value.toString());
+    setSetting(SETTINGS.check_interval, cleaned_value * 60 * 1000);
+  }).change(function() { $(this).keyup(); });
+}
+
+// Initializes the two desktop notification togglers. Updates their state from
+// SETTINGS.notifications_enabled and binds a handler for the change event of
+// both drop-downs that synchronizes their values, and checks for notifications
+// being permitted. If they are, the setting is saved. If not, the user is asked
+// to permit them then the value of the dropdown is updated if they do.
+function initializeNotificationsToggler() {
+  if (!areNotificationsPermitted()) {
     setSetting(SETTINGS.notifications_enabled, false);
   }
   
-  $('#notifications select').change(function() {
-    var $this = $(this);
+  var $togglers = $('#notifications select, #basic_notifications select');
   
-    var enabled = ($this.val() == 'enabled');
-    if (enabled) {
-      if (window.webkitNotifications.checkPermission() == 0) {
+  $togglers.change(function() {
+    var $this = $(this);
+    var $that = $togglers.not(this);
+    
+    $that.val($this.val());
+  
+    if ($this.val() == 'enabled') {
+      if (areNotificationsPermitted()) {
         setSetting(SETTINGS.notifications_enabled, true);
       } else {
-        $this.val('disabled');
+        $togglers.val('disabled');
         webkitNotifications.requestPermission(function() {
-          if (window.webkitNotifications.checkPermission() == 0) {
+          if (areNotificationsPermitted()) {
             setSetting(SETTINGS.notifications_enabled, true);
-            $this.val('enabled');
+            $togglers.val('enabled');
           }
         });
       }
@@ -98,9 +327,16 @@ function initializeNotificationsChecker() {
     }
   }).val(getSetting(SETTINGS.notifications_enabled) ? 'enabled' : 'disabled');
   
+}
+
+// Initializes the notifications timeout textbox. Updates its value from
+// SETTINGS.notifications_timeout and binds a handler for the change and keyup
+// events that validates the contents and saves the new value.
+function initializeNotificationsTimeout() {
   var timeout = (getSetting(SETTINGS.notifications_timeout) / 1000) || 30;
+  
   $('#notifications input').val(timeout).keyup(function() {
-    var new_timeout = cleanTimeoutTextbox(this);
+    var new_timeout = cleanTimeTextbox(this);
     if (new_timeout < 1) {
       new_timeout = 1;
       $(this).val(new_timeout);
@@ -109,29 +345,34 @@ function initializeNotificationsChecker() {
   }).change(function() { $(this).keyup(); });
 }
 
+// Initializes the two sound alert selection drop-downs. Fills them with sounds
+// from SETTINGS.custom_sounds and binds a handler for the change event of both
+// drop-downs that synchronizes their values and saves the new choice.
 function initializeSoundSelector() {
-  var select = $('#sound_alert select');
+  var selects = $('#sound_alert select, #basic_sound_alert select');
   var play_button = $('#play_sound');
-  var new_button = $('#new_sound');
-  var new_form = $('#new_sound_form');
-  
-  new_form.css({
-    top: (window.innerHeight - new_form.height()) / 2,
-    left: (window.innerWidth - new_form.width()) / 2
-  });
   
   var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
   $.each(custom_sounds, function(i, v) {
-    $('<option>').text(v.name).attr('value', v.url).appendTo(select);
+    $('<option>').text(v.name).attr('value', v.url).appendTo(selects);
   });
   
-  select.change(function() {
-    var audio_file = select.val();
-    
+  selects.change(function() {
+    var audio_file = $(this).val();
+    selects.not(this).val(audio_file);
     setSetting(SETTINGS.sound_alert, audio_file);
-    
     play_button.attr({ disabled: audio_file == '' });
   });
+  
+  selects.val(getSetting(SETTINGS.sound_alert) || '');
+  selects.change();
+}
+
+// Initializes the Play Sound button with a click handler that plays the
+// selected sound (the button and drop-down are disabled while playing).
+function initializeSoundPlayer() {
+  var select = $('#sound_alert select');
+  var play_button = $('#play_sound');
   
   play_button.click(function() {
     select.attr({ disabled: true });
@@ -145,18 +386,34 @@ function initializeSoundSelector() {
     });
     audio.play();
   });
+}
+
+// Initializes the sound creation form, including the New button that displays
+// the form, and the Ok/Cancel buttons in the form itself.
+function initializeSoundCreator() {
+  var new_button = $('#new_sound');
+  var new_form = $('#new_sound_form');
   
+  // Center the form.
+  new_form.css({
+    top: (window.innerHeight - new_form.height()) / 2,
+    left: (window.innerWidth - new_form.width()) / 2
+  });
+  
+  // Show form.
   new_button.click(function() {
     $('input', new_form).val('');
-    grayOut(true);
+    shadeBackground(true);
     new_form.fadeIn();
   });
   
+  // Cancel form.
   $('#new_sound_cancel').click(function() {
-    grayOut(false);
+    shadeBackground(false);
     new_form.fadeOut();
   });
   
+  // Try to create a new sound entry.
   $('#new_sound_create').click(function() {
     var name = $('#new_sound_name').val();
     var url = $('#new_sound_url').val();
@@ -175,55 +432,71 @@ function initializeSoundSelector() {
       create_button.css('cursor', 'auto');
     }
     
-    new Audio(url).addEventListener('error', function() {
+    // Make sure we can play the file.
+    var audio_file = new Audio(url);
+    
+    audio_file.addEventListener('error', function() {
       alert(chrome.i18n.getMessage('new_sound_failed'));
       restoreCreateButton();
     });
-    new Audio(url).addEventListener('canplaythrough', function() {
+    audio_file.addEventListener('canplaythrough', function() {
       var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
       custom_sounds.push({ name: name, url: url });
       setSetting(SETTINGS.custom_sounds, custom_sounds);
       
-      $('<option>').text(name).attr('value', url).appendTo(select);
+      $('<option>').text(name).attr('value', url)
+                   .appendTo('#sound_alert select, #basic_sound_alert select');
       
       restoreCreateButton();
-      grayOut(false);
+      shadeBackground(false);
       new_form.fadeOut();
     });
   });
-  
-  select.val(getSetting(SETTINGS.sound_alert) || '');
-  select.change();
 }
 
+// Initializes the View All Function drop-down. Updates its state from
+// SETTINGS.view_all_action and binds a handler for the change event to save the
+// newly selected setting.
+function initializeViewAllSelector() {
+  $('#view_all select').change(function() {
+    setSetting(SETTINGS.view_all_action, $(this).val());
+  }).val(getSetting(SETTINGS.view_all_action));
+}
+
+// Initializes the Export Pages button and form. Binds a handler to the Export
+// Pages button that pops up the form on click and fills it with the output of
+// exportPagesList(), and another handler to the Close button in the form to
+// hide it.
 function initializeExporter() {
   var form = $('#export_form');
   
   $('#export').click(function() {
     exportPagesList(function(result) {
       $('textarea', form).val(result);
-      grayOut(true);
+      shadeBackground(true);
       form.fadeIn();
     });
   });
 
   $('button', form).click(function() {
     form.fadeOut();
-    grayOut(false);
+    shadeBackground(false);
   });
 }
 
+// Initializes the Import Pages button that displays the import form and the
+// Import/Cancel buttons in the form itself.
 function initializeImporter() {
   var form = $('#import_form');
   
   $('#import').click(function() {
-    grayOut(true);
+    shadeBackground(true);
     form.fadeIn();
   });
     
   $('#import_cancel', form).click(function() {
     form.fadeOut();
-    grayOut(false);
+    shadeBackground(false);
   });
   
   $('#import_perform', form).click(function() {
@@ -233,283 +506,491 @@ function initializeImporter() {
     } catch (e) {
       alert(chrome.i18n.getMessage('import_error'));
       form.fadeOut();
-      grayOut(false);
+      shadeBackground(false);
       return;
     }
     if (count) {
       var singular = chrome.i18n.getMessage('import_success_single');
-      var plural = chrome.i18n.getMessage('import_success_multi', count.toString());
+      var plural = chrome.i18n.getMessage('import_success_multi',
+                                          count.toString());
       alert(count == 1 ? singular : plural);
       fillPagesList();
     } else {
       alert(chrome.i18n.getMessage('import_empty'));
     }
     form.fadeOut();
-    grayOut(false);
+    shadeBackground(false);
   });
 }
 
-function initializeTimeoutTextbox() {
-  var timeout = Math.round(getSetting(SETTINGS.check_interval) / (60 * 1000));
-  
-  $('#global_timeout input').val(timeout).keyup(function() {
-    setSetting(SETTINGS.check_interval, cleanTimeoutTextbox(this) * 60 * 1000);
-  }).change(function() { $(this).keyup(); });
+// Initializes the "Check All Now" button handler.
+function initializeGlobalChecker() {
+  $('#check_all').click(function() {
+    getAllPageURLs(function(pages) {
+      var progress_message = chrome.i18n.getMessage('check_in_progress') + '..';
+      $('.last_check_time').text(progress_message);
+      
+      BG.check(true, $.noop, function(url) {
+        var page_record = findPageRecord(url);
+        $('.last_check_time', page_record).trigger('time_updated');
+      });
+    });
+  });
 }
 
-function cleanTimeoutTextbox(textbox) {
-  var caret_pos = textbox.selectionStart;
-  var caret_end = textbox.selectionEnd;
+// Initializes the event handler for the button that switches between basic and
+// advanced settings. The button is unresponsive while the switching animation
+// is running.
+(function() {
+  var switching = false;
   
-  var str_timeout = $(textbox).val().replace(/[^.0-9]/g, '');
-  var new_timeout = parseFloat(str_timeout) || 1;
-  
-  if (new_timeout <= 5 / 60) {
-    new_timeout = 5 / 60;
+  initializeAdvancedSwitch = function() {
+    if (switching) return false;
+    switching = true;
+    
+    $('#options_switch input').click(function() {
+      var checked = $(this).is(':checked');
+      var to_hide = checked ? '#basic_options' : '#advanced_options';
+      var to_show = checked ? '#advanced_options' : '#basic_options';
+      
+      $(to_hide).slideUp('slow', function() {
+        $(to_show).slideDown('slow', function() {
+          switching = false;
+        });
+      });
+    });
   }
+})();
+
+/*******************************************************************************
+*                        Per-Page Controls Initialization                      *
+*******************************************************************************/
+
+// Initializes all per-page controls with their live event handlers.
+function initializePageControls() {
+  initializePageRename();
+  initializePageRemove();
+  initializePageCheck();
   
-  if (str_timeout.match(/^0*\.|\.0*$/)) {
-    $(textbox).val(str_timeout);
-  } else {
-    $(textbox).val(new_timeout);
-  }
+  initializePageAdvancedToggler();
   
-  textbox.selectionStart = caret_pos;
-  textbox.selectionEnd = caret_end;
-  
-  return new_timeout;
+  initializePageCheckInterval();
+  initializePageModeSelector();
+  initializePageModeTester();
+  initializePageModePicker();
 }
 
-// Returns the URL of the page record given any element in it.
-function findUrl(context) {
-  return $(context).closest('.page_record').find('.page_link').get()[0].href;
-}
-
-function fillPagesList() {
-  var global_check_interval = getSetting(SETTINGS.check_interval);
-  getAllPages(function(pages) {
-    // Sort the pages.
-    var sort_order = getSetting(SETTINGS.sort_by);
-    if (sort_order != 'date added') {
-      pages.sort(function(a, b) {
-        if (sort_order == 'name') {
-          a = a.name;
-          b = b.name;
-        } else if (sort_order == 'check interval') {
-          a = a.check_interval || global_check_interval;
-          b = b.check_interval || global_check_interval;
-        } else if (sort_order == 'last check') {
-          a = -a.last_check;
-          b = -b.last_check;
-        } else if (sort_order == 'last changed') {
-          a = -a.last_changed || 0;
-          b = -b.last_changed || 0;
-        }
-        
-        return (a < b) ? -1 : 1;
+// Initializes the page renamer button and mini-form. Binds a handler to the
+// rename button that swaps the page link with a textbox and an Ok/Cancel pair,
+// and applies the appropriate handlers to the pair.
+function initializePageRename() {
+  $('.rename').live('click', function() {
+    var record = findPageRecord(this);
+    var page_link = record.find('.page_link');
+    
+    if (!page_link.is(':hidden')) {
+      var textbox = $('<input type="text" value="' + page_link.text() + '" />');
+      var cancel_button = $('<input type="button" value="' +
+                            chrome.i18n.getMessage('cancel') + '" />');
+      var ok_button = $('<input type="button" value="' +
+                        chrome.i18n.getMessage('ok') + '" />');
+      
+      page_link.hide().after(cancel_button).after(ok_button).after(textbox);
+      
+      cancel_button.click(function() {
+        textbox.remove();
+        ok_button.remove();
+        cancel_button.remove();
+        page_link.show();
+      });
+      
+      ok_button.click(function() {
+        page_link.text(textbox.val());
+        setPageSettings(findUrl(this), { name: textbox.val() });
+        cancel_button.click();
       });
     }
+  });
+}
+
+// Initializes the remove button handler to slide up the page record, remove the
+// page from the database, refill the pages list and update the badge when done
+// in case the removed page was marked as updated.
+function initializePageRemove() {
+  $('.stop_monitoring').live('click', function() {
+    var url = findUrl(this);
     
-    // Clear the list.
-    $('#pages').html('');
+    removePage(url, BG.updateBadge);
     
-    // Fill the list.
-    if (pages.length > 0) {
-      $.each(pages, function(_, page) {
-        var page_record = $('#templates .page_record').clone();
-        var check_interval = page.check_interval || global_check_interval;
-        var advanced_set = false;
+    var scroll_position = scrollY;
     
-        var name = page.name || chrome.i18n.getMessage('untitled', page.url);
-        if (name.length > 60) {
-          name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
-        }
+    $('td', findPageRecord(this)).slideUp('slow', function() {
+      if ($('#pages .page_record').length == 1) {
+        $('#pages').animate(
+          { height: '50px', opacity: 1 }, 'slow', fillPagesList
+        );
+      } else {
+        fillPagesList();
+        scrollTo(0, scroll_position);
+      }
+    });
+  });
+}
+
+// Initializes the per-page forced check button handler to replace the last
+// check label with a "check in progress" message, perform a check on this page,
+// then fade in the new last check label and update the badge.
+function initializePageCheck() {
+  $('.check_now').live('click', function() {
+    var timestamp = $('.last_check_time', findPageRecord(this));
+    var url = findUrl(this);
+    var progress_message = chrome.i18n.getMessage('check_in_progress') + '..';
+    
+    timestamp.text(progress_message);  
+    BG.checkPage(url, function(url) {
+      timestamp.trigger('time_updated');
+      BG.updateBadge();
+    });
+  });
+}
+
+// Initializes the advanced page options toggler and individual advanced options
+// togglers. The former slides the advanced options div up or down, adds or
+// removes the "toggled" class, and restores the last settings entered into the
+// controls in the custom div on sliding down. The latter toggles the "disabled"
+// and "enabled" classes of sibling spans and enables/disables all <input> and
+// <select> elements within the same parent.
+function initializePageAdvancedToggler() {
+  $('.advanced_toggle input[type=checkbox]').live('click', function() {
+    var url = findUrl(this);
+    var page_record = findPageRecord(this);
+    
+    if ($(this).is(':checked')) {
+      $('.advanced_toggle', page_record).addClass('toggled');
+      $('.advanced_controls', page_record).slideDown('fast');
+      
+      // Apply previously-set advanced settings.
+      var interval_div = $('.page_interval', page_record);
+      if ($(':checked', interval_div).length > 0) {
+        var interval = cleanTimeTextbox($('input[type=text]', interval_div));
+        setPageCheckInterval(url, interval);
+      }
+      
+      if ($('.mode :checked', page_record).length > 0) {
+        var custom_mode = $('.mode select', page_record).val();
+        var custom_mode_string = $('.mode_string', page_record).val();
+        setPageRegexOrSelector(url, custom_mode, custom_mode_string);
+      }
+    } else {
+      $('.advanced_controls', page_record).slideUp('fast', function() {
+        $('.advanced_toggle', page_record).removeClass('toggled');
+      });
+      
+      setPageCheckInterval(url, null);
+      setPageRegexOrSelector(url, 'regex', null);
+    }
+  });
+  
+  $('.advanced_controls input[type=checkbox]').live('click', function() {
+    var checked = $(this).is(':checked');
+    
+    $(this).nextAll('span').toggleClass('enabled', checked)
+                           .toggleClass('disabled', !checked);
+    $('input,select', $(this).parent()).not(this).attr({ disabled: !checked });
+  });
+}
+
+// Initializes the page check interval textbox with a handler for the change and
+// keyup events that validates the contents and saves the new value  if needed.
+// Also binds a (secondary) handler to the interval checkbox that removes the
+// custom interval when unchecked, and resaves the currently entered value when
+// checked.
+function initializePageCheckInterval() {
+  $('.page_interval input[type=checkbox]').live('click', function() {
+    var url = findUrl(this);
+    if ($(this).is(':checked')) {
+      setPageCheckInterval(url, $('input[type=text]', $(this).parent()).val());
+    } else {
+      setPageCheckInterval(url, null);
+    }
+  });
+  
+  $('.page_interval input[type=text]').live('keyup', function() {
+    setPageCheckInterval(findUrl(this), cleanTimeTextbox(this));
+  }).live('change', function() { $(this).keyup(); });
+}
+
+// Initializes the custom monitoring mode checkbox, drop-down and textbox.
+// 1. The checkbox enables/disables the rest of the controls on the same line.
+//    When checked, it triggers the keyup event on the textbox, and when
+//    unchecked, it resets the page to the default text mode.
+// 2. The dropdown selects between regex and selector modes, triggers the keyup
+//    event in the textbox, and enables the picker if selector mode is selected.
+// 3. The textbox calls setPageRegexOrSelector() with the appropriate arguments
+//    on keyup and change events.
+function initializePageModeSelector() {
+  $('.mode input[type=checkbox]').live('click', function() {
+    var url = findUrl(this);
+    var record = findPageRecord(this);
+    
+    if ($(this).is(':checked')) {
+      $('.mode_string', record).keyup();
+    } else {
+      setPageSettings(url, { mode: 'text', regex: null, selector: null });
+    }
+  });
+  
+  $('.mode select').live('change', function() {
+    var record = findPageRecord(this);
+    $('.mode_string', record).keyup();
+    $('.mode_pick', record).attr({ disabled: $(this).val() == 'regex' });
+  });
+  
+  $('.mode_string').live('keyup', function() {
+    var mode = $('select', findPageRecord(this)).val();
+    setPageRegexOrSelector(findUrl(this), mode, $(this).val());
+  }).live('change', function() { $(this).keyup(); });
+}
+
+// Initializes the custom monitoring mode test button. On click, the button
+// disables itself and the textbox, runs a test with the currently specified
+// mode and mode string, displays the result in an alert box, then re-enables
+// itself and the textbox.
+function initializePageModeTester() {
+  $('.mode_test').live('click', function() {
+    var url = findUrl(this);
+    var record = findPageRecord(this);
+    var mode = $('select', record).val();
+    var mode_string = $('.mode_string', record).val();
+    var button = $(this);
+    
+    button.val(chrome.i18n.getMessage('test_progress'))
+          .add($('.mode_string', record)).attr({ disabled: true });
+
+    $.ajax({
+      url: url,
+      success: function(html) {
+        var findAndFormat = (mode == 'regex') ? findAndFormatRegexMatches :
+                                                findAndFormatSelectorMatches;
+        findAndFormat(html, mode_string, function(results) {
+          if (results) {
+            alert(chrome.i18n.getMessage('test_matches') +'\n' + results);
+          } else {
+            alert(chrome.i18n.getMessage('test_no_matches'));
+          }
         
-        page_record.find('.page_link').attr({
-          href: page.url,
-          target: '_blank'
-        }).text(name);
-        
-        page_record.find('.favicon').attr({
-          src: page.icon || 'img/page.png'
-        });
-        
-        var last_check_span = page_record.find('.last_check_time');
-        last_check_span.bind('time_updated', function() {
-          var $span = $(this);
-          getPage(page.url, function(page) {
-            var last_check = page.last_check ? describeTimeSince(page.last_check) : chrome.i18n.getMessage('never');
-            
-            if (last_check != $span.text()) {
-              $span.fadeOut('slow', function() {
-                $span.text(last_check).fadeIn('slow');
-              });
-            }
+          cleanAndHashPage(html, mode, mode_string, mode_string, function(crc) {
+            setPageSettings(url, { crc: crc });
           });
         });
-        last_check_span.trigger('time_updated');
-        setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
-        
-        var timeout = check_interval / (60 * 1000);
-        page_record.find('.timeout input[type=text]').val(timeout);
-        if (page.check_interval) {
-          page_record.find('.timeout span').addClass('enabled').removeClass('disabled');
-          page_record.find('.timeout input').attr({ disabled: false });
-          page_record.find('.timeout input[type=checkbox]').attr({ checked: true });
-          advanced_set = true;
-        }
-        
-        page_record.find('.mode input[type=radio]').attr({name: 'name' + crc(page.url) });
-        
-        if (page.mode == null) {
-          if (page.regex) {
-            page.mode = 'regex';
-          } else {
-            page.mode = 'text';
-          }
-        }
-        if (page.mode == 'text') {
-          page_record.find('.mode input[type=radio]').first().attr({ checked: true });
-        } else {
-          page_record.find('.mode span').first().addClass('enabled').removeClass('disabled');
-          page_record.find('.mode input').attr({ disabled: false });
-          page_record.find('.mode input[type=checkbox]').attr({ checked: true });
-          page_record.find('.mode input[type=radio][value=' + page.mode + ']')
-                     .click();
-          if (page.mode == 'regex') {
-            page_record.find('.mode input[type=text]').val(page.regex);
-          } else if (page.mode == 'selector') {
-            page_record.find('.mode input[type=text]').val(page.selector);
-          }
-          advanced_set = true;
-        }
-        
-        if (advanced_set) {
-          page_record.find('.advanced_toggle input[type=checkbox]').attr({ checked: true });
-          page_record.find('.advanced_toggle').addClass('toggled');
-          page_record.find('.advanced_controls').css({ display: 'block' });
-        }
-        
-        page_record.appendTo('#pages');
+      },
+      error: function() {
+        alert(chrome.i18n.getMessage('test_fail'));
+      },
+      complete: function() {
+        button.val(chrome.i18n.getMessage('test_button'))
+              .add($('.mode_string', record)).attr({ disabled: false });
+      }
+    });
+  });
+}
+
+// Initializes the Pick button in the page mode selector. On click, the button
+// spawns a tab with the URL of the page in the its record, then injects jquery,
+// followed by scripts/selector.js  and styles/selector.css into the tab.
+function initializePageModePicker() {
+  $('.mode_pick').live('click', function() {
+    chrome.tabs.create({
+      url: findUrl(this),
+      selected: true
+    }, function(tab) {
+      chrome.tabs.executeScript(tab.id, { file: 'lib/jquery-1.4.1.js' },
+                                function() {
+        chrome.tabs.executeScript(tab.id, { file: 'scripts/selector.js' });
+        chrome.tabs.insertCSS(tab.id, { file: 'styles/selector.css' });
       });
+    });
+  });
+}
+
+/*******************************************************************************
+*                              Page List Generator                             *
+*******************************************************************************/
+
+// Fills the pages table (id=pages) with a list of page records, each record
+// containing basic info about the page and controls to edit per-page settings.
+// The pages are sorted per SETTINGS.sort_by. If no pages are being monitored,
+// a copy of the row with class=empty from the tebplates table is inserted.
+function fillPagesList() {
+  getAllPages(function(pages) {
+    sortPagesInplace(pages, getSetting(SETTINGS.sort_by));
+    
+    $('#pages').html('');
+    
+    if (pages.length > 0) {
+      $.each(pages, function(_, page) { addPageToTable(page); });
     } else {
       $('#templates .empty').clone().appendTo('#pages');
     }
   });
 }
 
-function setPageTimeout(context, timeout) {
-  var url = findUrl(context);
-  
-  if (timeout != null) timeout = parseFloat(timeout) * 60 * 1000;
-  
-  setPageSettings(url, {check_interval: timeout}, BG.scheduleCheck);
-}
-
-function setPageRegex(context, regex) {
-  if (regex === null)  {
-    setPageSettings(findUrl(context), {regex: null, mode: 'text'});
-  } else {
-    var is_valid_regex = true;
-    try {
-      var temp_regex = new RegExp(regex);
-    } catch (e) {
-      is_valid_regex = false;
-    }
-  
-    var textbox = $(context).closest('.page_record').find('.mode input[type=text]');
-    var test_button = $(context).closest('.page_record').find('.mode input[type=button]');
-    if (is_valid_regex) {
-      textbox.removeClass('invalid');
-      test_button.attr({ disabled: false });
-      setPageSettings(findUrl(context), {regex: regex});
-    } else {
-      test_button.attr({ disabled: true });
-      textbox.addClass('invalid');
-    }
-  }
-}
-
-function setPageSelector(context, selector) {
-  if (selector === null)  {
-    setPageSettings(findUrl(context), {selector: null, mode: 'text'});
-  } else {
-    var is_valid_selector = true;
-    try {
-      $(selector);
-    } catch (e) {
-      is_valid_selector = false;
-    }
-  
-    var textbox = $(context).closest('.page_record').find('.mode input[type=text]');
-    var test_button = $(context).closest('.page_record').find('.mode input[type=button]');
-    if (is_valid_selector) {
-      textbox.removeClass('invalid');
-      test_button.attr({ disabled: false });
-      setPageSettings(findUrl(context), {selector: selector});
-    } else {
-      test_button.attr({ disabled: true });
-      textbox.addClass('invalid');
-    }
-  }
-}
-
-function exportPagesList(callback) {
-  getAllPages(function(pages) {
-    var buffer = [];
-    var add_date = new Date().getTime();
+// Sorts an array of pages in-place given a sort_order. Valid sort order values:
+// 1. date added: no sorting is done. The input array is expected to be
+//    initially sorted by the date when the page was added.
+// 2. name: the page's name attribute.
+// 3. check interval: the page's check interval (or the global check interval
+//    for pages with no custom interval defined).
+// 4. last check: the date when the page was last checked.
+// 5. last change: the date when the page was last changed.
+// Other values of sort order will raise an error.
+function sortPagesInplace(pages, sort_order) {
+  if (sort_order != 'date added') {
+    var global_check_interval = getSetting(SETTINGS.check_interval);
     
-    buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<\!\-\- This is an' +
-                ' automatically generated file.\n     It will be read and' +
-                ' overwritten.\n     DO NOT EDIT! \-\-\>\n<META HTTP-EQUIV=' +
-                '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
-                'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
-    
-    for (var i in pages) {
-      var icon_attr = pages[i].icon ? ' ICON_URI="' + pages[i].icon + '" ' : '';
-      buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' + add_date + '"' + icon_attr + '>' + pages[i].name + '</A>\n');
-      
-      var advanced_settings = {
-        mode: pages[i].mode,
-        regex: pages[i].regex,
-        selector: pages[i].selector,
-        check_interval: pages[i].check_interval,
-        crc: pages[i].crc,
-        last_check: pages[i].last_check,
-        last_changed: pages[i].last_changed,
+    pages.sort(function(a, b) {
+      if (sort_order == 'name') {
+        a = a.name;
+        b = b.name;
+      } else if (sort_order == 'check interval') {
+        a = a.check_interval || global_check_interval;
+        b = b.check_interval || global_check_interval;
+      } else if (sort_order == 'last check') {
+        a = -a.last_check;
+        b = -b.last_check;
+      } else if (sort_order == 'last changed') {
+        a = -a.last_changed || 0;
+        b = -b.last_changed || 0;
+      } else {
+        throw(new Error('Invalid sort order.'));
       }
-      var encoded_settings = JSON.stringify(advanced_settings).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      buffer.push('            \<\!\-\-PageMonitorAdvancedPageData=' + encoded_settings + '\-\-\>\n');
-    }
-    
-    buffer.push('</DL><p>');
-    
-    (callback || $noop)(buffer.join(''));
-  });
+      
+      return (a < b) ? -1 : 1;
+    });
+  }
 }
 
-function importPagesList(bookmarks) {
-  var page_regex = /(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\s*\<\!\-\-PageMonitorAdvancedPageData=(\{.*\})\-\-\>\n)?/g;
-  var match;
-  var matches_count = 0;
+// Adds a page record to the pages table. The template is taken from #templates
+// and filled with the info form the supplied argument (a page object as
+// returned by the getPage() function).
+function addPageToTable(page) {
+  var page_record = $('#templates .page_record').clone();
+  var global_check_interval = getSetting(SETTINGS.check_interval);
+  var check_interval = page.check_interval || global_check_interval;
+  var advanced_set = false;
+
+  // Page info.
+  var name = page.name || chrome.i18n.getMessage('untitled', page.url);
+  if (name.length > 60) {
+    name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
+  }
   
-  while (match = page_regex.exec(bookmarks, page_regex.lastIndex)) {
-    var page_link = $(match[1]);
-    var page_url = page_link.attr('HREF') || '';
-    var page_name = page_link.text() || chrome.i18n.getMessage('untitled', page_url);
-    var page_icon = page_link.attr('ICON_URI') || null;
-    
-    var advanced = {};
-    if (match[2]) {
-      advanced = JSON.parse(match[2].replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>'));
-    }
-    
-    if (page_url) {
-      var page = $.extend({ url: page_url, name: page_name, icon: page_icon }, advanced);
-      addPage(page);
-      matches_count++;
+  page_record.find('.page_link').attr({
+    href: page.url,
+    target: '_blank'
+  }).text(name);
+  
+  page_record.find('.favicon').attr({
+    src: page.icon || 'img/page.png'
+  });
+  
+  // Last check time ticker.
+  var last_check_span = page_record.find('.last_check_time');
+  last_check_span.bind('time_updated', function() {
+    var $span = $(this);
+    getPage(page.url, function(page) {
+      var last_check = page.last_check ? describeTimeSince(page.last_check)
+                                       : chrome.i18n.getMessage('never');
+      
+      if (last_check != $span.text()) {
+        $span.fadeOut('slow', function() {
+          $span.text(last_check).fadeIn('slow');
+        });
+      }
+    });
+  });
+  last_check_span.trigger('time_updated');
+  setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
+  
+  // Check interval textbox.
+  var interval = check_interval / (60 * 1000);
+  var interval_div = $('.page_interval', page_record);
+  $('input[type=text]', interval_div).val(interval);
+  if (page.check_interval) {
+    interval_div.children('span').addClass('enabled').removeClass('disabled');
+    $('input', interval_div).attr({ disabled: false });
+    $('input[type=checkbox]', interval_div).attr({ checked: true });
+    advanced_set = true;
+  }
+  
+  // Custom monitoring mode textbox.
+  if (page.mode == null) {
+    if (page.regex) {
+      page.mode = 'regex';
+    } else {
+      page.mode = 'text';
     }
   }
   
-  return matches_count;
+  if (page.mode != 'text') {
+    var mode_div = $('.mode', page_record);
+    var mode_string = (page.mode == 'regex') ? page.regex : page.selector;
+    
+    mode_div.children('span').addClass('enabled').removeClass('disabled');
+    $('input,select', mode_div).attr({ disabled: false });
+    $('input[type=checkbox]', mode_div).attr({ checked: true });
+    $('select', mode_div).val(page.mode).change();
+    $('.mode_string', mode_div).val(mode_string).keyup();
+    
+    advanced_set = true;
+  }
+  
+  // Advanced checkbox.
+  if (advanced_set) {
+    $('.advanced_toggle', page_record).addClass('toggled');
+    $('.advanced_toggle input', page_record).attr({ checked: true });
+    $('.advanced_controls', page_record).css({ display: 'block' });
+  }
+  
+  page_record.appendTo('#pages');
+}
+
+/*******************************************************************************
+*                           Server for Selector GUI                            *
+*******************************************************************************/
+
+// Waits for a request from a selector GUI page specifying a URL and a selector
+// for the page at that URL. If there is a page record with that URL in the
+// displayed page list, its advanced options are displayed and its custom mode
+// checkbox is checked, then its mode is set to "selector", and its mode string
+// textbox is filled with the selector string. A keyup event is triggered on the
+// textbox.
+chrome.extension.onRequest.addListener(function(request, _, callback) {
+  if (request && request.selector) {
+    var page_record = findPageRecord(request.url);
+    if (page_record.length > 0 &&
+        $('.advanced_toggle.toggled', page_record).length > 0 &&
+        $('.mode :checked', page_record).length > 0) {
+      $('.mode select', page_record).val('selector');
+      $('.mode_string', page_record).val(request.selector).keyup();
+      callback(null);
+    }
+  }
+});
+
+/*******************************************************************************
+*                               Main Function                                  *
+*******************************************************************************/
+
+// Completely initializes the page.
+function init() {
+  if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
+  
+  applyLocalization();
+  $('title').text(chrome.i18n.getMessage('options_title'));
+  
+  initializeGlobalControls();
+  initializePageControls();
+  
+  fillPagesList();
 }
