@@ -399,9 +399,9 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
     callback(crc(result || ''));
   }
   
-  if (mode == 'regex' && regex != null && regex != undefined) {
+  if (mode == 'regex' && regex) {
     findAndFormatRegexMatches(html, regex, callBackWithCrc);
-  } else if (mode == 'selector' && selector != null && selector != undefined) {
+  } else if (mode == 'selector' && selector) {
     findAndFormatSelectorMatches(html, selector, callBackWithCrc);
   } else {
     cleanHtmlPage(html, callBackWithCrc);
