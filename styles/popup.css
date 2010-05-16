@@ -1,8 +1,20 @@
+/* Imports */
+
 @import url("base.css");
+
+/* General Page Styles */
 
 body {
   overflow: hidden;
 }
+
+hr {
+  border-top: none;
+  border-bottom: 1px gray dotted;
+  margin-top: 0;
+}
+
+/* Main Controls */
 
 .main_controls {
   text-align: center;
@@ -44,20 +56,27 @@ body {
   text-shadow: none;
 }
 
+#monitor_page.inprogress {
+  cursor: progress;
+}
+
+/* Loading Bar */
+
 .loading {
   width: 100%;
-  background: url('../img/loader.gif') center 13px no-repeat;
 }
 
 .loading_spacer {
   height: 49px;
 }
 
+.loading_spacer td {
+  background: url('../img/loader.gif') center 16px no-repeat;
+}
+
+/* Fixes */
+
 .notification div {
   /* Needed to avoid jQuery animation stutter. */
   min-width: 10px;
-}
-
-#monitor_page.inprogress {
-  cursor: progress;
 }
