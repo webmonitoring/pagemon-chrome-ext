@@ -164,7 +164,7 @@ function exportPagesList(callback) {
         check_interval: pages[i].check_interval,
         crc: pages[i].crc,
         last_check: pages[i].last_check,
-        last_changed: pages[i].last_changed,
+        last_changed: pages[i].last_changed
       }).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
       buffer.push('            <!--PageMonitorAdvancedPageData=' +
                   encoded_settings + '-->\n');
@@ -460,7 +460,7 @@ function initializeSoundCreator() {
 function initializeViewAllSelector() {
   $('#view_all select').change(function() {
     setSetting(SETTINGS.view_all_action, $(this).val());
-  }).val(getSetting(SETTINGS.view_all_action));
+  }).val(getSetting(SETTINGS.view_all_action) || 'diff');
 }
 
 // Initializes the Export Pages button and form. Binds a handler to the Export

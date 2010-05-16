@@ -394,18 +394,18 @@ function bringUpToDate(from_version, callback) {
       setSetting(SETTINGS.notifications_timeout, 30 * 1000);
       setSetting(SETTINGS.animations_disabled, false);
       setSetting(SETTINGS.sort_by, 'date added');
-      setSetting(SETTINGS.view_all_action, 'originals');
+      setSetting(SETTINGS.view_all_action, 'original');
       
       updateDone();
     } else if (from_version < 2) {
-      setSetting(SETTINGS.view_all_action, 'originals');
+      setSetting(SETTINGS.view_all_action, 'original');
       delete localStorage.last_check;
       
       importVersionOnePages(updateDone);
     } else if (from_version < 3) {
       setSetting(SETTINGS.check_interval, getSetting('timeout') ||
                                           DEFAULT_CHECK_INTERVAL);
-      setSetting(SETTINGS.view_all_action, 'originals');
+      setSetting(SETTINGS.view_all_action, 'original');
       delete localStorage.timeout;
       
       importVersionTwoPages(updateDone);

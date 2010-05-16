@@ -41,46 +41,47 @@ def compileHTML(filename):
     
     return lxml.html.tostring(doc)
 
-def stripSVN(src, names):
+def stripDotfiles(src, names):
     return [i for i in names if i.startswith('.')]
 
-# Remove old build folder.
-if os.path.exists('build'):
-    print 'Cleaning old folder'
-    shutil.rmtree('build')
+if __name__ == '__main__':
+    # Remove old build folder.
+    if os.path.exists('build'):
+        print 'Cleaning old folder'
+        shutil.rmtree('build')
+    
+    # Copy all files.
+    print 'Copying files'
+    shutil.copytree('.', 'build', ignore=stripDotfiles)
 
-# Copy all files.
-print 'Copying files'
-shutil.copytree('.', 'build', ignore=stripSVN)
+    # Copy over minified libs.
+    print 'Applying minified libs'
+    for f in glob.glob('build/lib/*.js'):
+        os.remove(f)
+    for f in glob.glob('build/lib/min/*.js'):
+        shutil.copy(f, 'build/lib')
+    shutil.rmtree('build/lib/min')
 
-# Copy over minified libs.
-print 'Applying minified libs'
-for f in glob.glob('build/lib/*.js'):
-    os.remove(f)
-for f in glob.glob('build/lib/min/*.js'):
-    shutil.copy(f, 'build/lib')
-shutil.rmtree('build/lib/min')
+    # Remove the build script.
+    print 'Removing build script'
+    os.remove('build/build.py')
 
-# Remove the build script.
-print 'Removing build script'
-os.remove('build/build.py')
+    # Compress stylesheets.
+    for f in glob.glob('build/styles/*.css'):
+        print 'Compiling CSS:', f
+        data = open(f).read()
+        open(f, 'w').write(compileCSS(data))
 
-# Compress stylesheets.
-for f in glob.glob('build/*.css'):
-    print 'Compiling CSS:', f
-    data = open(f).read()
-    open(f, 'w').write(compileCSS(data))
+    # Compress javascript.
+    for f in glob.glob('build/scripts/*.js'):
+        print 'Compiling JS:', f
+        data = open(f).read()
+        open(f, 'w').write(compileJS(data))
 
-# Compress javascript.
-for f in glob.glob('build/*.js'):
-    print 'Compiling JS:', f
-    data = open(f).read()
-    open(f, 'w').write(compileJS(data))
+    # Compress HTML.
+    for f in glob.glob('build/*.htm*'):
+        print 'Compiling HTML:', f
+        data = compileHTML(f)
+        open(f, 'w').write(data)
 
-# Compress HTML.
-for f in glob.glob('build/*.htm*'):
-    print 'Compiling HTML:', f
-    data = compileHTML(f)
-    open(f, 'w').write(data)
-
-print 'Done'
+    print 'Done'
