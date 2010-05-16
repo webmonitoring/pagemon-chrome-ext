@@ -155,8 +155,12 @@
     "message": "переименовать",
     "description": "The text of the button to rename a page."
   },
+  "remove_page": {
+    "message": "удалить",
+    "description": "The text on the button that stops a page from being monitored."
+  },
   "last_check": {
-    "message": "Последняя проверка:",
+    "message": "Проверено",
     "description": "The text of the label that specified when the page was last checked."
   },
   "unknown": {
@@ -204,15 +208,15 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Интервал Проверок (мин.):",
+    "message": "Интервал Проверок (мин.)",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
-    "message": "Пользовательский Режим:",
+    "message": "Пользовательский Режим",
     "description": "The label for custom checking mode (selector or regex)."
   },
   "regex": {
-    "message": "Регулярное Выражение",
+    "message": "Регекс",
     "description": "The label for regex mode."
   },
   "selector": {
@@ -224,7 +228,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Уведомления:",
+    "message": "Уведомления",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -236,15 +240,15 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Уведомления остаются (сек.):",
+    "message": "Уведомления остаются (сек.)",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
-    "message": "Цвет Значка:",
+    "message": "Цвет Значка",
     "description": "Label for the badge color selector."
   },
   "sound_alert": {
-    "message": "Звуковое Уведомление:",
+    "message": "Звуковое Уведомление",
     "description": "Label for the sound alert drop-down."
   },
   "sound_none": {
@@ -252,7 +256,7 @@
     "description": "The value of the no-sound option in the sound alert drop-down."
   },
   "sort": {
-    "message": "Сортировать по:",
+    "message": "Сортировать по",
     "description": "The label for the sort order drop-down."
   },
   "sort_date": {
@@ -280,7 +284,7 @@
     "description": "The 'last changed' option in the sort order drop-down."
   },
   "animations": {
-    "message": "Анимация:",
+    "message": "Анимация",
     "description": "The label for the checkbox to disable/enable animations."
   },
   "import": {
@@ -316,11 +320,11 @@
     "description": "The text for a generic 'close form' button."
   },
   "sound_name": {
-    "message": "Название:",
+    "message": "Название",
     "description": "The label for the sound name in the 'new sound' form."
   },
   "sound_url": {
-    "message": "URL (файл MP3 или OGG):",
+    "message": "URL (файл MP3 или OGG)",
     "description": "The label for the sound URL in the 'new sound' form."
   },
   "sound_create": {
@@ -362,5 +366,13 @@
   "selector_gui_help_text": {
     "message": "При помощи этого вы сможете визуально выбрать элемент страницы за которым хотите следить.\n\nНаведите курсор на нужный элемент страницы, и когда он выделится синим, нажмите чтобы выбрать его.\n\nЕсли вы довольны результатом, просто нажмите Готово, чтобы вернутся на страницу настроек.\n\nЕсли выбранный элемент покрывает только часть элемента, за которым вы хотите следить, вы можете нажать 'Расширить Выбранную Область'. Это действие можно повторять до тех пор, пока вы не будете довольны результатом.\n\nЕсли вы хотите начать заново вы можете нажать 'Выбрать Элемент'.",
     "description": "The help message in the visual selector construction GUI."
+  },
+  "view_all_function": {
+    "message": "Функция \"Просмотреть Все\"",
+    "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does."
+  },
+  "view_original": {
+    "message": "просмотреть оригинал",
+    "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
   }
 }
