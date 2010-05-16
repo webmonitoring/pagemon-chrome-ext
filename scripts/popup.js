@@ -91,26 +91,33 @@ function fillNotifications(callback) {
 // Updates the state of the three main buttons of the popup.
 // 1. If the page in the currently selected tab is being monitored, disables the
 //    Monitor This Page button and replaces its text with a localized variant of
-//    "Page is Monitored". Otherwise enables it and sets the text to a localized
-//    variant of "Monitor This Page".
+//    "Page is Monitored". If the current page is not an HTTP(S) one, disables
+//    the button and set the text to the localized variant of "Monitor This
+//    Page". Otherwise enables it and sets the text to a localized variant of
+//    "Monitor This Page".
 // 2. If there are any notifications displayed, enabled the View All button.
 //    Otherwise disables it.
 // 3. If there are any pages monitored at all, enabled the Check All button.
 //    Otherwise disables it.
 function updateButtonsState() {
-  // Mark page monitored if it is (initially).
+  // Enable/Disable the Monitor This Page button.
   chrome.tabs.getSelected(null, function(tab) {
-    isPageMonitored(tab.url, function(monitored) {
-      if (monitored) {
-        $('#monitor_page').unbind('click').addClass('inactive');
-        $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
-        $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
-      } else {
-        $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
-        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
-        $('#monitor_page img').attr('src', 'img/monitor.png');
-      }
-    });
+    if (tab.url.match(/^https?:/)) {
+      isPageMonitored(tab.url, function(monitored) {
+        if (monitored || !tab.url.match(/^https?:/)) {
+          $('#monitor_page').unbind('click').addClass('inactive');
+          $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
+          $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+        } else {
+          $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
+          $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
+          $('#monitor_page img').attr('src', 'img/monitor.png');
+        }
+      });
+    } else {
+      $('#monitor_page').unbind('click').addClass('inactive');
+      $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+    }
   });
   
   // Enable/Disable the View All button.
