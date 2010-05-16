@@ -155,8 +155,12 @@
     "message": "ad değiştir",
     "description": "The text of the button to rename a page."
   },
+  "remove_page": {
+    "message": "izlemeyi durdur",
+    "description": "The text on the button that stops a page from being monitored."
+  },
   "last_check": {
-    "message": "Son Denetleme:",
+    "message": "Son Denetleme",
     "description": "The text of the label that specified when the page was last checked."
   },
   "unknown": {
@@ -204,11 +208,11 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Denetleme Sıklığı (dakika):",
+    "message": "Denetleme Sıklığı (dakika)",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
-    "message": "Özel Mod:",
+    "message": "Özel Mod",
     "description": "The label for custom checking mode (selector or regex)."
   },
   "regex": {
@@ -224,7 +228,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Masaüstü Bildirimleri:",
+    "message": "Masaüstü Bildirimleri",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -236,15 +240,15 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Bildirim Süresi (saniye):",
+    "message": "Bildirim Süresi (saniye)",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
-    "message": "Belirteç Rengi:",
+    "message": "Belirteç Rengi",
     "description": "Label for the badge color selector."
   },
   "sound_alert": {
-    "message": "Sesli Uyarı:",
+    "message": "Sesli Uyarı",
     "description": "Label for the sound alert drop-down."
   },
   "sound_none": {
@@ -252,7 +256,7 @@
     "description": "The value of the no-sound option in the sound alert drop-down."
   },
   "sort": {
-    "message": "Sayfaları Sırala:",
+    "message": "Sayfaları Sırala",
     "description": "The label for the sort order drop-down."
   },
   "sort_date": {
@@ -280,7 +284,7 @@
     "description": "The 'last changed' option in the sort order drop-down."
   },
   "animations": {
-    "message": "Animasyonlar:",
+    "message": "Animasyonlar",
     "description": "The label for the checkbox to disable/enable animations."
   },
   "import": {
@@ -316,11 +320,11 @@
     "description": "The text for a generic 'close form' button."
   },
   "sound_name": {
-    "message": "İsim:",
+    "message": "İsim",
     "description": "The label for the sound name in the 'new sound' form."
   },
   "sound_url": {
-    "message": "URL (MP3/OGG):",
+    "message": "URL (MP3/OGG)",
     "description": "The label for the sound URL in the 'new sound' form."
   },
   "sound_create": {
@@ -362,5 +366,13 @@
   "selector_gui_help_text": {
     "message": "Bu denetimler, izlemeye almak istediğiniz sayfa öğelerini görsel olarak seçmenizi sağlar.\n\nFarenizi hareket ettirdiğinizde üstüne geldiğiniz öğenin maviyle vurgulandığını göreceksiniz. Vurgulanan kısım istediğiniz öğeyle (ya da bir bölümüyle) eşleştiğinde, seçmek için tıklayın.\n\nSeçiminizden memnunsanız Bitti'ye tıklayarak seçenekler sayfasına geri dönün.\n\nSeçtiğiniz öğe izlemeye almak istediğiniz öğenin bir kısmıysa, 'Seçimi Genişlet'e tıklayarak seçiminizi içinde bulunduğu alan içinde büyütebilirsiniz. Bu işlemi seçimden memnun olana ya da sayfanın tümüne ulaşana kadar tekrarlayabilirsiniz.\n\nBaştan başlamak ve yeni bir öğe seçmek isterseniz 'Öğe Seç'e tıklayın.",
     "description": "The help message in the visual selector construction GUI."
+  },
+  "view_all_function": {
+    "message": "Fonksiyon \"Güncellenenleri Aç\"",
+    "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does."
+  },
+  "view_original": {
+    "message": "orijinal gör",
+    "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
   }
 }

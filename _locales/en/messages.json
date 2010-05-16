@@ -152,11 +152,15 @@
     "description": "The text of the button to toggle advanced settings."
   },
   "rename_page": {
-    "message": "rename page",
+    "message": "rename",
     "description": "The text of the button to rename a page."
   },
+  "remove_page": {
+    "message": "remove",
+    "description": "The text on the button that stops a page from being monitored."
+  },
   "last_check": {
-    "message": "Last Check:",
+    "message": "Last Check",
     "description": "The text of the label that specified when the page was last checked."
   },
   "unknown": {
@@ -204,11 +208,11 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Check Interval (minutes):",
+    "message": "Check Interval (minutes)",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
-    "message": "Custom Mode:",
+    "message": "Custom Mode",
     "description": "The label for custom checking mode (selector or regex)."
   },
   "regex": {
@@ -224,7 +228,7 @@
     "description": "The text that replaces the pages list on the options page when no pages are monitored."
   },
   "notifications": {
-    "message": "Desktop Notifications:",
+    "message": "Desktop Notifications",
     "description": "Label for the desktop notifications checkbox."
   },
   "disabled": {
@@ -236,15 +240,15 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Notifications stay (seconds):",
+    "message": "Notifications Stay (seconds)",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
-    "message": "Badge Color:",
+    "message": "Badge Color",
     "description": "Label for the badge color selector."
   },
   "sound_alert": {
-    "message": "Sound Alert:",
+    "message": "Sound Alert",
     "description": "Label for the sound alert drop-down."
   },
   "sound_none": {
@@ -252,7 +256,7 @@
     "description": "The value of the no-sound option in the sound alert drop-down."
   },
   "sort": {
-    "message": "Sort Pages By:",
+    "message": "Sort Pages By",
     "description": "The label for the sort order drop-down."
   },
   "sort_date": {
@@ -280,7 +284,7 @@
     "description": "The 'last changed' option in the sort order drop-down."
   },
   "animations": {
-    "message": "Animations:",
+    "message": "Animations",
     "description": "The label for the checkbox to disable/enable animations."
   },
   "import": {
@@ -316,11 +320,11 @@
     "description": "The text for a generic 'close form' button."
   },
   "sound_name": {
-    "message": "Name:",
+    "message": "Name",
     "description": "The label for the sound name in the 'new sound' form."
   },
   "sound_url": {
-    "message": "URL (MP3 or OGG file):",
+    "message": "URL (MP3 or OGG file)",
     "description": "The label for the sound URL in the 'new sound' form."
   },
   "sound_create": {
@@ -362,5 +366,13 @@
   "selector_gui_help_text": {
     "message": "These controls will allow you to visually select the page element you want to monitor.\n\nStart by moving your mouse around and notice that the elements over which you pass are outlined in blue. Once the outline matches the element you want (or some part of it), click to select it.\n\nIf you're happy with your selection, simply click Done to return to the options page.\n\nIf the element you selected is only part of the element you would like to monitor, you can click on 'Grow Selection' to extend the selection over to the element in which your selection resides. You can repeat this until you are satisfied with the result or until you reach a top-level part of the page.\n\nIf you'd like to start from scratch and select a new element, click 'Pick Element'.",
     "description": "The help message in the visual selector construction GUI."
+  },
+  "view_all_function": {
+    "message": "\"View All\" Function",
+    "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does."
+  },
+  "view_original": {
+    "message": "view original",
+    "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
   }
 }
