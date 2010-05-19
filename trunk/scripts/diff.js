@@ -248,8 +248,8 @@ function initiateDiff(url) {
       dataType: 'text',
       success: function(new_html, _, xhr) {
         var type = xhr.getResponseHeader('Content-type');
-        new_html = canonizeHtml(new_html, type);
-        page.html = canonizeHtml(page.html, type);
+        new_html = canonizePage(new_html, type);
+        page.html = canonizePage(page.html, type);
           
         if (page.html) {
           applyDiff(url, page.html, new_html);
