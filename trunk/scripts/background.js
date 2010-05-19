@@ -39,6 +39,22 @@ var WATCHDOG_INTERVAL = 15 * 60 * 1000;
 // last check before the watchdog is alerted.
 var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
+// The pages database table structure as an SQL CREATE TABLE statement.
+var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
+  `url` TEXT NOT NULL UNIQUE, \
+  `name` TEXT NOT NULL, \
+  `mode` TEXT NOT NULL DEFAULT 'text', \
+  `regex` TEXT, \
+  `selector` TEXT, \
+  `check_interval` INTEGER, \
+  `html` TEXT NOT NULL DEFAULT '', \
+  `crc` INTEGER NOT NULL DEFAULT 0, \
+  `icon` TEXT, \
+  `updated` INTEGER, \
+  `last_check` INTEGER, \
+  `last_changed` INTEGER \
+);";
+
 /*******************************************************************************
 *                                Badge Updating                                *
 *******************************************************************************/
@@ -347,22 +363,9 @@ function importVersionTwoPages(callback) {
   insertPages(pages_to_import, callback);
 }
 
-// Creates pages table in the database if it does not exist.
+// Creates the pages table in the database if it does not already exist.
 function createPagesTable(callback) {
-  executeSql("CREATE TABLE IF NOT EXISTS pages ( \
-                `url` TEXT NOT NULL UNIQUE, \
-                `name` TEXT NOT NULL, \
-                `mode` TEXT NOT NULL DEFAULT 'text', \
-                `regex` TEXT, \
-                `selector` TEXT, \
-                `check_interval` INTEGER, \
-                `html` TEXT NOT NULL, \
-                `crc` INTEGER NOT NULL, \
-                `icon` TEXT, \
-                `updated` INTEGER, \
-                `last_check` INTEGER, \
-                `last_changed` INTEGER \
-              );", $.noop, callback);
+  executeSql(DATABASE_STRUCTURE, $.noop, callback);
 }
 
 // Removes unused localStorage settings, e.g. those that were used to page
