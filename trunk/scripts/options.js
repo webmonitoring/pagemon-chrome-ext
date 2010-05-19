@@ -240,7 +240,7 @@ function initializeColorPicker() {
     return d >= 16 ? d.toString(16) : '0' + d.toString(16);
   }
   
-  var badge_color = getSetting(SETTINGS.badge_color);
+  var badge_color = getSetting(SETTINGS.badge_color) || [0, 255, 0, 255];
   var badge_color = '#' + toHex(badge_color[0]) + 
                           toHex(badge_color[1]) +
                           toHex(badge_color[2]);
@@ -282,8 +282,10 @@ function initializeSorter() {
 // of both boxes that validates the contents, saves the new value and updates
 // the other textbox with the new value.
 function initializeIntervalTextbox() {
-  var interval = Math.round(getSetting(SETTINGS.check_interval) / (60 * 1000));
+  var interval = getSetting(SETTINGS.check_interval) || (180 * 60 * 1000);
   var textboxes = $('#interval input, #basic_interval input');
+  
+  interval = Math.round(interval / (60 * 1000));
   
   textboxes.val(interval).keyup(function() {
     var cleaned_value = cleanTimeTextbox(this);
@@ -823,7 +825,7 @@ function initializePageModePicker() {
 // a copy of the row with class=empty from the tebplates table is inserted.
 function fillPagesList() {
   getAllPages(function(pages) {
-    sortPagesInplace(pages, getSetting(SETTINGS.sort_by));
+    sortPagesInplace(pages, getSetting(SETTINGS.sort_by) || 'date added');
     
     $('#pages').html('');
     
