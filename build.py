@@ -66,6 +66,10 @@ if __name__ == '__main__':
     print 'Removing build script'
     os.remove('build/build.py')
 
+    # Remove the tests.
+    print 'Removing tests'
+    shutil.rmtree('build/tests')
+
     # Compress stylesheets.
     for f in glob.glob('build/styles/*.css'):
         print 'Compiling CSS:', f
