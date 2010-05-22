@@ -119,7 +119,7 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
       var message = (new_count > 0) ? new_count.toString() : '';
 
       chrome.browserAction.setBadgeBackgroundColor({
-        color: getSetting(SETTINGS.badge_color) || [0, 255, 0, 255]
+        color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255]
       });
       chrome.browserAction.setBadgeText({ text: message });
       chrome.browserAction.setIcon({ path: BROWSER_ICON });

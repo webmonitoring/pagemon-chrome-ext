@@ -240,7 +240,7 @@ function initializeColorPicker() {
     return d >= 16 ? d.toString(16) : '0' + d.toString(16);
   }
   
-  var badge_color = getSetting(SETTINGS.badge_color) || [0, 255, 0, 255];
+  var badge_color = getSetting(SETTINGS.badge_color) || [0, 180, 0, 255];
   var badge_color = '#' + toHex(badge_color[0]) + 
                           toHex(badge_color[1]) +
                           toHex(badge_color[2]);
