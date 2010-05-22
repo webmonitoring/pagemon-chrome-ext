@@ -96,7 +96,7 @@ function elementToSelector(element) {
 
 // The main function. Inserts the controls, updates the global references to
 // them, then sets up event handlers for everything.
-$(function() {
+function initialize() {
   // Insert controls.
   generateControls().appendTo('body');
   
@@ -163,4 +163,6 @@ $(function() {
       return false;
     }
   });
-});
+}
+
+$(initialize);
