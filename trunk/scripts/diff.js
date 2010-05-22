@@ -17,7 +17,7 @@ var SCROLL_MARGIN = 75;
 *******************************************************************************/
 
 // Splits an HTML string into a list of substrings appropriate for diffing over.
-// Each substring is either a tag, a space or a word.
+// Each substring is either a tag, a string of whitespace characters or a word.
 function htmlToList(html) {
   var CHAR = 0;
   var TAG = 1;
@@ -40,7 +40,7 @@ function htmlToList(html) {
         buffer.push(current);
         current = character;
         mode = TAG;
-      } else if (html.slice(pos, pos + 2).match(/^.\b.$/)) {
+      } else if (html.slice(pos, pos + 2).match(/^\s\S|\S\s$/)) {
         buffer.push(current + character);
         current = '';
       } else {
@@ -90,12 +90,14 @@ function wrapText(list, prefix, suffix) {
   return out;
 }
 
-// Calculates the diff between two HTML string, src and dest, and returns a
+// Calculates the diff between two HTML strings, src and dest, and returns a
 // compiled version with <del> and <ins> tags added in the appropriate places.
-// Returns null if there's an error in the diff library.
-function calculateDiff(src, dest) {
-  var src = htmlToList(src.replace(/\s+/g, ' '));
-  var dest = htmlToList(dest.replace(/\s+/g, ' '));
+// Returns null if there's an error in the diff library. This uses difflib for
+// calculating the diff.
+function calculateHtmlDiff(src, dest) {
+  src = htmlToList(src);
+  dest = htmlToList(dest);
+  
   var opcodes = new difflib.SequenceMatcher(src, dest).get_opcodes();
   var buffer = [];
   
@@ -130,6 +132,43 @@ function calculateDiff(src, dest) {
         return null;
     }
   }
+  
+  return buffer.join('');
+}
+
+// Calculates the diff between two text strings, src and dest, and returns a
+// compiled version with <del> and <ins> tags added in the appropriate places.
+// Returns null if there's an error in the diff library. Use Google's
+// diff_match_patch library for calculating the diff.
+function calculateTextDiff(src, dest) {
+  console.log('text');
+  var differ = new diff_match_patch();
+  var opcodes = differ.diff_main(src, dest);
+  differ.diff_cleanupSemantic(opcodes);
+  var buffer = [];
+  
+  buffer.push('<pre>');
+  for (var i = 0; i < opcodes.length; i++) {
+    var mode = opcodes[i][0];
+    var content = opcodes[i][1].replace(/\r\n|\r|\n/g, '<br />');
+    
+    switch (mode) {
+      case DIFF_DELETE:
+        buffer.push('<del>' + content + '</del>');
+        break;
+      case DIFF_INSERT:
+        buffer.push('<ins>' + content + '</ins>');
+        break;
+      case DIFF_EQUAL:
+        buffer.push(content);
+        break;
+      default:
+        // Error in the diff library - should never happen.
+        console.assert(false);
+        return null;
+    }
+  }
+  buffer.push('</pre>');
   
   return buffer.join('');
 }
@@ -214,17 +253,20 @@ function findFirstChangePosition() {
   return pos || { left: 0, top: 0 };
 }
 
-// Takes a URL and the source and destination HTML strings, diffs them, inserts
-// them into the current page with appropriate changes and UI controls, then
+// Takes a URL, the source and destination HTML strings, and a MIME type. Diffs
+// the strings either as text or as HTML depending on the type, inserts the
+// result into the current page with appropriate changes and UI controls, then
 // scrolls to the first change.
-function applyDiff(url, src, dest) {
+function applyDiff(url, src, dest, type) {
   // Get base and styles.
   $('<base />').attr('href', calculateBaseUrl(url, src, dest)).appendTo('head');
   $('<style type="text/css">').text(getInlineStyles(src)).appendTo('head');
   getReferencedStyles(src).appendTo('head');
   
   // Get diffed body.
-  var compiled = calculateDiff(getStrippedBody(src), getStrippedBody(dest));
+  var is_type_html = type.match(/\b(x|xht|ht)ml\b/);
+  var differ = is_type_html ? calculateHtmlDiff : calculateTextDiff;
+  var compiled = differ(getStrippedBody(src), getStrippedBody(dest));
   if (compiled === null) alert(chrome.i18n.getMessage('diff_error'));
   $('body').html(compiled);
   
@@ -248,11 +290,9 @@ function initiateDiff(url) {
       dataType: 'text',
       success: function(new_html, _, xhr) {
         var type = xhr.getResponseHeader('Content-type');
-        new_html = canonizePage(new_html, type);
-        page.html = canonizePage(page.html, type);
           
         if (page.html) {
-          applyDiff(url, page.html, new_html);
+          applyDiff(url, page.html, canonizePage(new_html, type), type);
         } else {
           setPageSettings(url, { html: new_html });
           $('img').hide();
