@@ -306,19 +306,13 @@ function isPageMonitored(url, callback) {
 *******************************************************************************/
 
 // Takes a page (HTML or text) and a MIME type (allowing a ;q=... suffix) and
-// converts the page to its canonical form. For text/plain, this means wrapping
-// it in a set of <pre> tags and replacing newlines with "<br />". For HTML,
-// this means collapsing spaces. Empty input results in empty output.
+// converts the page to its canonical form. For HTML and XML, this means
+// collapsing spaces. For other types, no transformation is applied. Empty input
+// results in empty output.
 function canonizePage(page, type) {
   if (!page) return page;
   
-  type = type.match(/^.*?(?=;|$)/);
-  
-  if (type == 'text/plain') {
-    return '<pre>' + page.replace(/(\r\n|\r|\n)/g, '<br />') + '</pre>';
-  } else {
-    return page.replace(/\s+/g, ' ');
-  }
+  return type.match(/\b(x|xht|ht)ml\b/) ? page.replace(/\s+/g, ' ') : page;
 }
 
 // Searches for all matches of regex in text, formats them into a single string,
@@ -459,7 +453,7 @@ function checkPage(url, callback, force_snapshot) {
               settings = {
                 updated: true,
                 crc: crc,
-                html: force_snapshot ? canonizePage(html, type) : page.html,
+                html: force_snapshot ? (html, type) : page.html,
                 last_changed: new Date().getTime()
               }
             } else {

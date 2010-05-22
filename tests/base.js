@@ -587,16 +587,16 @@ $(function() {
     equals(canonizePage('', 'text/html'), '', 'Empty HTML.');
     equals(canonizePage('', 'application/x-yz'), '', 'Empty other MIME type.');
     equals(canonizePage('abc  def\nghi\n\njkl', 'text/plain'),
-           '<pre>abc  def<br />ghi<br /><br />jkl</pre>',
+           'abc  def\nghi\n\njkl',
            'Plain text with multiple spaces and lines breaks.');
     equals(canonizePage('abc  def\nghi\n\njkl', 'text/html'),
            'abc def ghi jkl',
            'HTML with multiple spaces and lines breaks.');
     equals(canonizePage('abc  def\nghi\n\njkl', 'application/x-yz'),
-           'abc def ghi jkl',
+           'abc  def\nghi\n\njkl',
            'Other MIME type with multiple spaces and lines breaks.');
     equals(canonizePage('a\rb\nc\r\nd\n\r', 'text/plain'),
-           '<pre>a<br />b<br />c<br />d<br /><br /></pre>',
+           'a\rb\nc\r\nd\n\r',
            'Plain text with mixed lines breaks (\\r and \\n).');
   });
   
