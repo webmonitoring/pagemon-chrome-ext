@@ -309,20 +309,18 @@ $(function() {
   });
   
   delayedTest('sqlResultToArray', 1, function(resume) {
-    executeSql('DELETE FROM pages', [], function() {
-      executeSql("INSERT INTO pages(url, name) VALUES('a', 'b')", [],
+    executeSql("INSERT INTO pages(url, name) VALUES('a', 'b')", [],
+               function() {
+      executeSql("INSERT INTO pages(url, name) VALUES('c', 'd')", [],
                  function() {
-        executeSql("INSERT INTO pages(url, name) VALUES('c', 'd')", [],
-                   function() {
-          executeSql('SELECT * FROM pages', [], function(result) {
-            var expected = [{ url: 'a', name: 'b' }, { url: 'c', name: 'd' }];
-            $.extend(expected[0], DEFAULT_PAGE);
-            $.extend(expected[1], DEFAULT_PAGE);
+        executeSql('SELECT * FROM pages', [], function(result) {
+          var expected = [{ url: 'a', name: 'b' }, { url: 'c', name: 'd' }];
+          $.extend(expected[0], DEFAULT_PAGE);
+          $.extend(expected[1], DEFAULT_PAGE);
 
-            same(sqlResultToArray(result), expected, 'Converted array');
-            
-            executeSql('DELETE FROM pages', [], resume);
-          });
+          same(sqlResultToArray(result), expected, 'Converted array');
+          
+          executeSql('DELETE FROM pages', [], resume);
         });
       });
     });
@@ -552,6 +550,30 @@ $(function() {
             });
           });
         });
+      });
+    });
+  });
+  
+  delayedTest('Storage of 6+ MB of data', 1, function(resume) {
+    var large_string = new Date().getTime() + '';
+    
+    while (large_string.length < (6 * (2 << 20))) {
+      large_string = large_string + large_string;
+    }
+  
+    executeSql("INSERT INTO pages(url, name, html) VALUES('a', 'b', ?)",
+               [large_string], function() {
+      executeSql('SELECT url, name, html FROM pages', [], function(result) {
+        result = sqlResultToArray(result);
+        
+        equals(result.length, 1, 'Number of results');
+        equals(result[0].url, 'a', 'Resulting URL');
+        equals(result[0].name, 'b', 'Resulting name');
+        
+        // Not an equals() check to avoid printing out the large string.
+        ok(result[0].html == large_string, 'Resulting HTML matched.');
+        
+        executeSql('DELETE FROM pages', [], resume);
       });
     });
   });
