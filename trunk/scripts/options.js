@@ -993,6 +993,8 @@ function init() {
   
   applyLocalization();
   $('title').text(chrome.i18n.getMessage('options_title'));
+  $('.mode_test').val(chrome.i18n.getMessage('test_button'));
+  $('.mode_pick').val(chrome.i18n.getMessage('pick_button'));
   
   initializeGlobalControls();
   initializePageControls();
