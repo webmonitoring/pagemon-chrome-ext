@@ -131,6 +131,10 @@
     "message": "Тест",
     "description": "The text on the button that tests a given regex or selector on a page in advanced mode."
   },
+  "pick_button": {
+    "message": "Выбрать",
+    "description": "The text on the button that launches the selector GUI."
+  },
   "test_progress": {
     "message": "Тестируется...",
     "description": "The message that appears while testing a regex or selector."
