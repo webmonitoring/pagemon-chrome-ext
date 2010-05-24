@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <title>Page Monitor Test: Selector GUI</title>
+    <script src="../lib/jquery-1.4.1.js"></script>
+    <link rel="stylesheet" href="lib/qunit.css" type="text/css" media="screen" />
+    <script type="text/javascript" src="lib/qunit.js"></script>
+    <script type="text/javascript" src="../scripts/selector.js"></script>
+    <script type="text/javascript" src="selector.js"></script>
+  </head>
+  <body>
+    <h1 id="qunit-header">Page Monitor Test: Selector GUI</h1>
+    <h2 id="qunit-banner"></h2>
+    <h2 id="qunit-userAgent"></h2>
+    <ol id="qunit-tests"></ol>
+    <div style="display: none;">
+      <div id="test1">a</div>
+      <div id="test2">
+        <div></div>
+        <span></span>
+        <div class="test4"></div>
+        <br>
+        <img />
+        <div></div>
+      </div>
+      <div id="test3">c</div>
+      <div class="chrome_page_monitor_ignore"></div>
+    </div>
+  </body>
+</html>
