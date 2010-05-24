@@ -39,7 +39,7 @@ var DUMMY_PAGE = {
     console.log('Start ' + name);
     switch(name) {
       case 'Local Storage':
-        var local_storage_backup = {};
+        local_storage_backup = {};
         for (var prop in localStorage) {
           if (localStorage.hasOwnProperty(prop)) {
             local_storage_backup[prop] = localStorage[prop];
