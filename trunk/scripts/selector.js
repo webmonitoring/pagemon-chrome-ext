@@ -164,5 +164,3 @@ function initialize() {
     }
   });
 }
-
-$(initialize);
