@@ -319,13 +319,4 @@ $(function() {
     setUpButtonHandlers = old_setUpButtonHandlers;
     setUpBodyHandlers = old_setUpBodyHandlers;
   });
-  
-  
-  frame = $('#' + FRAME_ID);
-  pick_button = $('span[title=Pick]', frame);
-  parent_button = $('span[title=Parent]', frame);
-  done_button = $('input[type=button][title=Done]', frame);
-  help_button = $('input[type=button][title=Help]', frame);
-  
-  
 });
