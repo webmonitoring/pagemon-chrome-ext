@@ -94,8 +94,8 @@ function cleanTimeTextbox(textbox) {
 // Enables or disables the Test button and the regex/selector textbox for a
 // particular page record depending on whether the enable argument is non-false.
 function updatePageModeControls(page_record, enable) {
-  page_record.find('.mode input[type=text]').toggleClass('invalid', !enable);
-  page_record.find('.mode input[type=button]').attr({ disabled: !enable });
+  page_record.find('.mode .mode_string').toggleClass('invalid', !enable);
+  page_record.find('.mode .mode_test').attr({ disabled: !enable });
 }
 
 // Applies a per-page check interval to a page given its URL. The interval
@@ -808,7 +808,10 @@ function initializePageModePicker() {
     }, function(tab) {
       chrome.tabs.executeScript(tab.id, { file: 'lib/jquery-1.4.1.js' },
                                 function() {
-        chrome.tabs.executeScript(tab.id, { file: 'scripts/selector.js' });
+        chrome.tabs.executeScript(tab.id, { file: 'scripts/selector.js' },
+                                  function() {
+          chrome.tabs.executeScript(tab.id, { code: '$(initialize);' });
+        });
         chrome.tabs.insertCSS(tab.id, { file: 'styles/selector.css' });
       });
     });
