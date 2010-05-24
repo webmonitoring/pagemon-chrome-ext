@@ -94,20 +94,42 @@ function elementToSelector(element) {
   return path.join('>');
 }
 
-// The main function. Inserts the controls, updates the global references to
-// them, then sets up event handlers for everything.
-function initialize() {
-  // Insert controls.
-  generateControls().appendTo('body');
+// Sets up the mousemove and click handlers for the <body> to highlight the
+// element currently being hovered on with the chrome_page_monitor_temp_outline
+// class and the selected one with chrome_page_monitor_active. Also sets the
+// selected element if one is clicked in pick mode, deactivates the pick button
+// by removing its chrome_page_monitor_active class and calls
+// currentElementChanged to update the selection.
+function setUpBodyHandlers() {
+  $('body').mousemove(function(e) {
+    if (pick_mode) {
+      $('*').removeClass('chrome_page_monitor_temp_outline');
+      $(e.originalEvent.srcElement).addClass('chrome_page_monitor_temp_outline');
+    }
+  });
   
-  // Update references.
-  frame = $('#chrome_page_monitor_selector');
-  pick_button = $('span[title=Pick]', frame);
-  parent_button = $('span[title=Parent]', frame);
-  done_button = $('input[type=button][title=Done]', frame);
-  help_button = $('input[type=button][title=Help]', frame);
-  
-  // Set up control event handlers.
+  $('body').click(function(e) {
+    if (pick_mode) {
+      var element = e.originalEvent.srcElement;
+      if (!($(element).is('body') ||
+            $(element).closest('#chrome_page_monitor_selector').length)) {
+        current_element = element;
+        currentElementChanged();
+        pick_mode = false;
+        pick_button.removeClass('chrome_page_monitor_active');
+      }
+      return false;
+    }
+  });
+}
+
+// Sets up the button handlers:
+// 1. The pick button turns on pick mode and discards the current selection.
+// 2. The parent button replaces the selection with its parent.
+// 3. The done button sends the current selector and URL back to the extension
+//    and closes the window when a reply is received.
+// 4. The help button display an instructions message.
+function setUpButtonHandlers() {
   pick_button.click(function() {
     pick_mode = true;
     current_element = null;
@@ -141,26 +163,20 @@ function initialize() {
   help_button.click(function() {
     alert(chrome.i18n.getMessage('selector_gui_help_text'));
   });
+}
+
+// The main function. Inserts the controls, updates the global references to
+// them, then sets up event handlers for everything by calling 
+// setUpBodyHandlers() and setUpButtonHandlers().
+function initialize() {
+  generateControls().appendTo('body');
   
-  // Set up global body event handlers.
-  $('body').mousemove(function(e) {
-    if (pick_mode) {
-      $('*').removeClass('chrome_page_monitor_temp_outline');
-      $(e.originalEvent.srcElement).addClass('chrome_page_monitor_temp_outline');
-    }
-  });
+  frame = $('#chrome_page_monitor_selector');
+  pick_button = $('span[title=Pick]', frame);
+  parent_button = $('span[title=Parent]', frame);
+  done_button = $('input[type=button][title=Done]', frame);
+  help_button = $('input[type=button][title=Help]', frame);
   
-  $('body').click(function(e) {
-    if (pick_mode) {
-      var element = e.originalEvent.srcElement;
-      if (!($(element).is('body') ||
-            $(element).closest('#chrome_page_monitor_selector').length)) {
-        current_element = element;
-        currentElementChanged();
-        pick_mode = false;
-        pick_button.removeClass('chrome_page_monitor_active');
-      }
-      return false;
-    }
-  });
+  setUpButtonHandlers();
+  setUpBodyHandlers();
 }
