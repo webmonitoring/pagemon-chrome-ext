@@ -7,6 +7,13 @@
   tab is closed.
 */
 
+// Constants.
+var OUTLINE_CLASS = 'chrome_page_monitor_outline';
+var TEMP_OUTLINE_CLASS = 'chrome_page_monitor_temp_outline';
+var ACTIVE_CLASS = 'chrome_page_monitor_active';
+var DISABLED_CLASS = 'chrome_page_monitor_disabled';
+var FRAME_ID = 'chrome_page_monitor_selector';
+
 // Picking state.
 var current_element = null;
 var current_selector = '';
@@ -22,9 +29,9 @@ var help_button = null;
 // Generates the controls that are inserted into the page. Returns a wrapped
 // jQuery set that's ready to be used with appendTo and the like.
 function generateControls() {
-  var template = '<div id="chrome_page_monitor_selector"> \
-                    <span title="Pick" class="chrome_page_monitor_active">%pick%</span> \
-                    <span title="Parent" class="chrome_page_monitor_disabled">%parent%</span> \
+  var template = '<div id="' + FRAME_ID + '"> \
+                    <span title="Pick" class="' + ACTIVE_CLASS + '">%pick%</span> \
+                    <span title="Parent" class="' + DISABLED_CLASS + '">%parent%</span> \
                     <input type="button" title="Done" value="%done%" disabled="disabled" /> \
                     <input type="button" title="Help" value="%help%" /> \
                   </div>';
@@ -44,17 +51,16 @@ function generateControls() {
 // Updates current_selector, the visual outline and the state of various buttons
 // depending on the value of current_element.
 function currentElementChanged() {
-  $('*').removeClass('chrome_page_monitor_temp_outline')
-        .removeClass('chrome_page_monitor_outline');
+  $('*').removeClass(TEMP_OUTLINE_CLASS).removeClass(OUTLINE_CLASS);
         
   done_button.attr('disabled', !current_element);
   
   if (current_element) {
-    $(current_element).addClass('chrome_page_monitor_outline');
-    parent_button.removeClass('chrome_page_monitor_disabled');
+    $(current_element).addClass(OUTLINE_CLASS);
+    parent_button.removeClass(DISABLED_CLASS);
     current_selector = elementToSelector(current_element);
   } else {
-    parent_button.addClass('chrome_page_monitor_disabled');
+    parent_button.addClass(DISABLED_CLASS);
     current_selector = '';
   }
 }
@@ -63,60 +69,73 @@ function currentElementChanged() {
 // would match this element (and hopefully it alone). Stops as soon as it
 // reaches an element with a defined ID attribute or when reaching the <body>.
 // Ignores classes starting with chrome_page_monitor_ (e.g. the outline class).
+// Elements outside of <body> return null. The returned selector is always
+// lowercase.
 function elementToSelector(element) {
   var path = [];
   
   element = $(element);
   
-  while (!(element.is('body') || element.attr('id'))) {
-    var tagname = element.get(0).tagName;
-    var classname = element.get(0).className;
+  if (element.is('body')) {
+    return 'body';
+  } else if (element.closest('body').length == 0) {
+    return null;
+  } else {
+    while (!(element.is('body') || element.attr('id'))) {
+      var tagname = element.get(0).tagName;
+      var classname = element.get(0).className;
 
-    classname = classname.replace(/chrome_page_monitor_\w+/g, '')
-                         .replace(/^\s+|\s+$/g, '')
-                         .replace(/\s+/g, '.');
+      classname = classname.replace(/chrome_page_monitor_\w+/g, '')
+                           .replace(/^\s+|\s+$/g, '')
+                           .replace(/\s+/g, '.');
 
-    var selector = classname ? (tagname + '.' + classname) : tagname;
-    
-    if (element.siblings(selector).length > 0) {
-      selector += ':nth-child(' + (element.index() + 1) + ')';
+      var selector = classname ? (tagname + '.' + classname) : tagname;
+      
+      if (element.siblings(selector).length > 0) {
+        selector += ':nth-child(' + (element.index() + 1) + ')';
+      }
+      
+      path.push(selector);
+      
+      element = element.parent();
     }
     
-    path.push(selector);
+    if (element.attr('id')) {
+      path.push('#' + element.attr('id'));
+    } else {
+      path.push('');
+    }
     
-    element = element.parent();
+    path.reverse();
+    
+    return path.join('>').toLowerCase();
   }
-  
-  if (element.attr('id')) path.push('#' + element.attr('id'));
-  
-  path.reverse();
-  
-  return path.join('>');
 }
 
 // Sets up the mousemove and click handlers for the <body> to highlight the
 // element currently being hovered on with the chrome_page_monitor_temp_outline
-// class and the selected one with chrome_page_monitor_active. Also sets the
-// selected element if one is clicked in pick mode, deactivates the pick button
+// class and the selected one with chrome_page_monitor_active. Also sets
+// current_element if one is clicked in pick mode, deactivates the pick button
 // by removing its chrome_page_monitor_active class and calls
-// currentElementChanged to update the selection.
+// currentElementChanged() to update the selection. Elements inside the control
+// block are ignored during selection.
 function setUpBodyHandlers() {
   $('body').mousemove(function(e) {
     if (pick_mode) {
-      $('*').removeClass('chrome_page_monitor_temp_outline');
-      $(e.originalEvent.srcElement).addClass('chrome_page_monitor_temp_outline');
+      $('*').removeClass(TEMP_OUTLINE_CLASS);
+      $(e.target).addClass(TEMP_OUTLINE_CLASS);
     }
   });
   
   $('body').click(function(e) {
     if (pick_mode) {
-      var element = e.originalEvent.srcElement;
+      var element = e.target;
       if (!($(element).is('body') ||
-            $(element).closest('#chrome_page_monitor_selector').length)) {
+            $(element).closest('#' + FRAME_ID).length)) {
         current_element = element;
         currentElementChanged();
         pick_mode = false;
-        pick_button.removeClass('chrome_page_monitor_active');
+        pick_button.removeClass(ACTIVE_CLASS);
       }
       return false;
     }
@@ -134,14 +153,14 @@ function setUpButtonHandlers() {
     pick_mode = true;
     current_element = null;
     currentElementChanged();
-    $(this).addClass('chrome_page_monitor_active');
+    $(this).addClass(ACTIVE_CLASS);
   });
   
   parent_button.click(function() {
-    if ($(this).is(':not(:disabled)') && current_element) {
+    if (!$(this).hasClass(DISABLED_CLASS) && current_element) {
       var parent = $(current_element).parent();
       if (parent.is('body')) {
-        parent_button.addClass('chrome_page_monitor_disabled');
+        parent_button.addClass(DISABLED_CLASS);
       } else {
         current_element = parent.get(0);
         currentElementChanged();
@@ -171,7 +190,7 @@ function setUpButtonHandlers() {
 function initialize() {
   generateControls().appendTo('body');
   
-  frame = $('#chrome_page_monitor_selector');
+  frame = $('#' + FRAME_ID);
   pick_button = $('span[title=Pick]', frame);
   parent_button = $('span[title=Parent]', frame);
   done_button = $('input[type=button][title=Done]', frame);
