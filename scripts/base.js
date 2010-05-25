@@ -453,7 +453,7 @@ function checkPage(url, callback, force_snapshot) {
               settings = {
                 updated: true,
                 crc: crc,
-                html: force_snapshot ? (html, type) : page.html,
+                html: force_snapshot ? canonizePage(html, type) : page.html,
                 last_changed: new Date().getTime()
               }
             } else {
