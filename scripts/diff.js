@@ -9,8 +9,11 @@
 *                                  Constants                                   *
 *******************************************************************************/
 
-// The numver of pixels to leave before the first change when scrolling to it.
+// The number of pixels to leave before the first change when scrolling to it.
 var SCROLL_MARGIN = 75;
+
+// A regex that lists all HTML4/HTML5 tags that do not require a closing tag.
+var EMPTY_HTML_TAGS_REGEX = /AREA|BASE|BASEFONT|BR|COL|FRAME|HR|IMG|INPUT|ISINDEX|LINK|META|PARAM|COMMAND|EMBED|KEYGEN|SOURCE|WBR/i;
 
 /*******************************************************************************
 *                                   Diffing                                    *
@@ -59,15 +62,30 @@ function htmlToList(html) {
   return filtered;
 }
 
+// Returns a boolean indicating whether the string passed represents an HTML tag
+// that is either self closed using the <... /> syntax or does not require
+// content (e.g. <img> or <br>). HTML attributes are ignored. If the passed
+// string is not a tag, null is returned.
+function isSelfClosingTag(tag) {
+  if (!tag.match(/^<[^]*>$/)) return null;
+  if (tag.match(/\/\s*>$/)) return true;
+  
+  var tagname = tag.substring(1).match(/^\w+\b/);
+  if (tagname && tagname[0].match(EMPTY_HTML_TAGS_REGEX)) return true;
+  
+  return false;
+}
+
 // Takes a list of strings, where each string is either an HTML tag or plain
-// text, then inserts the prefix before each run of plain text, and the suffix
-// after each run. Returns a list with the prefixes and suffixes inserted.
+// text, then inserts the prefix before each run of plain text or self-closing
+// tags (or a mix of the two), and the suffix after each run. Returns a list
+// of strings with the prefixes and suffixes inserted.
 function wrapText(list, prefix, suffix) {
   var out = [];
   var buffer = [];
   
   for (var i = 0; i < list.length; i++) {
-    if (list[i][0] == '<') {
+    if (list[i][0] == '<' && !isSelfClosingTag(list[i])) {
       if (buffer.length > 0) {
         out.push(prefix);
         out = out.concat(buffer);
@@ -90,28 +108,28 @@ function wrapText(list, prefix, suffix) {
   return out;
 }
 
-// Calculates the diff between two HTML strings, src and dest, and returns a
+// Calculates the diff between two HTML strings, src and dst, and returns a
 // compiled version with <del> and <ins> tags added in the appropriate places.
 // Returns null if there's an error in the diff library. This uses difflib for
 // calculating the diff.
-function calculateHtmlDiff(src, dest) {
+function calculateHtmlDiff(src, dst) {
   src = htmlToList(src);
-  dest = htmlToList(dest);
+  dst = htmlToList(dst);
   
-  var opcodes = new difflib.SequenceMatcher(src, dest).get_opcodes();
+  var opcodes = new difflib.SequenceMatcher(src, dst).get_opcodes();
   var buffer = [];
   
   for (var i = 0; i < opcodes.length; i++) {
     var opcode = opcodes[i][0];
     var src_start = opcodes[i][1];
     var src_end = opcodes[i][2];
-    var dest_start = opcodes[i][3];
-    var dest_end = opcodes[i][4];
+    var dst_start = opcodes[i][3];
+    var dst_end = opcodes[i][4];
     
     switch (opcode) {
       case 'replace':
         var deleted = src.slice(src_start, src_end);
-        var inserted = dest.slice(dest_start, dest_end);
+        var inserted = dst.slice(dst_start, dst_end);
         buffer = buffer.concat(wrapText(deleted, '<del>', '</del>'));
         buffer = buffer.concat(wrapText(inserted, '<ins>', '</ins>'));
         break;
@@ -120,11 +138,11 @@ function calculateHtmlDiff(src, dest) {
         buffer = buffer.concat(wrapText(deleted, '<del>', '</del>'));
         break;
       case 'insert':
-        var inserted = dest.slice(dest_start, dest_end);
+        var inserted = dst.slice(dst_start, dst_end);
         buffer = buffer.concat(wrapText(inserted, '<ins>', '</ins>'));
         break;
       case 'equal':
-        buffer = buffer.concat(dest.slice(dest_start, dest_end));
+        buffer = buffer.concat(dst.slice(dst_start, dst_end));
         break;
       default:
         // Error in the diff library - should never happen.
@@ -136,21 +154,24 @@ function calculateHtmlDiff(src, dest) {
   return buffer.join('');
 }
 
-// Calculates the diff between two text strings, src and dest, and returns a
+// Calculates the diff between two text strings, src and dst, and returns a
 // compiled version with <del> and <ins> tags added in the appropriate places.
-// Returns null if there's an error in the diff library. Use Google's
-// diff_match_patch library for calculating the diff.
-function calculateTextDiff(src, dest) {
-  console.log('text');
+// Returns null if there's an error in the diff library. The returned string is
+// valid HTML, with <, > and & escaped, as well as newlines converted to <br />.
+// Uses Google's diff_match_patch library for calculating the diff.
+function calculateTextDiff(src, dst) {
   var differ = new diff_match_patch();
-  var opcodes = differ.diff_main(src, dest);
+  var opcodes = differ.diff_main(src, dst);
   differ.diff_cleanupSemantic(opcodes);
   var buffer = [];
   
   buffer.push('<pre>');
   for (var i = 0; i < opcodes.length; i++) {
     var mode = opcodes[i][0];
-    var content = opcodes[i][1].replace(/\r\n|\r|\n/g, '<br />');
+    var content = opcodes[i][1].replace(/&/g, '&amp;')
+                               .replace(/</g, '&lt;')
+                               .replace(/>/g, '&gt;')
+                               .replace(/\r\n|\r|\n/g, '<br />');
     
     switch (mode) {
       case DIFF_DELETE:
@@ -198,7 +219,7 @@ function generateControls(url) {
   
   var $controls = $(controls);
   
-  $('a[href="#"]', $controls).click(function() {
+  $('a:last', $controls).click(function() {
     $('del').toggle();
     return false;
   });
@@ -206,23 +227,24 @@ function generateControls(url) {
   return $controls;
 }
 
-// Searches src and dest for a <base> tag, and returns the URL pointed to by the
+// Searches src and dst for a <base> tag, and returns the URL pointed to by the
 // first one found. If none found, returns the passed URL.
-function calculateBaseUrl(url, src, dest) {
+function calculateBaseUrl(url, src, dst) {
   var base = url;
   var src_base = src.match(/<base[^>]*href=['"]?([^>'"]+)[^>]*>/i);
-  var dest_base = dest.match(/<base[^>]*href=['"]?([^>'"]+)[^>]*>/i);
+  var dst_base = dst.match(/<base[^>]*href=['"]?([^>'"]+)[^>]*>/i);
 
   if (src_base && src_base.length > 0) {
     base = src_base[src_base.length - 1];
-  } else if (dest_base && dest_base.length > 0) {
-    base = dest_base[dest_base.length - 1];
+  } else if (dst_base && dst_base.length > 0) {
+    base = dst_base[dst_base.length - 1];
   }
   
   return base;
 }
 
-// Returns a concatenation of the content of all <style> tags in the HTML.
+// Returns a concatenation of the content of all <style> tags in the HTML,
+// separated by newlines.
 function getInlineStyles(html) {
   var styles = html.match(/<style[^>]*>(.*?)<\/style>/ig);
   var buffer = [];
@@ -257,16 +279,16 @@ function findFirstChangePosition() {
 // the strings either as text or as HTML depending on the type, inserts the
 // result into the current page with appropriate changes and UI controls, then
 // scrolls to the first change.
-function applyDiff(url, src, dest, type) {
+function applyDiff(url, src, dst, type) {
   // Get base and styles.
-  $('<base />').attr('href', calculateBaseUrl(url, src, dest)).appendTo('head');
+  $('<base />').attr('href', calculateBaseUrl(url, src, dst)).appendTo('head');
   $('<style type="text/css">').text(getInlineStyles(src)).appendTo('head');
   getReferencedStyles(src).appendTo('head');
   
   // Get diffed body.
   var is_type_html = type.match(/\b(x|xht|ht)ml\b/);
   var differ = is_type_html ? calculateHtmlDiff : calculateTextDiff;
-  var compiled = differ(getStrippedBody(src), getStrippedBody(dest));
+  var compiled = differ(getStrippedBody(src), getStrippedBody(dst));
   if (compiled === null) alert(chrome.i18n.getMessage('diff_error'));
   $('body').html(compiled);
   
@@ -296,7 +318,7 @@ function initiateDiff(url) {
         } else {
           setPageSettings(url, { html: new_html });
           $('img').hide();
-          $('div').first().html(chrome.i18n.getMessage('diff_corruption'));
+          $('div:first').html(chrome.i18n.getMessage('diff_corruption'));
         }
       }
     });

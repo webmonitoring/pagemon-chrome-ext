@@ -3,10 +3,16 @@ del {
   color: black !important;
   text-decoration: none !important;
 }
+del img {
+  outline: 1px #d65 solid !important;
+}
 ins {
   background: #6d5 !important;
   color: black !important;
   text-decoration: none !important;
+}
+ins img {
+  outline: 1px #6d5 solid !important;
 }
 #chrome_page_monitor_ext_orig_link {
   position: fixed !important;
