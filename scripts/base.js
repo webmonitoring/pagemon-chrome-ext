@@ -34,6 +34,22 @@ var REGEX_TIMEOUT = 7 * 1000;
 // The path to the worker script that runs asynchronous regex matches.
 var REGEX_WORKER_PATH = 'scripts/regex.js';
 
+// The pages database table structure as an SQL CREATE TABLE statement.
+var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
+  `url` TEXT NOT NULL UNIQUE, \
+  `name` TEXT NOT NULL, \
+  `mode` TEXT NOT NULL DEFAULT 'text', \
+  `regex` TEXT, \
+  `selector` TEXT, \
+  `check_interval` INTEGER, \
+  `html` TEXT NOT NULL DEFAULT '', \
+  `crc` INTEGER NOT NULL DEFAULT 0, \
+  `icon` TEXT, \
+  `updated` INTEGER, \
+  `last_check` INTEGER, \
+  `last_changed` INTEGER \
+);";
+
 /*******************************************************************************
 *                                  Utilities                                   *
 *******************************************************************************/
@@ -137,6 +153,11 @@ function delSetting(name) {
   localStorage.removeItem(name);
 }
 
+// Creates the pages table in the database if it does not already exist.
+function initializeStorage(callback) {
+  executeSql(DATABASE_STRUCTURE, $.noop, callback);
+}
+
 // Executes the specified SQL query with the specified arguments within a
 // transaction. If resultCallback is specified, it is called with the result of
 // the query. If transactionCallback is specified, it is called after the
@@ -234,7 +255,7 @@ function setPageSettings(url, settings, callback) {
   if (buffer) {
     var query = 'UPDATE pages SET ' + buffer.join(', ') + ' WHERE url = ?';
     
-    executeSql(query, args, null, (callback || $.noop));
+    executeSql(query, args, null, callback);
   } else {
     (callback || $.noop)();
   }
@@ -432,8 +453,7 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
 // page is updated. It is not updated when the CRC changes so that the diff
 // viewer has a snapshot of the page before the latest update.
 function checkPage(url, callback, force_snapshot) {
-  executeSql('SELECT updated FROM pages WHERE url = ?',
-             [url], function(result) {
+  getPage(url, function(result) {
     if (result.rows.length == 0 || result.rows.item(0).updated) {
       (callback || $.noop)(url);
       return;

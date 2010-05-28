@@ -39,22 +39,6 @@ var WATCHDOG_INTERVAL = 15 * 60 * 1000;
 // last check before the watchdog is alerted.
 var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
-// The pages database table structure as an SQL CREATE TABLE statement.
-var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
-  `url` TEXT NOT NULL UNIQUE, \
-  `name` TEXT NOT NULL, \
-  `mode` TEXT NOT NULL DEFAULT 'text', \
-  `regex` TEXT, \
-  `selector` TEXT, \
-  `check_interval` INTEGER, \
-  `html` TEXT NOT NULL DEFAULT '', \
-  `crc` INTEGER NOT NULL DEFAULT 0, \
-  `icon` TEXT, \
-  `updated` INTEGER, \
-  `last_check` INTEGER, \
-  `last_changed` INTEGER \
-);";
-
 /*******************************************************************************
 *                                Badge Updating                                *
 *******************************************************************************/
@@ -148,8 +132,7 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   
   // Performs the page checks. Called by check() to do the actual work.
   actualCheck = function(force, callback, page_callback) {
-    executeSql('SELECT url, last_check, check_interval FROM pages',
-               [], function(result) {
+    getAllPages(function(result) {
       var pages = sqlResultToArray(result);
       var current_time = new Date().getTime();
       var pages_to_check = force ? pages : $.grep(pages, function(page) {
@@ -203,8 +186,7 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   scheduleCheck = function() {
     var current_time = new Date().getTime();
     
-    executeSql('SELECT url, updated, last_check, check_interval FROM pages',
-               [], function(result) {
+    getAllPages(function(result) {
       if (result.rows.length == 0) return;
       
       var pages = sqlResultToArray(result);
@@ -295,29 +277,15 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
 // crc, icon, updated, last_check and last_changed). The url property is
 // required. Once all pages are impoirted, the callback is called.
 function insertPages(pages, callback) {
-  DB.transaction(function(transaction) {
-    var insert = 'INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-    
-    for (var i in pages) {
-      var page = pages[i];
-      if (!page.url) continue;
-      
-      transaction.executeSql(insert, [
-        page.url,
-        page.name || chrome.i18n.getMessage('untitled', page.url),
-        page.mode || 'text',
-        page.regex || null,
-        page.selector || null,
-        page.timeout || null,
-        page.html || null,
-        page.crc || null,
-        page.icon || null,
-        page.updated ? 1 : 0,
-        page.last_check || 0,
-        page.last_changed || null
-      ]);
-    }
-  }, $.noop, callback);
+  var pages_to_insert = pages.length;
+  
+  for (var i = 0; i < pages.length; i++) {
+    addPage(pages[i], function() {
+      if (--pages_to_insert == 0) {
+        (callback || $.noop)();
+      }
+    });
+  }
 }
 
 // Converts pages list from the 1.x format to the 3.x format.
@@ -363,11 +331,6 @@ function importVersionTwoPages(callback) {
   insertPages(pages_to_import, callback);
 }
 
-// Creates the pages table in the database if it does not already exist.
-function createPagesTable(callback) {
-  executeSql(DATABASE_STRUCTURE, $.noop, callback);
-}
-
 // Removes unused localStorage settings, e.g. those that were used to page
 // config in versions 2.x.
 function removeUnusedSettings() {
@@ -381,7 +344,7 @@ function removeUnusedSettings() {
 // Brings up the pages list and settings format to the current version if they
 // are outdated, then calls the callback.
 function bringUpToDate(from_version, callback) {
-  createPagesTable(function() {
+  initializeStorage(function() {
     function updateDone() {
       setSetting(SETTINGS.version, getExtensionVersion());
       removeUnusedSettings();

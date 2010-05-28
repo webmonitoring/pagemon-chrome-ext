@@ -130,8 +130,8 @@ function updateButtonsState() {
   }
   
   // Enable/disable the Check All Now button.
-  executeSql('SELECT COUNT(*) FROM pages', [], function(result) {
-    if (result.rows.item(0)['COUNT(*)'] == 0) {
+  getAllPageURLs(function(result) {
+    if (result.rows.length == 0) {
       $('#check_now').addClass('inactive');
       $('#check_now img').attr('src', 'img/refresh_inactive.png');
     } else {
