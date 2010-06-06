@@ -734,6 +734,8 @@ function initializePageModeSelector() {
 // mode and mode string, displays the result in an alert box, then re-enables
 // itself and the textbox.
 function initializePageModeTester() {
+  var form = $('#test_result_form');
+
   $('.mode_test').live('click', function() {
     var url = findUrl(this);
     var record = findPageRecord(this);
@@ -750,11 +752,9 @@ function initializePageModeTester() {
         var findAndFormat = (mode == 'regex') ? findAndFormatRegexMatches :
                                                 findAndFormatSelectorMatches;
         findAndFormat(html, mode_string, function(results) {
-          if (results) {
-            alert(chrome.i18n.getMessage('test_matches') +'\n' + results);
-          } else {
-            alert(chrome.i18n.getMessage('test_no_matches'));
-          }
+          $('textarea', form).val(results);
+          shadeBackground(true);
+          form.fadeIn();
         
           cleanAndHashPage(html, mode, mode_string, mode_string, function(crc) {
             setPageSettings(url, { crc: crc });
@@ -769,6 +769,11 @@ function initializePageModeTester() {
               .add($('.mode_string', record)).attr({ disabled: false });
       }
     });
+  });
+  
+  $('button', form).click(function() {
+    form.fadeOut();
+    shadeBackground(false);
   });
 }
 

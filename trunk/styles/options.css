@@ -185,7 +185,7 @@ h1 {
 
 /* Forms */
 
-#export_form, #import_form {
+#export_form, #import_form, #test_result_form {
   display: none;
   position: fixed;
   top: 20%;
@@ -198,15 +198,16 @@ h1 {
   z-index: 2;
 }
 
-#export_form textarea, #import_form textarea {
+#export_form textarea, #import_form textarea, #test_result_form textarea {
   display: block;
   width: 100%;
   min-height: 200px;
   margin-top: 10px;
   white-space: nowrap;
+  resize: none;
 }
 
-#export_form button, #import_form button {
+#export_form button, #import_form button, #test_result_form button {
   display: block;
   margin-top: 10px;
   margin-left: 20px;
