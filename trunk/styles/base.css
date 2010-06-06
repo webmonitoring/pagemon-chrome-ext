@@ -23,11 +23,11 @@ table {
   border-spacing: 0;
 }
 
-.main_table tr:nth-child(even) {
+.main_table tr:nth-child(odd) {
   background: white;
 }
 
-.main_table tr:nth-child(odd) {
+.main_table tr:nth-child(even) {
   background: #f4f4f4;
 }
 
