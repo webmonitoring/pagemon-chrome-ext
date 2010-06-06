@@ -64,32 +64,28 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   triggerDesktopNotification = function(pages) {
     if (!getSetting(SETTINGS.notifications_enabled)) return;
     
-    try {
-      var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
-      
-      var title;
-      if (pages.length == 1) {
-        title = chrome.i18n.getMessage('page_updated_single');
-      } else {
-        title = chrome.i18n.getMessage('page_updated_multi', pages.length);
-      }
-      
-      var content = $.map(pages, function(page) {
-        return page.name;
-      }).join(', ');
-      if (content.length > 150) {
-        content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/,
-                                  '$1...');
-      }
-      
-      var notification = webkitNotifications.createNotification(
-          NOTIFICATION_ICON, title, content);
-
-      notification.show();
-      setTimeout(notification.cancel, timeout);
-    } catch(e) {
-      console.log(e);
+    var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
+    
+    var title;
+    if (pages.length == 1) {
+      title = chrome.i18n.getMessage('page_updated_single');
+    } else {
+      title = chrome.i18n.getMessage('page_updated_multi', pages.length);
     }
+    
+    var content = $.map(pages, function(page) {
+      return page.name;
+    }).join(', ');
+    if (content.length > 150) {
+      content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/,
+                                '$1...');
+    }
+    
+    var notification = webkitNotifications.createNotification(
+        NOTIFICATION_ICON, title, content);
+
+    notification.show();
+    setTimeout(notification.cancel, timeout);
   };
   
   // Checks if any pages are marked as updated, and if so, displays their count

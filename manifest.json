@@ -20,6 +20,7 @@
     "tabs",
     "http://*/*",
     "https://*/*",
-    "unlimited_storage"
+    "unlimited_storage",
+    "notifications"
   ]
 }

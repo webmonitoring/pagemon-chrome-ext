@@ -27,11 +27,6 @@ function isValidSelector(selector) {
   return true;
 }
 
-// Returns a boolean indicating whether desktop notifications are allowed.
-function areNotificationsPermitted() {
-  return window.webkitNotifications.checkPermission() == 0;
-}
-
 // Fades the background (elements with z-index < 1) to gray and back, depending
 // on whether the "show" argument evaluates to boolean true or false.
 function shadeBackground(show) {
@@ -300,35 +295,14 @@ function initializeIntervalTextbox() {
 // being permitted. If they are, the setting is saved. If not, the user is asked
 // to permit them then the value of the dropdown is updated if they do.
 function initializeNotificationsToggler() {
-  if (!areNotificationsPermitted()) {
-    setSetting(SETTINGS.notifications_enabled, false);
-  }
-  
   var $togglers = $('#notifications select, #basic_notifications select');
   
   $togglers.change(function() {
-    var $this = $(this);
-    var $that = $togglers.not(this);
-    
-    $that.val($this.val());
-  
-    if ($this.val() == 'enabled') {
-      if (areNotificationsPermitted()) {
-        setSetting(SETTINGS.notifications_enabled, true);
-      } else {
-        $togglers.val('disabled');
-        webkitNotifications.requestPermission(function() {
-          if (areNotificationsPermitted()) {
-            setSetting(SETTINGS.notifications_enabled, true);
-            $togglers.val('enabled');
-          }
-        });
-      }
-    } else {
-      setSetting(SETTINGS.notifications_enabled, false);
-    }
+    var val = $(this).val();
+    $togglers.not(this).val(val);
+    setSetting(SETTINGS.notifications_enabled, val == 'enabled');
+    $('#notifications_timeout input').attr('disabled', val != 'enabled');
   }).val(getSetting(SETTINGS.notifications_enabled) ? 'enabled' : 'disabled');
-  
 }
 
 // Initializes the notifications timeout textbox. Updates its value from
@@ -337,14 +311,15 @@ function initializeNotificationsToggler() {
 function initializeNotificationsTimeout() {
   var timeout = (getSetting(SETTINGS.notifications_timeout) / 1000) || 30;
   
-  $('#notifications input').val(timeout).keyup(function() {
+  $('#notifications_timeout input').val(timeout).keyup(function() {
     var new_timeout = cleanTimeTextbox(this);
     if (new_timeout < 1) {
       new_timeout = 1;
       $(this).val(new_timeout);
     }
     setSetting(SETTINGS.notifications_timeout, new_timeout * 1000);
-  }).change(function() { $(this).keyup(); });
+  }).change(function() { $(this).keyup(); })
+    .attr('disabled', !getSetting(SETTINGS.notifications_enabled));
 }
 
 // Initializes the two sound alert selection drop-downs. Fills them with sounds
