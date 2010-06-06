@@ -132,8 +132,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   
   // Performs the page checks. Called by check() to do the actual work.
   actualCheck = function(force, callback, page_callback) {
-    getAllPages(function(result) {
-      var pages = sqlResultToArray(result);
+    getAllPages(function(pages) {
       var current_time = new Date().getTime();
       var pages_to_check = force ? pages : $.grep(pages, function(page) {
         var interval = page.check_interval ||
@@ -186,10 +185,9 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   scheduleCheck = function() {
     var current_time = new Date().getTime();
     
-    getAllPages(function(result) {
-      if (result.rows.length == 0) return;
+    getAllPages(function(pages) {
+      if (pages.length == 0) return;
       
-      var pages = sqlResultToArray(result);
       var times = $.map(pages, function(page) {
         if (page.updated || !page.last_check) {
           return current_time;

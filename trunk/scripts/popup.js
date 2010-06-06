@@ -130,8 +130,8 @@ function updateButtonsState() {
   }
   
   // Enable/disable the Check All Now button.
-  getAllPageURLs(function(result) {
-    if (result.rows.length == 0) {
+  getAllPageURLs(function(urls) {
+    if (urls.length == 0) {
       $('#check_now').addClass('inactive');
       $('#check_now img').attr('src', 'img/refresh_inactive.png');
     } else {

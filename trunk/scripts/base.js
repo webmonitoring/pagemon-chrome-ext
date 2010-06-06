@@ -453,8 +453,8 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
 // page is updated. It is not updated when the CRC changes so that the diff
 // viewer has a snapshot of the page before the latest update.
 function checkPage(url, callback, force_snapshot) {
-  getPage(url, function(result) {
-    if (result.rows.length == 0 || result.rows.item(0).updated) {
+  getPage(url, function(page) {
+    if (!page || page.updated) {
       (callback || $.noop)(url);
       return;
     }
