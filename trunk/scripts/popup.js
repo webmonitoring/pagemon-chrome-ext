@@ -5,7 +5,7 @@
 */
 
 // Returns the URL of the page referenced by a .notification record given any
-// element inside it.
+// element inside it. Returns null if not found.
 function getNotificationUrl(context) {
   return $(context).closest('.notification').find('.page_link').attr('href');
 }
@@ -33,8 +33,7 @@ function markPageVisited() {
   });
 }
 
-// Adds the page in the currently selected tab to the monitored list. While the
-// page is still loading, keeps retrying every 100 milliseconds.
+// Adds the page in the currently selected tab to the monitored list.
 function monitorCurrentPage() {
   $('#monitor_page').addClass('inprogress');
   chrome.tabs.getSelected(null, function(tab) {
@@ -62,11 +61,7 @@ function fillNotifications(callback) {
         }
         
         notification.find('.page_link').attr('href', page.url).text(name);
-        
-        notification.find('.favicon').attr({
-          src: getFavicon(page.url) || 'img/page.png'
-        });
-        
+        notification.find('.favicon').attr({ src: getFavicon(page.url) });
         notification.find('.view_diff').attr({
           href: 'diff.htm#' + btoa(page.url)
         });
@@ -97,22 +92,17 @@ function fillNotifications(callback) {
 function updateButtonsState() {
   // Enable/Disable the Monitor This Page button.
   chrome.tabs.getSelected(null, function(tab) {
-    if (tab.url.match(/^https?:/)) {
-      isPageMonitored(tab.url, function(monitored) {
-        if (monitored || !tab.url.match(/^https?:/)) {
-          $('#monitor_page').unbind('click').addClass('inactive');
-          $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
-          $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
-        } else {
-          $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
-          $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
-          $('#monitor_page img').attr('src', 'img/monitor.png');
-        }
-      });
-    } else {
-      $('#monitor_page').unbind('click').addClass('inactive');
-      $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
-    }
+    isPageMonitored(tab.url, function(monitored) {
+      if (monitored || !tab.url.match(/^https?:/)) {
+        $('#monitor_page').unbind('click').addClass('inactive');
+        $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
+        $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+      } else {
+        $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
+        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
+        $('#monitor_page img').attr('src', 'img/monitor.png');
+      }
+    });
   });
   
   // Enable/Disable the View All button.
@@ -141,10 +131,12 @@ function updateButtonsState() {
 // message, display a loading bar while checking, then slide out the new
 // notifications or the "no changes" message.
 function checkAllPages() {
-  getAllPageURLs(function(pages) {
+  getAllPageURLs(function(urls) {
+    var records_displayed = $('#notifications .notification').length;
+    var fadeout_target;
+    
     // If there are no pages to check, return.
-    if (pages.length === 0 ||
-        pages.length == $('#notifications .notification').length) {
+    if (urls.length - records_displayed <= 0) {
       return;
     }
     
@@ -154,10 +146,10 @@ function checkAllPages() {
     // Slide in the notifications list.
     // NOTE: Setting opacity to 0 leads to jumpiness (maybe setting
     //       display: none), so using 0.01 as a workaround.
-    if ($('#notifications .notification').length > 0) {
-      var fadeout_target = { height: '50px', opacity: 0.01 };
+    if (records_displayed > 0) {
+      fadeout_target = { height: '50px', opacity: 0.01 };
     } else {
-      var fadeout_target = { opacity: 0.01 };
+      fadeout_target = { opacity: 0.01 };
     }
     
     $('#notifications').animate(fadeout_target, 'slow', function() {
@@ -172,23 +164,22 @@ function checkAllPages() {
     BG.check(true, function() {
       // Fade out the loader.
       $('#notifications').animate({ opacity: 0 }, 400, function() {
-        var $this = $(this);
+        var that = this;
         // Fill the table - done at this point to get the final height.
         fillNotifications(function() {
           // Remember the height and content of the table.
-          var height = $this.height();
-          var html = $this.html();
+          var height = that.height();
+          var html = that.html();
           
           // Remove the loader, empty the table, and reset its height back to
           // 50px. The user does not see any change from the time the fade-out
           // finished.
-          $this.removeClass('loading').html('').height(50);
+          that.removeClass('loading').html('').height(50);
           // Slide the table to our pre-calculated height.
-          $this.animate({ height: height + 'px' }, 'slow', function() {
+          that.animate({ height: height + 'px' }, 'slow', function() {
             // Put the table contents back and fade it in.
-            $this.css({ height: 'auto' });
-            $this.html(html);
-            $this.animate({ opacity: 1 }, 400);
+            that.css({ height: 'auto' }).html(html)
+                .animate({ opacity: 1 }, 400);
             $('#check_now').click(checkAllPages);
           });
         });
@@ -197,29 +188,49 @@ function checkAllPages() {
   });
 }
 
+// Triggers a click() event on either all the view_diff links or all the
+// page_link links, depending on the value of SETTINGS.view_all_action ("diff"
+// or "original").
+function openAllPages() {
+  var target = getSetting(SETTINGS.view_all_action) == 'diff' ?
+               'view_diff' : 'page_link';
+  $('#notifications .' + target).click();
+}
+
+// Opens the <a> link on which it is called (i.e. the this object) in a new
+// unfocused tab and returns false.
+function openLinkInNewTab() {
+  chrome.tabs.create({ url: this.href, selected: false });
+  return false;
+}
+
+// Open a diff page in a new unfocused tab. Expects to be called on an element
+// within a notification record. The opened diff page will be for the URL of the
+// notification record.
+function openDiffPage() {
+  var diff_url = 'diff.htm#' + btoa(getNotificationUrl(this));
+  chrome.tabs.create({ url: diff_url, selected: false });
+}
+
+// Remove the page from the monitoring registry. Expects to be called on an
+// element within a notification record. The removed page will be for the URL
+// of the notification record.
+function stopMonitoring() {
+  BG.removePage(getNotificationUrl(this));
+}
+
 // Sets up handlers for the various interactive parts of the popup, both the
 // three global button and the three per-notification buttons.
 function setUpHandlers() {
   // Handlers for the main buttons.
   $('#monitor_page').click(monitorCurrentPage);
   $('#check_now').click(checkAllPages);
-  $('#view_all').click(function() {
-    var target = getSetting(SETTINGS.view_all_action) == 'diff' ?
-                 'view_diff' : 'page_link';
-    $('#notifications .' + target + '').click();
-  });
+  $('#view_all').click(openAllPages);
   
   // Live handlers for the per-notifications buttons.
-  $('.page_link,.mark_visited,.view_diff,.stop_monitoring').live('click', markPageVisited);
-  $('.page_link').live('click', function() {
-    chrome.tabs.create({ url: this.href, selected: false });
-    return false;
-  });
-  $('.view_diff').live('click', function() {
-    var diff_url = 'diff.htm#' + btoa(getNotificationUrl(this));
-    chrome.tabs.create({ url: diff_url, selected: false });
-  });
-  $('.stop_monitoring').live('click', function() {
-    BG.removePage(getNotificationUrl(this));
-  });
+  var buttons = $('.page_link,.mark_visited,.view_diff,.stop_monitoring');
+  buttons.live('click', markPageVisited);
+  $('.page_link').live('click', openLinkInNewTab);
+  $('.view_diff').live('click', openDiffPage);
+  $('.stop_monitoring').live('click', stopMonitoring);
 }
