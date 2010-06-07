@@ -113,9 +113,17 @@ h1 {
   left: -1px;
   border: 1px solid #9eafd1;
   border-radius: 5px 5px 0px 0px;
-  border-bottom: 1px white solid;
+  border-bottom: 1px transparent solid;
   margin-right: -2px;
   z-index: 1;
+}
+
+.main_table tr:nth-child(odd) .toggled {
+  border-bottom-color: white;
+}
+
+.main_table tr:nth-child(even) .toggled {
+  border-bottom-color: #f4f4f4;
 }
 
 .advanced_controls {
