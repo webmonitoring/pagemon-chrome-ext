@@ -290,7 +290,6 @@ function importVersionOnePages(callback) {
     pages.push({
       url: url,
       name: vals.name,
-      icon: vals.icon,
       mode: vals.regex ? 'regex' : 'text',
       regex: vals.regex || null
     });
@@ -315,7 +314,6 @@ function importVersionTwoPages(callback) {
       timeout: getSetting(url + ' timeout'),
       html: getSetting(url + ' html'),
       crc: getSetting(url + ' crc'),
-      icon: getSetting(url + ' icon'),
       updated: getSetting(url + ' updated'),
       last_check: getSetting(url + ' last_check'),
       last_changed: getSetting(url + ' last_changed')

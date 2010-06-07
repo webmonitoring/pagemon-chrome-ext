@@ -38,15 +38,10 @@ function markPageVisited() {
 function monitorCurrentPage() {
   $('#monitor_page').addClass('inprogress');
   chrome.tabs.getSelected(null, function(tab) {
-    // If the page is still loading, try a little while later.
-    if (tab.status == 'loading') {
-      setTimeout(monitorCurrentPage, 100);
-    } else {
-      addPage({ url: tab.url, name: tab.title, icon: tab.favIconUrl }, function() {
-        $('#monitor_page').removeClass('inprogress');
-        updateButtonsState();
-      });
-    }
+    addPage({ url: tab.url, name: tab.title }, function() {
+      $('#monitor_page').removeClass('inprogress');
+      updateButtonsState();
+    });
   });
 }
 
@@ -69,7 +64,7 @@ function fillNotifications(callback) {
         notification.find('.page_link').attr('href', page.url).text(name);
         
         notification.find('.favicon').attr({
-          src: page.icon || 'img/page.png'
+          src: getFavicon(page.url) || 'img/page.png'
         });
         
         notification.find('.view_diff').attr({
