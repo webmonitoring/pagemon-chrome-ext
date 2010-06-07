@@ -8,7 +8,6 @@ var DEFAULT_PAGE = {
   check_interval: null,
   html: '',
   crc: 0,
-  icon: null,
   updated: null,
   last_check: null,
   last_changed: null
@@ -21,7 +20,6 @@ var DUMMY_PAGE = {
   regex: 'd',
   selector: 'e',
   html: 'f',
-  icon: 'g',
   updated: 0,
   last_check: 123,
   last_changed: 456,
@@ -54,7 +52,9 @@ var DUMMY_PAGE = {
         stop();
         DB.transaction(function(transaction) {
           transaction.executeSql(BG.DATABASE_STRUCTURE, [], function() {
-            start();
+            transaction.executeSql('DELETE FROM pages', [], function() {
+              start();
+            });
           });
         });
         break;
@@ -122,9 +122,9 @@ $(function() {
   });
   
   test('References', function() {
-    ok(!BG == false, 'BG is defined');
-    ok(!DB == false, 'DB is defined');
-    ok(!REGEX_TIMEOUT == false, 'REGEX_TIMEOUT is defined and nonzero.');
+    ok(window.BG, 'BG is defined and non-null.');
+    ok(window.DB, 'DB is defined and non-null.');
+    ok(window.REGEX_TIMEOUT, 'REGEX_TIMEOUT is defined and nonzero.');
   });
   
   /****************************************************************************/

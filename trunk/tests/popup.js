@@ -1,14 +1,3 @@
-// The amount of milliseconds to wait per callback when stopping a test.
-var TEST_WAIT = 1000000;
-// Helper for asynchronous tests.
-function delayedTest(name, callbacks, test_function) {
-  test(name, function() {
-    stop(TEST_WAIT * callbacks);
-    var callbacks_remaining = callbacks;
-    test_function(function() { if (--callbacks_remaining == 0) start(); });
-  });
-}
-
 $(function() {
   test('getNotificationUrl', function() {
     equals(getNotificationUrl($('#getNotificationUrl_test_row1')),
