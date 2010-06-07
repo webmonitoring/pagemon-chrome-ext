@@ -44,7 +44,6 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   `check_interval` INTEGER, \
   `html` TEXT NOT NULL DEFAULT '', \
   `crc` INTEGER NOT NULL DEFAULT 0, \
-  `icon` TEXT, \
   `updated` INTEGER, \
   `last_check` INTEGER, \
   `last_changed` INTEGER \
@@ -120,6 +119,13 @@ function getStrippedBody(html) {
   }
   
   return body.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/ig, '');
+}
+
+// Returns a chrome://favicon/... URL that points to the Chrome-cached favicon
+// of the given URL. Returns "chrome://favicon/null" when given an invalid URL.
+function getFavicon(url) {
+  var host = url.match(/^\w+:\/\/[^\/]+/);
+  return 'chrome://favicon/' + (host ? host[0] : 'null');
 }
 
 // Takes all elements of the class "i18n" that have a title attribute from the
@@ -266,38 +272,29 @@ function setPageSettings(url, settings, callback) {
 // after the new page is successfully added (if it is). NOTE: If the supplied
 // page is already monitored, the callback is not called.
 function addPage(page, callback) {
-  if (window != BG) BG.addPage(page, callback);
+  if (window != BG) return BG.addPage(page, callback);
 
-  var query = 'INSERT INTO pages VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)';
-  var html = '';
+  var query = "INSERT INTO pages(url, name, mode, regex, selector, \
+                                 check_interval, html, crc, updated, \
+                                 last_check, last_changed) \
+               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
   
-  $.ajax({
-    url: page.url,
-    dataType: 'text',
-    complete: function() {
-      cleanAndHashPage(page.html || html, 'text', null, null, function(crc) {
-        executeSql(query, [
-          page.url,
-          page.name || chrome.i18n.getMessage('untitled', page.url),
-          page.mode || 'text',
-          page.regex || null,
-          page.selector || null,
-          page.check_interval || null,
-          page.html || html,
-          crc,
-          page.icon || null,
-          page.updated ? 1 : 0,
-          new Date().getTime(),
-          page.last_changed || null
-        ], null, function() {
-          BG.scheduleCheck();
-          (callback || $.noop)();
-        });
-      });
-    },
-    success: function(response) {
-      html = response;
-    }
+  executeSql(query, [
+    page.url,
+    page.name || chrome.i18n.getMessage('untitled', page.url),
+    page.mode || 'text',
+    page.regex || null,
+    page.selector || null,
+    page.check_interval || null,
+    page.html || '',
+    page.crc || 0,
+    page.updated ? 1 : 0,
+    new Date().getTime(),
+    page.last_changed || null
+  ], null, function() {
+    BG.takeSnapshot();
+    BG.scheduleCheck();
+    (callback || $.noop)();
   });
 }
 

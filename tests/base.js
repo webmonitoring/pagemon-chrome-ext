@@ -221,6 +221,18 @@ $(function() {
            'HTML with multiple internal and external scripts within body');
   });
   
+  test('getFavicon', function() {
+    equals(getFavicon('http://example.com/test.htm'),
+           'chrome://favicon/http://example.com',
+           'Basic URL.');
+    equals(getFavicon('http://example.com'),
+           'chrome://favicon/http://example.com',
+           'Path-less URL.');
+    equals(getFavicon('http:/example.com'),
+           'chrome://favicon/null',
+           'Invalid URL.');
+  });
+  
   test('applyLocalization', function() {
     old_getMessage = chrome.i18n.getMessage;
     chrome.i18n.getMessage = function(x) { return 'test:' + x; };

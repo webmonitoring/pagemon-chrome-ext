@@ -148,9 +148,8 @@ function exportPagesList(callback) {
                 'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
     
     for (var i in pages) {
-      var icon_attr = pages[i].icon ? ' ICON_URI="' + pages[i].icon + '" ' : '';
       buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' +
-                  add_date + '"' + icon_attr + '>' + pages[i].name + '</A>\n');
+                  add_date + '">' + pages[i].name + '</A>\n');
       
       var encoded_settings = JSON.stringify({
         mode: pages[i].mode,
@@ -186,7 +185,6 @@ function importPagesList(bookmarks) {
     var link = $(match[1]);
     var url = link.attr('HREF') || '';
     var name = link.text() || chrome.i18n.getMessage('untitled', url);
-    var icon = link.attr('ICON_URI') || null;
     
     var advanced = {};
     if (match[2]) {
@@ -196,7 +194,7 @@ function importPagesList(bookmarks) {
     }
     
     if (url) {
-      addPage($.extend({ url: url, name: name, icon: icon }, advanced));
+      addPage($.extend({ url: url, name: name }, advanced));
       matches_count++;
     }
   }
@@ -876,7 +874,7 @@ function addPageToTable(page) {
   }).text(name);
   
   page_record.find('.favicon').attr({
-    src: page.icon || 'img/page.png'
+    src: getFavicon(page.url)
   });
   
   // Last check time ticker.
