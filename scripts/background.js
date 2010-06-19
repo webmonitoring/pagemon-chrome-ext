@@ -40,14 +40,12 @@ var WATCHDOG_INTERVAL = 15 * 60 * 1000;
 var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
 /*******************************************************************************
-*                                Badge Updating                                *
+*                             Update Notifications                             *
 *******************************************************************************/
 
 (function() {
-  // The previous text on the badge, kept to detect cases where the
-  // updateBadge() function is called when no change to the badge has actually
-  // occurred.
-  var last_badge_text = '';
+  // The number of updated pages that has been last shown on the badge.
+  var last_count = 0;
   
   // Triggers a sound alert if one is enabled.
   triggerSoundAlert = function() {
@@ -70,7 +68,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     if (pages.length == 1) {
       title = chrome.i18n.getMessage('page_updated_single');
     } else {
-      title = chrome.i18n.getMessage('page_updated_multi', pages.length);
+      title = chrome.i18n.getMessage('page_updated_multi',
+                                     pages.length.toString());
     }
     
     var content = $.map(pages, function(page) {
@@ -94,22 +93,20 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // notifications if applicable.
   updateBadge = function() {
     getAllUpdatedPages(function(updated_pages) {
-      var old_count = last_badge_text ? parseInt(last_badge_text, 10) : 0;
-      var new_count = updated_pages.length;
-      var message = (new_count > 0) ? new_count.toString() : '';
+      var count = updated_pages.length;
 
       chrome.browserAction.setBadgeBackgroundColor({
         color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255]
       });
-      chrome.browserAction.setBadgeText({ text: message });
+      chrome.browserAction.setBadgeText({ text: count ? String(count) : '' });
       chrome.browserAction.setIcon({ path: BROWSER_ICON });
     
-      if (new_count > old_count) {
+      if (count > last_count) {
         triggerSoundAlert();
         triggerDesktopNotification(updated_pages);
       }
       
-      last_badge_text = message;
+      last_count = count;
     });
   };
 })();
@@ -133,8 +130,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       var pages_to_check = force ? pages : $.grep(pages, function(page) {
         var interval = page.check_interval ||
                        getSetting(SETTINGS.check_interval);
-        var projected_check = page.last_check + interval;
-        return projected_check <= current_time + EPSILON;
+        var projected_check = page.last_check + interval - EPSILON;
+        return projected_check <= current_time;
       });
       var pages_checked = 0;
       
@@ -301,7 +298,7 @@ function importVersionOnePages(callback) {
 // Converts pages list from the 2.x format to the 3.x format.
 function importVersionTwoPages(callback) {
   var pages = getSetting('pages');
-  var pages_to_import = getSetting('pages');
+  var pages_to_import = [];
   
   for (var i in pages) {
     var url = pages[i];
@@ -311,7 +308,7 @@ function importVersionTwoPages(callback) {
       mode: getSetting(url + ' mode'),
       regex: getSetting(url + ' regex'),
       selector: getSetting(url + ' selector'),
-      timeout: getSetting(url + ' timeout'),
+      check_interval: getSetting(url + ' timeout'),
       html: getSetting(url + ' html'),
       crc: getSetting(url + ' crc'),
       updated: getSetting(url + ' updated'),
@@ -325,10 +322,10 @@ function importVersionTwoPages(callback) {
 
 // Removes unused localStorage settings, e.g. those that were used to page
 // config in versions 2.x.
-function removeUnusedSettings() {
-  for (var i in localStorage) {
+function removeUnusedSettings(storage_object) {
+  for (var i in storage_object) {
     if (SETTINGS[i] === undefined) {
-      delete localStorage[i];
+      delete storage_object[i];
     }
   }
 }
@@ -339,7 +336,7 @@ function bringUpToDate(from_version, callback) {
   initializeStorage(function() {
     function updateDone() {
       setSetting(SETTINGS.version, getExtensionVersion());
-      removeUnusedSettings();
+      removeUnusedSettings(localStorage);
       (callback || $.noop)();
     }
   
@@ -357,14 +354,14 @@ function bringUpToDate(from_version, callback) {
       updateDone();
     } else if (from_version < 2) {
       setSetting(SETTINGS.view_all_action, 'original');
-      delete localStorage.last_check;
+      delSetting('last_check');
       
       importVersionOnePages(updateDone);
     } else if (from_version < 3) {
       setSetting(SETTINGS.check_interval, getSetting('timeout') ||
                                           DEFAULT_CHECK_INTERVAL);
       setSetting(SETTINGS.view_all_action, 'original');
-      delete localStorage.timeout;
+      delSetting('timeout');
       
       importVersionTwoPages(updateDone);
     } else {
