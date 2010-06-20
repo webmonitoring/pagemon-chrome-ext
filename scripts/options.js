@@ -7,6 +7,9 @@
 *                                  Utilities                                   *
 *******************************************************************************/
 
+// The minimum length of time in minutes that a time textbox is allowed to have.
+var MIN_TIME_TEXTBOX_VALUE = 0.8;  // ~5 seconds.
+
 // Returns a boolean indicating whether the supplied string is a valid regex.
 function isValidRegex(regex) {
   try {
@@ -38,14 +41,14 @@ function shadeBackground(show) {
     dark.css('display', 'block').animate({ opacity: 0.7 });
   } else {
     dark.animate({ opacity: 0 }, function() {
-      dark.css('display', 'none' );
+      dark.css('display', 'none');
     });
   }
 }
 
 // Returns the URL of the page record given any element in it.
 function findUrl(context) {
-  return $(context).closest('.page_record').find('.page_link').get()[0].href;
+  return $(context).closest('.page_record').find('.page_link').get(0).href;
 }
 
 // Returns a jQuery-wrapped page_record element which contains the specified
@@ -57,33 +60,26 @@ function findPageRecord(url_or_context) {
   return $(url_or_context).closest('.page_record');
 }
 
-// Validates that a time textbox contains a valid time value in minutes and
-// returns it as a number. If the value is invalid, it iss scrubbed and the
-// valid part (if any) is put back. Selection is preserved if possible. Valid
-// value are:
-// 1. Strings of numbers of length 1 or more.
-// 2. Strings of numbers with a single period.
-function cleanTimeTextbox(textbox) {
-  var caret_pos = textbox.selectionStart;
-  var caret_end = textbox.selectionEnd;
-  
-  var str_time = $(textbox).val().replace(/[^.0-9]/g, '');
-  var new_time = parseFloat(str_time) || 1;
-  
-  if (new_time <= 5 / 60) {
-    new_time = 5 / 60;
-  }
-  
-  if (str_time.match(/^0$|^0*\.|\.(.*0)?$/)) {
-    $(textbox).val(str_time);
+// Returns 2 to the power of the given value. Used when converting the value of
+// the check interval sliders which use a logarithmic scale. The returned value
+// is rounded to 2 decimal places if they are below 1. It is rounded to 1
+// decimal place for values between 1 and 10. It is rounded to an integer for
+// values above 10.
+function timeLogToAbsolute(log) {
+  var val = Math.pow(1.5, log);
+  if (val < 1) {
+    return Math.round(val * 100) / 100;
+  } else if (val < 10) {
+    return Math.round(val * 10) / 10;
   } else {
-    $(textbox).val(new_time);
+    return Math.round(val);
   }
-  
-  textbox.selectionStart = caret_pos;
-  textbox.selectionEnd = caret_end;
-  
-  return new_time;
+}
+
+// Returns the logarithm of 2 for the given value. Used when setting the check
+// interval sliders which use a logarithmic scale.
+function timeAbsoluteToLog(absolute) {
+  return (Math.log(absolute) / Math.log(1.5));
 }
 
 // Enables or disables the Test button and the regex/selector textbox for a
@@ -106,7 +102,7 @@ function setPageCheckInterval(url, minutes) {
 // argument must be either "regex" or "selector". The value argument is either a
 // string or a null. If it's null, the page is switched to text mode and its
 // regex and selector fields are deleted. If it's a valid regex/selector string,
-// it is saved to teh page record. If the value is non-null,
+// it is saved to the page record. If the value is non-null,
 // updatePageModeControls() is called with the validity of the value as the
 // enable argument.
 function setPageRegexOrSelector(url, mode, value) {
@@ -211,7 +207,7 @@ function initializeGlobalControls() {
   initializeColorPicker();
   initializeAnimationToggler();
   initializeSorter();
-  initializeIntervalTextbox();
+  initializeIntervalSliders();
   initializeNotificationsToggler();
   initializeNotificationsTimeout();
   initializeSoundSelector();
@@ -270,21 +266,23 @@ function initializeSorter() {
   }).val(getSetting(SETTINGS.sort_by) || 'date added');
 }
 
-// Initializes the two check interval textboxes. Updates their value from
-// SETTINGS.check_interval and binds a handler for the change and keyup events
-// of both boxes that validates the contents, saves the new value and updates
-// the other textbox with the new value.
-function initializeIntervalTextbox() {
+// Initializes the two check interval sliders. Updates their value from
+// SETTINGS.check_interval and binds handlers for their change and mouseup
+// events. The change event updates the range label while the mouseup event
+// saves the new value and synchronizes the value of the other textbox.
+function initializeIntervalSliders() {
   var interval = getSetting(SETTINGS.check_interval) || (180 * 60 * 1000);
   var textboxes = $('#interval input, #basic_interval input');
   
-  interval = Math.round(interval / (60 * 1000));
-  
-  textboxes.val(interval).keyup(function() {
-    var cleaned_value = cleanTimeTextbox(this);
-    textboxes.not(this).val(cleaned_value.toString());
-    setSetting(SETTINGS.check_interval, cleaned_value * 60 * 1000);
-  }).change(function() { $(this).keyup(); });
+  textboxes.val(timeAbsoluteToLog(interval / (60 * 1000))).change(function() {
+    var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
+    textboxes.siblings('.range_value_label').text(describeTime(val_ms));
+  }).mouseup(function() {
+    var val = timeLogToAbsolute(parseFloat($(this).val()));
+    var val_ms = val * 60 * 1000;
+    textboxes.not(this).val($(this).val());
+    setSetting(SETTINGS.check_interval, val_ms);
+  }).mouseup().change();
 }
 
 // Initializes the two desktop notification togglers. Updates their state from
@@ -309,14 +307,13 @@ function initializeNotificationsToggler() {
 function initializeNotificationsTimeout() {
   var timeout = (getSetting(SETTINGS.notifications_timeout) / 1000) || 30;
   
-  $('#notifications_timeout input').val(timeout).keyup(function() {
-    var new_timeout = cleanTimeTextbox(this);
-    if (new_timeout < 1) {
-      new_timeout = 1;
-      $(this).val(new_timeout);
-    }
-    setSetting(SETTINGS.notifications_timeout, new_timeout * 1000);
-  }).change(function() { $(this).keyup(); })
+  $('#notifications_timeout input').val(timeout).change(function() {
+    var val_ms = parseFloat($(this).val()) * 1000;
+    $(this).siblings('.range_value_label').text(describeTime(val_ms));
+  }).mouseup(function() {
+    var val_ms = parseFloat($(this).val()) * 1000;
+    setSetting(SETTINGS.notifications_timeout, val_ms);
+  }).change().mouseup()
     .attr('disabled', !getSetting(SETTINGS.notifications_enabled));
 }
 
@@ -647,7 +644,8 @@ function initializePageAdvancedToggler() {
       // Apply previously-set advanced settings.
       var interval_div = $('.page_interval', page_record);
       if ($(':checked', interval_div).length > 0) {
-        var interval = cleanTimeTextbox($('input[type=text]', interval_div));
+        var interval_log = $('input[type=range]', interval_div).val();
+        var interval = timeLogToAbsolute(interval_log);
         setPageCheckInterval(url, interval);
       }
       
@@ -675,24 +673,30 @@ function initializePageAdvancedToggler() {
   });
 }
 
-// Initializes the page check interval textbox with a handler for the change and
-// keyup events that validates the contents and saves the new value  if needed.
-// Also binds a (secondary) handler to the interval checkbox that removes the
-// custom interval when unchecked, and resaves the currently entered value when
-// checked.
+// Initializes the page check interval slider with a handler for the change
+// event that updates the label and a handler for the mouseup event that saves
+// the new value. Also binds a (secondary) handler to the interval checkbox that
+// removes the custom interval when unchecked, and resaves the currently entered
+// value when checked.
 function initializePageCheckInterval() {
   $('.page_interval input[type=checkbox]').live('click', function() {
     var url = findUrl(this);
     if ($(this).is(':checked')) {
-      setPageCheckInterval(url, $('input[type=text]', $(this).parent()).val());
+      var interval_log = $('input[type=range]', $(this).parent()).val();
+      var interval = timeLogToAbsolute(parseFloat(interval_log));
+      setPageCheckInterval(url, interval);
     } else {
       setPageCheckInterval(url, null);
     }
   });
   
-  $('.page_interval input[type=text]').live('keyup', function() {
-    setPageCheckInterval(findUrl(this), cleanTimeTextbox(this));
-  }).live('change', function() { $(this).keyup(); });
+  $('.page_interval input[type=range]').live('change', function() {
+    var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
+    $(this).siblings('.range_value_label').text(describeTime(val_ms));
+  }).live('mouseup', function() {
+    var val = timeLogToAbsolute(parseFloat($(this).val()));
+    setPageCheckInterval(findUrl(this), val);
+  });
 }
 
 // Initializes the custom monitoring mode checkbox, drop-down and textbox.
@@ -895,10 +899,11 @@ function addPageToTable(page) {
   last_check_span.trigger('time_updated');
   setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
   
-  // Check interval textbox.
+  // Check interval range slider.
   var interval = check_interval / (60 * 1000);
+  var interval_log = timeAbsoluteToLog(interval);
   var interval_div = $('.page_interval', page_record);
-  $('input[type=text]', interval_div).val(interval);
+  $('input[type=range]', interval_div).val(interval_log).change();
   if (page.check_interval) {
     interval_div.children('span').addClass('enabled').removeClass('disabled');
     $('input', interval_div).attr({ disabled: false });
@@ -948,7 +953,7 @@ function addPageToTable(page) {
 // checkbox is checked, then its mode is set to "selector", and its mode string
 // textbox is filled with the selector string. A keyup event is triggered on the
 // textbox.
-chrome.extension.onRequest.addListener(function(request, _, callback) {
+function selectorServer(request, _, callback) {
   if (request && request.selector) {
     var page_record = findPageRecord(request.url);
     if (page_record.length > 0 &&
@@ -959,7 +964,7 @@ chrome.extension.onRequest.addListener(function(request, _, callback) {
       callback(null);
     }
   }
-});
+}
 
 /*******************************************************************************
 *                               Main Function                                  *
@@ -976,6 +981,8 @@ function init() {
   
   initializeGlobalControls();
   initializePageControls();
-  
+
+  chrome.extension.onRequest.addListener(selectorServer);
+
   fillPagesList();
 }

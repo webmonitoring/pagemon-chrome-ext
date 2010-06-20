@@ -212,7 +212,7 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Check Interval (minutes)",
+    "message": "Check Interval",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
@@ -244,7 +244,7 @@
     "description": "Generic label for enabled items."
   },
   "notifications_timeout": {
-    "message": "Notifications Stay (seconds)",
+    "message": "Notifications Stay",
     "description": "Label for the desktop notifications timeout textbox."
   },
   "badge_color": {
