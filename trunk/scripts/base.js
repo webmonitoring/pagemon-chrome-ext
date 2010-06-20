@@ -71,13 +71,11 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   };
 })();
 
-// Returns a string describing the amount of time that has passed since the time
-// specified in the timestamp argument. Examples: '7 seconds ago', '1 hour ago',
-// '3 hours 27 minutes ago', '40 days 10 hours ago'. The exact words returned
-// depend on the current locale.
-function describeTimeSince(timestamp) {
-  var time_delta = new Date().getTime() - timestamp;
-  var seconds = Math.floor(time_delta / 1000);
+// Returns a string describing the amount of time equivalent to the specified
+// amount of milliseconds. Examples: '7 seconds', '1 hour', '3 hours 9 minutes',
+// '40 days 10 hours'. The exact words returned depend on the current locale.
+function describeTime(milliseconds) {
+  var seconds = Math.floor(milliseconds / 1000);
   var minutes = Math.floor(seconds / 60) % 60;
   var hours = Math.floor(seconds / (60 * 60)) % 24;
   var days = Math.floor(seconds / (60 * 60 * 24));
@@ -105,7 +103,16 @@ function describeTimeSince(timestamp) {
     label += ' ' + ((seconds == 1) ? singular : plural);
   }
   
-  return chrome.i18n.getMessage('ago', label.replace(/^\s+|\s+$/g, ''));
+  return label.replace(/^\s+|\s+$/g, '');
+}
+
+// Returns a string describing the amount of time that has passed since the time
+// specified in the timestamp argument. Examples: '7 seconds ago', '1 hour ago',
+// '3 hours 27 minutes ago', '40 days 10 hours ago'. The exact words returned
+// depend on the current locale.
+function describeTimeSince(timestamp) {
+  var time_delta = new Date().getTime() - timestamp;
+  return chrome.i18n.getMessage('ago', describeTime(time_delta));
 }
 
 // Takes a string representation of an HTML document, discards everything

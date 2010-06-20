@@ -140,45 +140,40 @@ $(function() {
     equals(crc(123), null, 'CRC of a number');
   });
   
+  test('describeTime (English)', function() {
+    equals(describeTime(0), '0 seconds', '0ms');
+    equals(describeTime(100), '0 seconds', '100ms');
+    equals(describeTime(900), '0 seconds', '900ms');
+    equals(describeTime(1100), '1 second', '1100ms');
+    equals(describeTime(1900), '1 second', '1900ms');
+    equals(describeTime(59 * 1000), '59 seconds', '59s');
+    equals(describeTime(61 * 1000), '1 minute', '61s');
+    equals(describeTime(10 * 60 * 1000), '10 minutes', '10m');
+    equals(describeTime(60 * 60 * 1000), '1 hour', '60m');
+    equals(describeTime(80 * 60 * 1000), '1 hour 20 minutes', '80m');
+    equals(describeTime(3 * 60 * 60 * 1000), '3 hours', '3h');
+    equals(describeTime(3.5 * 60 * 60 * 1000), '3 hours 30 minutes', '3.5h');
+    equals(describeTime(24 * 60 * 60 * 1000), '1 day', '24h');
+    equals(describeTime(24.5 * 60 * 60 * 1000), '1 day', '24.5h');
+    equals(describeTime(28 * 60 * 60 * 1000), '1 day 4 hours', '28h');
+    equals(describeTime(40 * 24 * 60 * 60 * 1000), '40 days', '40 days');
+  });
+  
   test('describeTimeSince (English)', function() {
     var BASE_TIMESTAMP = Math.pow(10, 10);
     var old_Date = Date;
-    Date = function() { this.getTime = function() { return BASE_TIMESTAMP; }; };
-  
-    equals(describeTimeSince(BASE_TIMESTAMP),
-           '0 seconds ago', 'Since now');
-    equals(describeTimeSince(BASE_TIMESTAMP - 100),
-           '0 seconds ago', 'Since 100ms');
-    equals(describeTimeSince(BASE_TIMESTAMP - 900),
-           '0 seconds ago', 'Since 900ms');
-    equals(describeTimeSince(BASE_TIMESTAMP - 1100),
-           '1 second ago', 'Since 1100ms');
-    equals(describeTimeSince(BASE_TIMESTAMP - 1900),
-           '1 second ago', 'Since 1900ms');
-    equals(describeTimeSince(BASE_TIMESTAMP - (59 * 1000)),
-           '59 seconds ago', 'Since 59s');
-    equals(describeTimeSince(BASE_TIMESTAMP - (61 * 1000)),
-           '1 minute ago', 'Since 61s');
-    equals(describeTimeSince(BASE_TIMESTAMP - (10 * 60 * 1000)),
-           '10 minutes ago', 'Since 10m');
-    equals(describeTimeSince(BASE_TIMESTAMP - (60 * 60 * 1000)),
-           '1 hour ago', 'Since 60m');
-    equals(describeTimeSince(BASE_TIMESTAMP - (80 * 60 * 1000)),
-           '1 hour 20 minutes ago', 'Since 80m');
-    equals(describeTimeSince(BASE_TIMESTAMP - (3 * 60 * 60 * 1000)),
-           '3 hours ago', 'Since 3h');
-    equals(describeTimeSince(BASE_TIMESTAMP - (3.5 * 60 * 60 * 1000)),
-           '3 hours 30 minutes ago', 'Since 3.5h');
-    equals(describeTimeSince(BASE_TIMESTAMP - (24 * 60 * 60 * 1000)),
-           '1 day ago', 'Since 24h');
-    equals(describeTimeSince(BASE_TIMESTAMP - (24.5 * 60 * 60 * 1000)),
-           '1 day ago', 'Since 24.5h');
-    equals(describeTimeSince(BASE_TIMESTAMP - (28 * 60 * 60 * 1000)),
-           '1 day 4 hours ago', 'Since 28h');
-    equals(describeTimeSince(BASE_TIMESTAMP - (40 * 24 * 60 * 60 * 1000)),
-           '40 days ago', 'Since 40 days');
+    var old_describeTime = describeTime;
     
+    Date = function() { this.getTime = function() { return BASE_TIMESTAMP; }; };
+    describeTime = function(milliseconds) {
+      equal(milliseconds, 42, 'Milliseconds');
+      return 'abc def ghi';
+    }
+    equal(describeTimeSince(BASE_TIMESTAMP - 42), 'abc def ghi ago',
+          'Time description');
+  
     Date = old_Date;
+    describeTime = old_describeTime;
   });
   
   test('getStrippedBody', function() {
