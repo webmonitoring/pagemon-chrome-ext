@@ -16,6 +16,7 @@
     "default_title": "__MSG_name__",
     "popup": "popup.htm"
   },
+  "minimum_chrome_version": "5.0.375",
   "permissions": [
     "tabs",
     "http://*/*",
