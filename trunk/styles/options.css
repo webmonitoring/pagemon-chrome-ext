@@ -36,6 +36,12 @@ input[type=checkbox], input[type=radio] {
   top: 1px;
 }
 
+input[type=range] {
+  position: relative;
+  top: 7px;
+  min-width: 100px;
+}
+
 /* Header */
     
 h1 {
@@ -267,6 +273,16 @@ h1 {
 #basic_interval input {
   width: 3em;
   text-align: center;
+}
+
+#basic_interval .range_value_label {
+  width: 200px;
+  display: inline-block;
+  position: absolute;
+  right: 75px;
+  text-align: center;
+  line-height: 40%;
+  z-index: -1;
 }
 
 /* Advanced Global Options */
