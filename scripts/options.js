@@ -79,7 +79,7 @@ function timeLogToAbsolute(log) {
 // Returns the logarithm of 2 for the given value. Used when setting the check
 // interval sliders which use a logarithmic scale.
 function timeAbsoluteToLog(absolute) {
-  return (Math.log(absolute) / Math.log(1.5));
+  return Math.log(absolute) / Math.log(1.5);
 }
 
 // Enables or disables the Test button and the regex/selector textbox for a
@@ -115,8 +115,13 @@ function setPageRegexOrSelector(url, mode, value) {
     var valid = value && (is_regex ? isValidRegex : isValidSelector)(value);
     updatePageModeControls(findPageRecord(url), valid);
     if (valid) {
-      setPageSettings(url, { mode: mode });
-      setPageSettings(url, is_regex ? { regex: value } : { selector: value });
+      var settings = { mode: mode };
+      if (is_regex) {
+        settings.regex = value;
+      } else {
+        settings.selector = value;
+      }
+      setPageSettings(url, settings);
     }
   }
 }
@@ -137,7 +142,7 @@ function exportPagesList(callback) {
     var buffer = [];
     var add_date = new Date().getTime();
     
-    buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n\<!-- This is an' +
+    buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n<!-- This is an' +
                 ' automatically generated file.\n     It will be read and' +
                 ' overwritten.\n     DO NOT EDIT! -->\n<META HTTP-EQUIV=' +
                 '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
@@ -171,9 +176,9 @@ function exportPagesList(callback) {
 // as written out by exportPagesList(), these are imported as well. Returns the
 // number of pages found.
 function importPagesList(bookmarks) {
-  var page_regex = new Regex('(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\s*\<!--' +
-                             'PageMonitorAdvancedPageData=' +
-                             '(\{.*?\})-->\n)?', 'g');
+  var page_regex = new RegExp('(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\\s*<!--' +
+                              'PageMonitorAdvancedPageData=' +
+                              '(\{.*?\})-->\n)?', 'g');
   var match;
   var matches_count = 0;
   
@@ -278,8 +283,7 @@ function initializeIntervalSliders() {
     var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
     textboxes.siblings('.range_value_label').text(describeTime(val_ms));
   }).mouseup(function() {
-    var val = timeLogToAbsolute(parseFloat($(this).val()));
-    var val_ms = val * 60 * 1000;
+    var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
     textboxes.not(this).val($(this).val());
     setSetting(SETTINGS.check_interval, val_ms);
   }).mouseup().change();
@@ -313,8 +317,7 @@ function initializeNotificationsTimeout() {
   }).mouseup(function() {
     var val_ms = parseFloat($(this).val()) * 1000;
     setSetting(SETTINGS.notifications_timeout, val_ms);
-  }).change().mouseup()
-    .attr('disabled', !getSetting(SETTINGS.notifications_enabled));
+  }).change().attr('disabled', !getSetting(SETTINGS.notifications_enabled));
 }
 
 // Initializes the two sound alert selection drop-downs. Fills them with sounds
@@ -347,18 +350,22 @@ function initializeSoundPlayer() {
   var play_button = $('#play_sound');
   
   play_button.click(function() {
-    select.attr({ disabled: true });
-    play_button.attr({ disabled: true });
+    select.attr('disabled', true);
+    play_button.attr('disabled', true);
     
     var audio = new Audio(select.val());
     
     audio.addEventListener('ended', function() {
-      select.attr({ disabled: false });
-      play_button.attr({ disabled: false });
+      select.attr('disabled', false);
+      play_button.attr('disabled', false);
     });
     audio.play();
   });
 }
+
+// ------------------------------------WARNING----------------------------------
+// --------------------EVERYTHING BELOW THIS LINE IS UNTESTED-------------------
+// -----------------------------------------------------------------------------
 
 // Initializes the sound creation form, including the New button that displays
 // the form, and the Ok/Cancel buttons in the form itself.
@@ -522,9 +529,12 @@ function initializeGlobalChecker() {
     
     $('#options_switch input').click(function() {
       var checked = $(this).is(':checked');
+      
+      var label_state = checked ? 'hidden': 'visible';
+      $('#basic_interval .range_value_label').css('visibility', label_state);
+      
       var to_hide = checked ? '#basic_options' : '#advanced_options';
       var to_show = checked ? '#advanced_options' : '#basic_options';
-      
       $(to_hide).slideUp('slow', function() {
         $(to_show).slideDown('slow', function() {
           switching = false;
