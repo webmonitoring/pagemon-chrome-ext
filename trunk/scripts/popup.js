@@ -38,6 +38,7 @@ function monitorCurrentPage() {
   $('#monitor_page').addClass('inprogress');
   chrome.tabs.getSelected(null, function(tab) {
     addPage({ url: tab.url, name: tab.title }, function() {
+      BG.takeSnapshot(tab.url);
       $('#monitor_page').removeClass('inprogress');
       updateButtonsState();
     });
