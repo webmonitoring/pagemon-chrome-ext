@@ -279,10 +279,10 @@ h1 {
   width: 200px;
   display: inline-block;
   position: absolute;
-  right: 75px;
   text-align: center;
-  line-height: 40%;
   z-index: -1;
+  line-height: 40%;
+  padding-left: 10px;
 }
 
 /* Advanced Global Options */

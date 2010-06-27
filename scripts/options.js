@@ -287,6 +287,18 @@ function initializeIntervalSliders() {
     textboxes.not(this).val($(this).val());
     setSetting(SETTINGS.check_interval, val_ms);
   }).mouseup().change();
+  
+  var slider = $('#basic_interval input[type=range]');
+  var label = $('#basic_interval .range_value_label');
+  
+  var position = slider.offset();
+  var width = slider.width();
+  var height = slider.height();
+  var label_width = label.width();
+  var label_height = label.height();
+  
+  var new_left = position.left + width / 2 - label_width / 2;
+  label.css({ left: new_left });
 }
 
 // Initializes the two desktop notification togglers. Updates their state from
