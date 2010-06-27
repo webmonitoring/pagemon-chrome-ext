@@ -116,13 +116,15 @@ function updateButtonsState() {
   
   // Enable/disable the Check All Now button.
   getAllPageURLs(function(urls) {
-    if (urls.length == 0) {
-      $('#check_now').addClass('inactive');
-      $('#check_now img').attr('src', 'img/refresh_inactive.png');
-    } else {
-      $('#check_now').removeClass('inactive');
-      $('#check_now img').attr('src', 'img/refresh.png');
-    }
+    getAllUpdatedPages(function(updated_urls) {
+      if (urls.length == updated_urls.length) {
+        $('#check_now').addClass('inactive');
+        $('#check_now img').attr('src', 'img/refresh_inactive.png');
+      } else {
+        $('#check_now').removeClass('inactive');
+        $('#check_now img').attr('src', 'img/refresh.png');
+      }
+    });
   });
 }
 
@@ -164,7 +166,7 @@ function checkAllPages() {
     BG.check(true, function() {
       // Fade out the loader.
       $('#notifications').animate({ opacity: 0 }, 400, function() {
-        var that = this;
+        var that = $(this);
         // Fill the table - done at this point to get the final height.
         fillNotifications(function() {
           // Remember the height and content of the table.
@@ -199,9 +201,9 @@ function openAllPages() {
 
 // Opens the <a> link on which it is called (i.e. the this object) in a new
 // unfocused tab and returns false.
-function openLinkInNewTab() {
+function openLinkInNewTab(event) {
   chrome.tabs.create({ url: this.href, selected: false });
-  return false;
+  event.preventDefault();
 }
 
 // Open a diff page in a new unfocused tab. Expects to be called on an element
