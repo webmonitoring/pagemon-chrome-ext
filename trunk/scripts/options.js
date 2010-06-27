@@ -178,7 +178,7 @@ function exportPagesList(callback) {
 function importPagesList(bookmarks) {
   var page_regex = new RegExp('(<[aA][^<>]+>[^<>]+<\/[aA]>)(?:\\s*<!--' +
                               'PageMonitorAdvancedPageData=' +
-                              '(\{.*?\})-->\n)?', 'g');
+                              '(\{.*?\})-->)?', 'g');
   var match;
   var matches_count = 0;
   
