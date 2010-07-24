@@ -69,8 +69,7 @@ function currentElementChanged() {
 // would match this element (and hopefully it alone). Stops as soon as it
 // reaches an element with a defined ID attribute or when reaching the <body>.
 // Ignores classes starting with chrome_page_monitor_ (e.g. the outline class).
-// Elements outside of <body> return null. The returned selector is always
-// lowercase.
+// Elements outside of <body> return null.
 function elementToSelector(element) {
   var path = [];
   
@@ -82,7 +81,7 @@ function elementToSelector(element) {
     return null;
   } else {
     while (!(element.is('body') || element.attr('id'))) {
-      var tagname = element.get(0).tagName;
+      var tagname = element.get(0).tagName.toLowerCase();
       var classname = element.get(0).className;
 
       classname = classname.replace(/chrome_page_monitor_\w+/g, '')
@@ -108,7 +107,7 @@ function elementToSelector(element) {
     
     path.reverse();
     
-    return path.join('>').toLowerCase();
+    return path.join('>');
   }
 }
 
