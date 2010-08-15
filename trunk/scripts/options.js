@@ -845,13 +845,14 @@ function fillPagesList() {
 }
 
 // Sorts an array of pages in-place given a sort_order. Valid sort order values:
-// 1. date added: no sorting is done. The input array is expected to be
-//    initially sorted by the date when the page was added.
-// 2. name: the page's name attribute.
-// 3. check interval: the page's check interval (or the global check interval
-//    for pages with no custom interval defined).
-// 4. last check: the date when the page was last checked.
-// 5. last change: the date when the page was last changed.
+// * date added: no sorting is done. The input array is expected to be
+//   initially sorted by the date when the page was added.
+// * name: the page's name attribute.
+// * url: the page's url attribute.
+// * check interval: the page's check interval (or the global check interval
+//   for pages with no custom interval defined).
+// * last check: the date when the page was last checked.
+// * last change: the date when the page was last changed.
 // Other values of sort order will raise an error.
 function sortPagesInplace(pages, sort_order) {
   if (sort_order != 'date added') {
@@ -870,6 +871,9 @@ function sortPagesInplace(pages, sort_order) {
       } else if (sort_order == 'last changed') {
         a = -a.last_changed || 0;
         b = -b.last_changed || 0;
+      } else if (sort_order == 'url') {
+        a = a.url;
+        b = b.url;
       } else {
         throw(new Error('Invalid sort order.'));
       }
