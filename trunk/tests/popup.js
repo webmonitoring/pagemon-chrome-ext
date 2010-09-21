@@ -18,7 +18,6 @@ $(function() {
   test('markPageVisited', function() {
     expect(22);
     var old_getNotificationUrl = getNotificationUrl;
-    var old_setPageSettings = setPageSettings;
     var old_BG = BG;
     var old_$ = $;
     var old_fillNotifications = fillNotifications;
@@ -28,12 +27,6 @@ $(function() {
       equals(arg, 'test1', 'Argument to getNotificationUrl()');
       return 'test2';
     };
-    setPageSettings = function(url, properties, callback) {
-      equals(url, 'test2', 'URL argument to setPageSettings()');
-      same(properties, { updated: false },
-           'Properties argument to setPageSettings()');
-      callback();
-    };
     BG = {
       updateBadge: function() {
         ok(true, 'Badge update triggered.');
@@ -42,7 +35,13 @@ $(function() {
         equals(url, 'test2', 'URL argument to takeSnapshot()');
         equals(callback, 'test3', 'Callback argument to takeSnapshot()');
       },
-      scheduleCheck: 'test3'
+      scheduleCheck: 'test3',
+      setPageSettings: function(url, properties, callback) {
+        equals(url, 'test2', 'URL argument to setPageSettings()');
+        same(properties, { updated: false },
+             'Properties argument to setPageSettings()');
+        callback();
+      }
     };
     $ = function(selector_or_object) {
       if ($.state == 0) {
@@ -86,7 +85,6 @@ $(function() {
       fillNotifications = old_fillNotifications;
       $ = old_$;
       BG = old_BG;
-      setPageSettings = old_setPageSettings;
       getNotificationUrl = old_getNotificationUrl;
     };
     markPageVisited.call('test1');

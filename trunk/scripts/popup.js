@@ -17,7 +17,7 @@ function markPageVisited() {
   var url = getNotificationUrl(this);
   var that = this;
   
-  setPageSettings(url, { updated: false }, function() {
+  BG.setPageSettings(url, { updated: false }, function() {
     BG.updateBadge();
     BG.takeSnapshot(url, BG.scheduleCheck);
     
