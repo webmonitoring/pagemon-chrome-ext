@@ -212,6 +212,7 @@ function generateControls(url) {
   var title = chrome.i18n.getMessage('diff_original_title');
   var original = chrome.i18n.getMessage('diff_original');
   var hide = chrome.i18n.getMessage('diff_hide_deletions');
+  var show = chrome.i18n.getMessage('diff_show_deletions');
   var controls = template.replace('%url%', url)
                          .replace('%title%', title)
                          .replace('%original%', original)
@@ -220,6 +221,11 @@ function generateControls(url) {
   var $controls = $(controls);
   
   $('a:last', $controls).click(function() {
+    if ($(this).text() == show) {
+      $(this).text(hide);
+    } else {
+      $(this).text(show);
+    }
     $('del').toggle();
     return false;
   });
