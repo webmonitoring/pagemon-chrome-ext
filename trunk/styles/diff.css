@@ -26,6 +26,7 @@ ins img {
   padding: 5px 20px 5px 20px !important;
   padding-top: 5px !important;
   text-align: center !important;
+  z-index: 9999 !important;
 }
 #chrome_page_monitor_ext_orig_link a:link,
 #chrome_page_monitor_ext_orig_link a:visited {
