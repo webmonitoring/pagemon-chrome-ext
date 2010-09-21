@@ -183,7 +183,7 @@ $(function() {
   test('actualCheck', function() {
     expect(10);
     var old_getAllPages = getAllPages;
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_updateBadge = updateBadge;
     var old_scheduleCheck = scheduleCheck;
     var old_getSetting = getSetting;
@@ -199,7 +199,7 @@ $(function() {
                 { url: 'f', last_check: 500 },
                 { url: 'g', last_check: 550 }]);
     };
-    Date = function() { return { getTime: function() { return 600; } }; };
+    Date.now = function() { return 600; };
     updateBadge = function() { ok(true, 'Badge updated.'); };
     scheduleCheck = function() { ok(true, 'Check scheduled.'); };
     getSetting = function(name) {
@@ -261,7 +261,7 @@ $(function() {
     
     EPSILON = old_EPSILON;
     getAllPages = old_getAllPages;
-    Date = old_Date;
+    Date.now = old_Date_now;
     updateBadge = old_updateBadge;
     scheduleCheck = old_scheduleCheck;
     getSetting = old_getSetting;
@@ -270,11 +270,11 @@ $(function() {
   
   test('applySchedule', function() {
     expect(6);
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_clearTimeout = clearTimeout;
     var old_setTimeout = setTimeout;
     
-    Date = function() { return { getTime: function() { return 100; } }; };
+    Date.now = function() { return 100; };
     clearTimeout = function() {
       ok(true, 'Timeout cleared.');
     };
@@ -289,20 +289,20 @@ $(function() {
     };
     applySchedule(42);
     
-    Date = old_Date;
+    Date.now = old_Date_now;
     clearTimeout = old_clearTimeout;
     setTimeout = old_setTimeout;
   });
   
   test('scheduleCheck', function() {
     expect(3);
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_getAllPages = getAllPages;
     var old_getSetting = getSetting;
     var old_applySchedule = applySchedule;
     var old_MINIMUM_CHECK_SPACING = MINIMUM_CHECK_SPACING;
     
-    Date = function() { return { getTime: function() { return 100; } }; };
+    Date.now = function() { return 100; };
     getAllPages = function(callback) {
       callback([{ last_check: 100, check_interval: 42 },
                 { last_check: 43, check_interval: 100 },
@@ -346,7 +346,7 @@ $(function() {
     };
     scheduleCheck();
     
-    Date = old_Date;
+    Date.now = old_Date_now;
     getAllPages = old_getAllPages;
     getSetting = old_getSetting;
     applySchedule = old_applySchedule;
@@ -384,27 +384,27 @@ $(function() {
 
   test('watchdog', function() {
     expect(1);
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_setTimeout = setTimeout;
     var old_WATCHDOG_TOLERANCE = WATCHDOG_TOLERANCE;
     var old_scheduleCheck = scheduleCheck;
     
-    Date = function() { return { getTime: function() { return 100; } }; };
+    Date.now = function() { return 100; };
     applySchedule(100);
 
     setTimeout = $.noop;
     WATCHDOG_TOLERANCE = 10;
 
     scheduleCheck = function() { ok(true, 'Check scheduled.'); };
-    Date = function() { return { getTime: function() { return 220; } }; };
+    Date.now = function() { return 220; };
     watchdog();
     
     scheduleCheck = function() { ok(false, 'Unnecessary check scheduled.'); };
-    Date = function() { return { getTime: function() { return 200; } }; };
+    Date.now = function() { return 200; };
     watchdog();
     
     scheduleCheck = old_scheduleCheck;
-    Date = old_Date;
+    Date.now = old_Date_now;
     setTimeout = old_setTimeout;
     WATCHDOG_TOLERANCE = old_WATCHDOG_TOLERANCE;
   });

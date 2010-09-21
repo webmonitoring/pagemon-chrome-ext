@@ -126,7 +126,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // Performs the page checks. Called by check() to do the actual work.
   actualCheck = function(force, callback, page_callback) {
     getAllPages(function(pages) {
-      var current_time = new Date().getTime();
+      var current_time = Date.now();
       var pages_to_check = force ? pages : $.grep(pages, function(page) {
         var interval = page.check_interval ||
                        getSetting(SETTINGS.check_interval);
@@ -163,7 +163,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // Sets the next check to go off after the number of milliseconds specified.
   // Updates projected_check_time for the watchdog.
   applySchedule = function(after) {
-    var current_time = new Date().getTime();
+    var current_time = Date.now();
     
     projected_check_time = current_time + after;
     
@@ -176,7 +176,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // check, then calls applySchedule() to schedule a check after this amount of
   // time.
   scheduleCheck = function() {
-    var current_time = new Date().getTime();
+    var current_time = Date.now();
     
     getAllPages(function(pages) {
       if (pages.length == 0) return;
@@ -231,7 +231,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // If everything goes well, this should never be needed, but better be safe
   // than sorry.
   watchdog = function() {
-    if (new Date().getTime() - projected_check_time > WATCHDOG_TOLERANCE) {
+    if (Date.now() - projected_check_time > WATCHDOG_TOLERANCE) {
       console.log('WARNING: Watchdog recovered a lost timeout.');
       scheduleCheck();
     }
