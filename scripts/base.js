@@ -147,7 +147,6 @@ function describeTimeSince(timestamp) {
 // outside the <body> element (if one exists), then strips <script> tags.
 function getStrippedBody(html) {
   var body = html.match(/<body[^>]*>(?:([^]*)<\/body>([^]*)|([^]*))/i);
-  console.log(body);
   if (body && body.length > 1) {
     if (body[2] && body[2].length > MIN_BODY_TAIL_LENGTH) {
       body = body[1] + ' ' + body[2];
