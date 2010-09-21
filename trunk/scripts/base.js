@@ -60,6 +60,8 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   crc = function(str) {
     if (typeof str != 'string') return null;
     
+    str = encodeUTF8(str);
+    
     var length = str.length;
     var crc = 0xFFFFFFFF; 
 
@@ -70,6 +72,29 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
     return crc ^ -1;
   };
 })();
+
+// Encodes a unicode string into a UTF-8 byte sequence.
+// Adapted from code at http://www.webtoolkit.info/javascript-utf8.html.
+function encodeUTF8(string) {
+  var utftext = [];
+
+  for (var n = 0; n < string.length; n++) {
+    var c = string.charCodeAt(n);
+
+    if (c < 128) {
+      utftext.push(String.fromCharCode(c));
+    } else if ((c > 127) && (c < 2048)) {
+      utftext.push(String.fromCharCode((c >> 6) | 192));
+      utftext.push(String.fromCharCode((c & 63) | 128));
+    } else {
+      utftext.push(String.fromCharCode((c >> 12) | 224));
+      utftext.push(String.fromCharCode(((c >> 6) & 63) | 128));
+      utftext.push(String.fromCharCode((c & 63) | 128));
+    }
+  }
+
+  return utftext.join('');
+}
 
 // Returns a string describing the amount of time equivalent to the specified
 // amount of milliseconds. Examples: '7 seconds', '1 hour', '3 hours 9 minutes',
