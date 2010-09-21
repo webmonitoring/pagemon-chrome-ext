@@ -265,10 +265,10 @@ $(function() {
   
   test('exportPagesList', function() {
     expect(1);
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_getAllPages = getAllPages;
     
-    Date = function() { return { getTime: function() { return 1000; } }; };
+    Date.now = function() { return 1000; };
     getAllPages = function(callback) {
       callback([{ name: 'n1',
                   url: 'u1',
@@ -297,7 +297,7 @@ $(function() {
       equal(file, expected_file, 'Exported output');
     });
     
-    Date = old_Date;
+    Date.now = old_Date_now;
     getAllPages = old_getAllPages;
   });
 

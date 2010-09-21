@@ -161,10 +161,10 @@ $(function() {
   
   test('describeTimeSince (English)', function() {
     var BASE_TIMESTAMP = Math.pow(10, 10);
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_describeTime = describeTime;
     
-    Date = function() { this.getTime = function() { return BASE_TIMESTAMP; }; };
+    Date.now = function() { return BASE_TIMESTAMP; };
     describeTime = function(milliseconds) {
       equal(milliseconds, 42, 'Milliseconds');
       return 'abc def ghi';
@@ -172,7 +172,7 @@ $(function() {
     equal(describeTimeSince(BASE_TIMESTAMP - 42), 'abc def ghi ago',
           'Time description');
   
-    Date = old_Date;
+    Date.now = old_Date_now;
     describeTime = old_describeTime;
   });
   
@@ -360,8 +360,8 @@ $(function() {
     scheduleCheck = function() { ok(true, 'Check scheduled.'); resume(); };
     var old_BG  = BG;
     BG = window;
-    var old_Date = Date;
-    Date = function() { this.getTime = function() { return 123; }; };
+    var old_Date_now = Date.now;
+    Date.now = function() { return 123;};
     
     executeSql('SELECT * FROM pages', [], function(result) {
       addPage(DUMMY_PAGE, function() {
@@ -372,7 +372,7 @@ $(function() {
           
           scheduleCheck = old_scheduleCheck;
           BG = old_BG;
-          Date = old_Date;
+          Date.now = old_Date_now;
           
           executeSql('DELETE FROM pages', [], resume);
         });
@@ -411,10 +411,8 @@ $(function() {
     BG = window;
     var old_scheduleCheck = BG.scheduleCheck;
     scheduleCheck = $.noop;
-    var old_Date = Date;
-    Date = function() {
-      this.getTime = function() { return DUMMY_PAGE.last_check; };
-    };
+    var old_Date_now = Date.now;
+    Date.now = function() { return DUMMY_PAGE.last_check; };
     
     getPage('nonexistent', function(page) {
       equals(page, null, 'Non-existent page');
@@ -428,7 +426,7 @@ $(function() {
           
           scheduleCheck = old_scheduleCheck;
           BG = old_BG;
-          Date = old_Date;
+          Date.now = old_Date_now;
           
           executeSql('DELETE FROM pages', [], resume);
         });
@@ -465,10 +463,8 @@ $(function() {
     BG = window;
     var old_scheduleCheck = BG.scheduleCheck;
     scheduleCheck = $.noop;
-    var old_Date = Date;
-    Date = function() {
-      this.getTime = function() { return DUMMY_PAGE.last_check; };
-    };
+    var old_Date_now = Date.now;
+    Date.now = function() { return DUMMY_PAGE.last_check; };
     
     getAllPages(function(pages) {
       same(pages, [], 'Empty pages list');
@@ -484,7 +480,7 @@ $(function() {
             
             scheduleCheck = old_scheduleCheck;
             BG = old_BG;
-            Date = old_Date;
+            Date.now = old_Date_now;
             
             executeSql('DELETE FROM pages', [], resume);
           });
@@ -549,10 +545,8 @@ $(function() {
     BG = window;
     var old_scheduleCheck = BG.scheduleCheck;
     scheduleCheck = $.noop;
-    var old_Date = Date;
-    Date = function() {
-      this.getTime = function() { return DUMMY_PAGE.last_check; };
-    };
+    var old_Date_now = Date.now;
+    Date.now = function() { return DUMMY_PAGE.last_check; };
     
     var url = DUMMY_PAGE.url;
     
@@ -572,7 +566,7 @@ $(function() {
         
                 scheduleCheck = old_scheduleCheck;
                 BG = old_BG;
-                Date = old_Date;
+                Date.now = old_Date_now;
                 
                 executeSql('DELETE FROM pages', [], resume);
               });
@@ -584,7 +578,7 @@ $(function() {
   });
   
   delayedTest('Storage of 6+ MB of data', 1, function(resume) {
-    var large_string = new Date().getTime() + '';
+    var large_string = Date.now() + '';
     
     while (large_string.length < (6 * (2 << 20))) {
       large_string = large_string + large_string;
@@ -824,12 +818,12 @@ $(function() {
   
     var old_BG  = BG;
     var old_scheduleCheck = BG.scheduleCheck;
-    var old_Date = Date;
+    var old_Date_now = Date.now;
     var old_ajax = $.ajax;
     var old_setPageSettings = setPageSettings;
     BG = window;
     scheduleCheck = $.noop;
-    Date = function() { this.getTime = function() { return 123; }; };
+    Date.now = function() { return 123; };
     
     function shouldNotBeCalled() {
       ok(false, 'Ajax called when page is updated.');
@@ -862,7 +856,7 @@ $(function() {
         
         scheduleCheck = old_scheduleCheck;
         BG = old_BG;
-        Date = old_Date;
+        Date.now = old_Date_now;
         $.ajax = old_ajax;
         setPageSettings = old_setPageSettings;
         executeSql('DELETE FROM pages', [], resume);

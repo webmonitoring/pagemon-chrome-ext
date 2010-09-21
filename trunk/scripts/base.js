@@ -139,8 +139,7 @@ function describeTime(milliseconds) {
 // '3 hours 27 minutes ago', '40 days 10 hours ago'. The exact words returned
 // depend on the current locale.
 function describeTimeSince(timestamp) {
-  var time_delta = new Date().getTime() - timestamp;
-  return chrome.i18n.getMessage('ago', describeTime(time_delta));
+  return chrome.i18n.getMessage('ago', describeTime(Date.now() - timestamp));
 }
 
 // Takes a string representation of an HTML document, discards everything
@@ -330,7 +329,7 @@ function addPage(page, callback) {
     page.html || '',
     page.crc || 0,
     page.updated ? 1 : 0,
-    new Date().getTime(),
+    Date.now(),
     page.last_changed || null
   ], null, function() {
     BG.takeSnapshot();
@@ -512,13 +511,13 @@ function checkPage(url, callback, force_snapshot) {
                 updated: true,
                 crc: crc,
                 html: force_snapshot ? canonizePage(html, type) : page.html,
-                last_changed: new Date().getTime()
+                last_changed: Date.now()
               }
             } else {
               settings = { html: canonizePage(html, type) };
             }
             
-            settings.last_check = new Date().getTime();
+            settings.last_check = Date.now();
             setPageSettings(url, settings, function() {
               (callback || $.noop)(url);
             });
@@ -526,7 +525,7 @@ function checkPage(url, callback, force_snapshot) {
         });
       },
       error: function() {
-        setPageSettings(url, { last_check: new Date().getTime() }, function() {
+        setPageSettings(url, { last_check: Date.now() }, function() {
           (callback || $.noop)(url);
         });
       }

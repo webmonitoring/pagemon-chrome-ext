@@ -140,7 +140,7 @@ function exportPagesList(callback) {
   
   getAllPages(function(pages) {
     var buffer = [];
-    var add_date = new Date().getTime();
+    var add_date = Date.now();
     
     buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n<!-- This is an' +
                 ' automatically generated file.\n     It will be read and' +
