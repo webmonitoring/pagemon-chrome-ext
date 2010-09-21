@@ -111,7 +111,7 @@ $(function() {
          'In-progress class removed.');
     };
     updateButtonsState = function() {
-      ok('Buttons state updated.');
+      ok(true, 'Buttons state updated.');
     };
     
     monitorCurrentPage();
@@ -227,8 +227,12 @@ $(function() {
   
   test('updateButtonsState / Check All Now', function() {
     var old_getAllPageURLs = getAllPageURLs;
+    var old_getAllUpdatedPages = getAllUpdatedPages;
     
     getAllPageURLs = function(callback) {
+      callback([]);
+    };
+    getAllUpdatedPages = function(callback) {
       callback([]);
     };
     updateButtonsState();
@@ -244,7 +248,19 @@ $(function() {
     equal($('#check_now img').attr('src'), 'img/refresh.png',
           'Active image.');
     
+    getAllPageURLs = function(callback) {
+      callback([1, 2, 3]);
+    };
+    getAllUpdatedPages = function(callback) {
+      callback([1, 2, 3]);
+    };
+    updateButtonsState();
+    ok($('#check_now').hasClass('inactive'), 'Readded inactive class.');
+    equal($('#check_now img').attr('src'), 'img/refresh_inactive.png',
+          'Inactive image.');
+    
     getAllPageURLs = old_getAllPageURLs;
+    getAllUpdatedPages = old_getAllUpdatedPages;
   });
   
   test('checkAllPages', function() {
@@ -387,11 +403,12 @@ $(function() {
   test('openLinkInNewTab', function() {
     expect(2);
     var old_create = chrome.tabs.create;
+    var event = {preventDefault: function() { ok(true, 'Default prevented.'); }};
     
     chrome.tabs.create = function(arg) {
       same(arg, { url: 'test', selected: false }, 'Argument to create()');
     };
-    equal(openLinkInNewTab.call({ href: 'test' }), false, 'Returned');
+    openLinkInNewTab.call({ href: 'test' }, event);
     
     chrome.tabs.create = old_create;
   });

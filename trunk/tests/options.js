@@ -500,7 +500,7 @@ $(function() {
   });
   
   test('initializeIntervalSliders', function() {
-    expect(18);
+    expect(26);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_timeAbsoluteToLog = timeAbsoluteToLog;
@@ -565,14 +565,31 @@ $(function() {
       not: function(excluder) {
         equal(excluder, this, 'Excluded by not()');
         return this;
+      },
+      offset: function() {
+        ok(true, 'Offset queried.');
+        return {left: 123, top: 456};
+      },
+      width: function() {
+        ok(true, 'Width queried.');
+        return 78;
+      },
+      height: function() {
+        ok(true, 'Height queried.');
+        return 90;
+      },
+      css: function(arg) {
+        same(arg, { left: 123 }, 'Repositioned.');
       }
     };
     $ = function(arg) {
       if (arg == '#interval input, #basic_interval input' ||
+          arg == '#basic_interval input[type=range]' ||
+          arg == '#basic_interval .range_value_label' ||
           arg == dispatcher) {
         ok(true, 'Valid input passed to jQuery.');
       } else {
-        ok(false, 'Invalid input passed to jQuery.');
+        ok(false, 'Invalid input passed to jQuery: ' + arg + '.');
       }
       return dispatcher;
     };
