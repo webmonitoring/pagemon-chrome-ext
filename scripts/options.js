@@ -868,7 +868,7 @@ function sortPagesInplace(pages, sort_order) {
       } else if (sort_order == 'last check') {
         a = -a.last_check;
         b = -b.last_check;
-      } else if (sort_order == 'last changed') {
+      } else if (sort_order == 'last change') {
         a = -a.last_changed || 0;
         b = -b.last_changed || 0;
       } else if (sort_order == 'url') {
