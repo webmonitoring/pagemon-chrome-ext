@@ -13,7 +13,7 @@
   clear: none !important;
   overflow: visible !important;
   visibility: visible !important;
-  z-index: auto !important;
+  z-index: 9999 !important;
   cursor: auto !important;
   border: none !important;
   outline: none !important;
