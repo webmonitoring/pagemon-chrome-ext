@@ -163,12 +163,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // Sets the next check to go off after the number of milliseconds specified.
   // Updates projected_check_time for the watchdog.
   applySchedule = function(after) {
-    var current_time = Date.now();
-    
-    projected_check_time = current_time + after;
-    
+    projected_check_time = Date.now() + after;
     clearTimeout(check_timeout_id);
-    
     check_timeout_id = setTimeout(check, after);
   };
 
@@ -215,13 +211,13 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       type: 'HEAD',
       url: RELIABLE_CHECKPOINT,
       complete: function(xhr) {
-        if (xhr.status >= 200 && xhr.status < 300) {
+        if (xhr && xhr.status >= 200 && xhr.status < 300) {
           // Network up; do the check.
           actualCheck(force, callback, page_callback);
         } else {
           // Network down. Do a constant reschedule.
           applySchedule(RESCHEDULE_DELAY);
-          callback();
+          (callback || null)();
         }
       }
     });
