@@ -34,6 +34,9 @@ var REGEX_TIMEOUT = 7 * 1000;
 // The path to the worker script that runs asynchronous regex matches.
 var REGEX_WORKER_PATH = 'scripts/regex.js';
 
+// The minimum length of content after the </body> tag that cannot be ignored.
+var MIN_BODY_TAIL_LENGTH = 100;
+
 // The pages database table structure as an SQL CREATE TABLE statement.
 var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   `url` TEXT NOT NULL UNIQUE, \
@@ -143,9 +146,16 @@ function describeTimeSince(timestamp) {
 // Takes a string representation of an HTML document, discards everything
 // outside the <body> element (if one exists), then strips <script> tags.
 function getStrippedBody(html) {
-  var body = html.match(/<body[^>]*>(?:([^]*)<\/body>|([^]*))/i);
+  var body = html.match(/<body[^>]*>(?:([^]*)<\/body>([^]*)|([^]*))/i);
+  console.log(body);
   if (body && body.length > 1) {
-    body = (body[1] === undefined) ? body[2] : body[1];
+    if (body[2] && body[2].length > MIN_BODY_TAIL_LENGTH) {
+      body = body[1] + ' ' + body[2];
+    } else if (body[1] === undefined) {
+      body = body[3];
+    } else {
+      body = body[1];
+    }
   } else {
     body = html;
   }

@@ -178,42 +178,64 @@ $(function() {
   
   test('getStrippedBody', function() {
     equals(getStrippedBody(''), '', 'Empty string');
+    
     equals(getStrippedBody('abc'), 'abc', 'Non-HTML string');
+    
     equals(getStrippedBody('<html></html>'),
            '<html></html>',
            'Empty HTML');
+           
     equals(getStrippedBody('<body></body>'),
            '',
            'Empty stripped body');
+           
     equals(getStrippedBody('<body>abc</body>'),
            'abc',
            'Body with content');
+           
     equals(getStrippedBody('<html><head></head><body>abc</body></html>'),
            'abc',
            'HTML with body');
+           
     equals(getStrippedBody('<html><head></head><body>abc</html>'),
            'abc</html>',
            'HTML with unclosed body');
+           
     equals(getStrippedBody('<html><head></head><body>abc</body><body>def' +
                            '</body></html>'),
            'abc</body><body>def',
            'HTML with 2 bodies');
+           
     equals(getStrippedBody('<html><body>abc<script src="qwe"></script>def' +
                            '</body></html>'),
            'abcdef',
            'HTML with an external srcipt within body');
+           
     equals(getStrippedBody('<html><body>abc<script src="qwe" />def</body>' +
                            '</html>'),
            'abcdef',
            'HTML with a self-closed external srcipt within body');
+           
     equals(getStrippedBody('<html><body>abc<script>qwe</script></body></html>'),
            'abc',
            'HTML with an internal script within body');
+           
     equals(getStrippedBody('<html><body>abc<script>qwe</script>def<script src' +
                            '="hello" type="text/javascript"></script>ghi' +
                            '<script src="rty" />\n jkl</body></html>'),
            'abcdefghi\n jkl',
            'HTML with multiple internal and external scripts within body');
+           
+    var old_MIN_BODY_TAIL_LENGTH = MIN_BODY_TAIL_LENGTH;
+    MIN_BODY_TAIL_LENGTH = 4;
+    equals(getStrippedBody('<html><head></head><body>abc</body>def'),
+           'abc',
+           'HTML with little content outside body');
+           
+    equals(getStrippedBody('<html><head></head><body>abc</body>defghi'),
+           'abc defghi',
+           'HTML with a lot of content outside body');
+    MIN_BODY_TAIL_LENGTH = old_MIN_BODY_TAIL_LENGTH;
   });
   
   test('getFavicon', function() {
