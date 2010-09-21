@@ -1,8 +1,9 @@
-import re
-import os
-import shutil
 import glob
 import lxml.html
+import os
+import re
+import shutil
+import sys
 
 def compileJS(text):
     import httplib, urllib, sys
@@ -76,11 +77,12 @@ if __name__ == '__main__':
         data = open(f).read()
         open(f, 'w').write(compileCSS(data))
 
-    # Compress javascript.
-    for f in glob.glob('build/scripts/*.js'):
-        print 'Compiling JS:', f
-        data = open(f).read()
-        open(f, 'w').write(compileJS(data))
+    # Compile javascript.
+    if '--compile_js' in sys.argv:
+      for f in glob.glob('build/scripts/*.js'):
+          print 'Compiling JS:', f
+          data = open(f).read()
+          open(f, 'w').write(compileJS(data))
 
     # Compress HTML.
     for f in glob.glob('build/*.htm*'):
