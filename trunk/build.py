@@ -5,6 +5,8 @@ import re
 import shutil
 import sys
 
+DEV_ONLY_REGEX = re.compile('<!--DEV_ONLY-->.*?<!--/DEV_ONLY-->', re.DOTALL)
+
 def compileJS(text):
     import httplib, urllib, sys
 
@@ -12,7 +14,7 @@ def compileJS(text):
                                ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
                                ('output_format', 'text'),
                                ('output_info', 'compiled_code')])
-    headers = { 'Content-type': 'application/x-www-form-urlencoded' }
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
 
     conn = httplib.HTTPConnection('closure-compiler.appspot.com')
     conn.request('POST', '/compile', params, headers)
@@ -26,17 +28,19 @@ def compileCSS(text):
     return re.sub(r'/\*.*?\*/|(?<!\w)\s+|\s(?=\{)', '', text.strip())
 
 def compileHTML(filename):
-    doc = lxml.html.parse(filename)
+    string = open(filename).read()
+    string = DEV_ONLY_REGEX.sub('', string)
+    doc = lxml.html.fromstring(string)
     
-    for e in doc.getroot().cssselect('*'):
+    for e in doc.cssselect('*'):
         if not e.tail or e.tail.isspace():
             e.tail = ' '
 
-    for script in doc.getroot().cssselect('script'):
+    for script in doc.cssselect('script'):
         if script.text:
             script.text = compileJS(script.text)
     
-    for style in doc.getroot().cssselect('style'):
+    for style in doc.cssselect('style'):
         if style.text:
             style.text = compileCSS(style.text)
     
@@ -71,7 +75,7 @@ if __name__ == '__main__':
     print 'Removing tests'
     shutil.rmtree('build/tests')
 
-    # Compress stylesheets.
+    # Compile stylesheets.
     for f in glob.glob('build/styles/*.css'):
         print 'Compiling CSS:', f
         data = open(f).read()
@@ -84,7 +88,7 @@ if __name__ == '__main__':
           data = open(f).read()
           open(f, 'w').write(compileJS(data))
 
-    # Compress HTML.
+    # Compile HTML.
     for f in glob.glob('build/*.htm*'):
         print 'Compiling HTML:', f
         data = compileHTML(f)
