@@ -304,7 +304,7 @@ $(function() {
     
     initialize();
     
-    ok($('body :last-child').hasClass('test_class'), 'Test class injected.');
+    ok($('body>:last-child').hasClass('test_class'), 'Test class injected.');
     equal(frame.get(0), $('#' + FRAME_ID).get(0), 'Frame reference');
     equal(pick_button.get(0), $('span[title=Pick]', frame).get(0),
           'Pick button reference');
