@@ -94,4 +94,4 @@ if __name__ == '__main__':
         data = compileHTML(f)
         open(f, 'w').write(data)
 
-    print 'Done'
+    raw_input('Done. Press enter to continue.')
