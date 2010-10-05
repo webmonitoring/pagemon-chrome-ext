@@ -162,10 +162,9 @@ function getStrippedBody(html) {
 }
 
 // Returns a chrome://favicon/... URL that points to the Chrome-cached favicon
-// of the given URL. Returns "chrome://favicon/null" when given an invalid URL.
+// of the given URL.
 function getFavicon(url) {
-  var host = url.match(/^\w+:\/\/[^\/]+/);
-  return 'chrome://favicon/' + (host ? host[0] : 'null');
+  return 'chrome://favicon/' + url;
 }
 
 // Takes all elements of the class "i18n" that have a title attribute from the
