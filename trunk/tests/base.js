@@ -240,13 +240,13 @@ $(function() {
   
   test('getFavicon', function() {
     equals(getFavicon('http://example.com/test.htm'),
-           'chrome://favicon/http://example.com',
+           'chrome://favicon/http://example.com/test.htm',
            'Basic URL.');
     equals(getFavicon('http://example.com'),
            'chrome://favicon/http://example.com',
            'Path-less URL.');
-    equals(getFavicon('http:/example.com'),
-           'chrome://favicon/null',
+    equals(getFavicon('bad url'),
+           'chrome://favicon/bad url',
            'Invalid URL.');
   });
   
