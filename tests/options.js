@@ -23,7 +23,7 @@ $(function() {
       equal(isValidRegex(regex), regexes[regex], regex + ' validity');
     }
   });
-  
+
   test('isValidSelector', function() {
     selectors = {
       '': true,
@@ -47,12 +47,12 @@ $(function() {
             selector + ' validity');
     }
   });
-  
+
   test('shadeBackground', function() {
     expect(13);
     var old_animate = $.fn.animate;
     var old_height = $.fn.height;
-    
+
     var animation_effects;
     $.fn.animate = function(effect, callback) {
       animation_effects.push(effect);
@@ -61,7 +61,7 @@ $(function() {
     $.fn.height = function(height) {
       equal(height, $('body').get(0).scrollHeight, 'Shader height set');
     };
-    
+
     // First time; showing.
     animation_effects = [];
     equal($('#shader').length, 0, 'Shader existence, before');
@@ -69,32 +69,32 @@ $(function() {
     equal($('#shader').length, 1, 'Shader existence, after');
     equal($('#shader').css('display'), 'block', 'Shader display');
     same(animation_effects, [{ opacity: 0.7 }], 'Animations');
-    
+
     // Second time; hiding.
     animation_effects = [];
     shadeBackground(false);
     equal($('#shader').length, 1, 'Shader existence, after #2');
     equal($('#shader').css('display'), 'none', 'Shader display');
     same(animation_effects, [{ opacity: 0 }], 'Animations');
-    
+
     // Third time; showing.
     animation_effects = [];
     shadeBackground(true);
     equal($('#shader').length, 1, 'Shader existence, after #3');
     equal($('#shader').css('display'), 'block', 'Shader display');
     same(animation_effects, [{ opacity: 0.7 }], 'Animations');
-    
+
     $('#shader').remove();
     $.fn.height = old_height;
     $.fn.animate = old_animate;
   });
-  
+
   test('findUrl', function() {
     expect(4);
     var old_closest = $.fn.closest;
     var old_find = $.fn.find;
     var old_get = $.fn.get;
-    
+
     $.fn.closest = function(selector) {
       equal(selector, '.page_record', 'Selector passed to closest()');
       return this;
@@ -107,38 +107,38 @@ $(function() {
       equal(index, 0, 'Index passed to find get()');
       return { href: 123 };
     };
-    
+
     equal(findUrl('abc'), 123, 'Found URL');
-    
+
     $.fn.closest = old_closest;
     $.fn.find = old_find;
     $.fn.get = old_get;
   });
-  
+
   test('findPageRecord', function() {
     expect(6);
     var old_$ = $;
-    
+
     closest_function_container = { closest: function(selector) {
       equal(selector, '.page_record', 'Selector passed to closest()');
       return 456;
     } };
-    
+
     $ = function(arg) {
       equal(arg, 123, 'jQuery argument');
       return closest_function_container;
     }
     equal(findPageRecord(123), 456, 'Found URL');
-    
+
     $ = function(arg) {
       equal(arg, '.page_link[href="abc"]', 'jQuery argument');
       return closest_function_container;
     }
     equal(findPageRecord('abc'), 456, 'Found URL');
-    
+
     $ = old_$;
   });
-  
+
   test('timeLogToAbsolute', function() {
     equal(timeLogToAbsolute(-6), 0.09, 'From -6');
     equal(timeLogToAbsolute(-3), 0.3, 'From -3');
@@ -154,7 +154,7 @@ $(function() {
     equal(timeLogToAbsolute(15), 438, 'From 15');
     equal(timeLogToAbsolute(17.4), 1159, 'From 17.4');
   });
-  
+
   test('timeAbsoluteToLog', function() {
     equal(timeAbsoluteToLog(1), 0, 'From 1');
     equal(timeAbsoluteToLog(1.5), 1, 'From 1.5');
@@ -167,11 +167,11 @@ $(function() {
   test('updatePageModeControls', function() {
     var span = $('.mode .mode_string');
     var input = $('.mode .mode_test');
-    
+
     updatePageModeControls($('body>div'), true);
     ok(!span.hasClass('invalid'), 'Span made valid.');
     equal(input.attr('disabled'), false, 'Input enabled.');
-    
+
     updatePageModeControls($('body>div'), false);
     ok(span.hasClass('invalid'), 'Span made invalid.');
     equal(input.attr('disabled'), true, 'Input disabled.');
@@ -180,7 +180,7 @@ $(function() {
   test('setPageCheckInterval', function() {
     expect(3);
     var old_setPageSettings = setPageSettings;
-    
+
     setPageSettings = function(url, setting, callback) {
       equal(url, 'abc', 'URL passed to setPageSettings()');
       same(setting, { check_interval: 123 * 60 * 1000 },
@@ -188,7 +188,7 @@ $(function() {
       equal(callback, BG.scheduleCheck, 'URL passed to setPageSettings()');
     };
     setPageCheckInterval('abc', '123');
-    
+
     setPageSettings = old_setPageSettings;
   });
 
@@ -199,25 +199,25 @@ $(function() {
     var old_updatePageModeControls = updatePageModeControls;
     var old_isValidRegex = isValidRegex;
     var old_isValidSelector = isValidSelector;
-    
+
     findPageRecord = function(url) {
       equal(url, 'a', 'URL passed to findPageRecord');
       return 'abc';
     };
-    
+
     try {
       setPageRegexOrSelector('a', 'b', 'c');
     } catch (e) {
       same(e.message, 'Invalid mode.', 'Result of passing an invalid mode');
     }
-    
+
     setPageSettings = function(url, settings) {
       equal(url, 'a', 'URL passed to setPageSettings');
       same(settings, { mode: 'text', regex: null, selector: null },
            'Settings passed to setPageSettings');
     };
     setPageRegexOrSelector('a', 'regex', null);
-    
+
     setPageSettings = function(url, settings) {
       ok(false, 'setPageSettings() called unnecessarily.');
     };
@@ -233,7 +233,7 @@ $(function() {
       equal(validity, false, 'Validity passed to updatePageModeControls()');
     };
     setPageRegexOrSelector('a', 'regex', 'b');
-    
+
     setPageSettings = function(url, settings) {
       equal(url, 'a', 'URL passed to setPageSettings()');
       same(settings, { mode: 'selector', selector: 'b' },
@@ -251,7 +251,7 @@ $(function() {
       equal(validity, true, 'Validity passed to updatePageModeControls()');
     };
     setPageRegexOrSelector('a', 'selector', 'b');
-    
+
     setPageSettings = old_setPageSettings;
     findPageRecord = old_findPageRecord;
     updatePageModeControls = old_updatePageModeControls;
@@ -262,12 +262,12 @@ $(function() {
   /****************************************************************************/
   module('Import & Export');
   /****************************************************************************/
-  
+
   test('exportPagesList', function() {
     expect(1);
     var old_Date_now = Date.now;
     var old_getAllPages = getAllPages;
-    
+
     Date.now = function() { return 1000; };
     getAllPages = function(callback) {
       callback([{ name: 'n1',
@@ -287,16 +287,16 @@ $(function() {
                   check_interval: 'k',
                   crc: 'l' }]);
     };
-    
+
     var expected_file = $.ajax({
       url: 'data/import_export.txt',
       async: false
     }).responseText;
-    
+
     exportPagesList(function(file) {
       equal(file, expected_file, 'Exported output');
     });
-    
+
     Date.now = old_Date_now;
     getAllPages = old_getAllPages;
   });
@@ -304,7 +304,7 @@ $(function() {
   test('importPagesList', function() {
     expect(3);
     var old_addPage = addPage;
-    
+
     addPage = function(page) {
       if (page.mode == 'a') {
         same(page, { name: 'n1',
@@ -328,21 +328,21 @@ $(function() {
         ok(false, 'Invalid page added: ' + JSON.stringify(page));
       }
     };
-    
+
     var input_file = $.ajax({
       url: 'data/import_export.txt',
       async: false
     }).responseText;
-    
+
     equal(importPagesList(input_file), 2, 'Returned pages');
-    
+
     addPage = old_addPage;
   });
 
   /****************************************************************************/
   module('Global Initialization');
   /****************************************************************************/
-  
+
   test('initializeGlobalControls', function() {
     var intializers = ['initializeColorPicker', 'initializeAnimationToggler',
                        'initializeSorter', 'initializeIntervalSliders',
@@ -353,7 +353,7 @@ $(function() {
                        'initializeExporter', 'initializeImporter',
                        'initializeGlobalChecker', 'initializeAdvancedSwitch'];
     expect(intializers.length);
-    
+
     var intializer_backup = {};
     for (var i = 0; i < intializers.length; i++) {
       intializer_backup[intializers[i]] = window[intializers[i]];
@@ -363,21 +363,21 @@ $(function() {
         };
       }
     }
-    
+
     initializeGlobalControls();
-    
+
     for (var i in intializer_backup) {
       window[i] = intializer_backup[i];
     }
   });
-  
+
   test('initializeColorPicker', function() {
     expect(8);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_BG = BG;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.badge_color, 'Setting requested via getSetting');
       return [1, 2, 3, 4];
@@ -405,21 +405,21 @@ $(function() {
         colorPicker: function() { ok(true, 'Color picker initialized.'); }
       };
     };
-    
+
     initializeColorPicker();
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     BG = old_BG;
     $ = old_$;
   });
-  
+
   test('initializeAnimationToggler', function() {
     expect(7);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.animations_disabled, 'Setting passed to getSetting');
       return 'abc';
@@ -446,22 +446,22 @@ $(function() {
       };
     };
     $.fx = { off: 123 };
-    
+
     initializeAnimationToggler();
     equal($.fx.off, false, 'JQuery effects toggler');
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     $ = old_$;
   });
-  
+
   test('initializeSorter', function() {
     expect(7);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_$ = $;
     var old_fillPagesList = fillPagesList;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.sort_by, 'Setting passed to getSetting');
       return 'abc';
@@ -490,15 +490,15 @@ $(function() {
     fillPagesList = function() {
       ok(true, 'Page list filler called.');
     };
-    
+
     initializeSorter();
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     $ = old_$;
     fillPagesList = old_fillPagesList;
   });
-  
+
   test('initializeIntervalSliders', function() {
     expect(26);
     var old_getSetting = getSetting;
@@ -507,7 +507,7 @@ $(function() {
     var old_timeLogToAbsolute = timeLogToAbsolute;
     var old_describeTime = describeTime;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.check_interval, 'Setting passed to getSetting');
       return 123;
@@ -593,9 +593,9 @@ $(function() {
       }
       return dispatcher;
     };
-    
+
     initializeIntervalSliders();
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     timeAbsoluteToLog = old_timeAbsoluteToLog;
@@ -603,13 +603,13 @@ $(function() {
     describeTime = old_describeTime;
     $ = old_$;
   });
-  
+
   test('initializeNotificationsToggler', function() {
     expect(11);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.notifications_enabled,
             'Setting passed to getSetting');
@@ -656,21 +656,21 @@ $(function() {
       }
       return dispatcher;
     };
-    
+
     initializeNotificationsToggler();
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     $ = old_$;
   });
-  
+
   test('initializeNotificationsTimeout', function() {
     expect(14);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_describeTime = describeTime;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.notifications_timeout) {
         return 678 * 1000;
@@ -733,21 +733,21 @@ $(function() {
       }
       return dispatcher;
     };
-    
+
     initializeNotificationsTimeout();
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     describeTime = old_describeTime;
     $ = old_$;
   });
-  
+
   test('initializeSoundSelector', function() {
     expect(11);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_$ = $;
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.custom_sounds) {
         return [{ name: 'a', url: 'b' }, { name: 'c', url: 'd' }];
@@ -761,9 +761,9 @@ $(function() {
       equal(name, SETTINGS.sound_alert, 'Setting passed to setSetting');
       equal(value, 'b', 'Value passed to setSetting');
     };
-    
+
     initializeSoundSelector();
-    
+
     var basic_selector = $('#basic_sound_alert select');
     var advanced_selector = $('#sound_alert select');
     equal($('option', basic_selector).length, 2, 'Basic selector option count');
@@ -771,7 +771,7 @@ $(function() {
           'Advanced selector option count');
     equal($('option', advanced_selector).length, 2,
           'Advanced selector option count');
-    
+
     setSetting = function(name, value) {
       equal(name, SETTINGS.sound_alert, 'Setting passed to setSetting');
       equal(value, 'd', 'Value passed to setSetting');
@@ -779,21 +779,21 @@ $(function() {
     basic_selector.val('d').change();
     equal(advanced_selector.val(), 'd', 'Synchronized value');
     equal($('#play_sound').attr('disabled'), false, 'Play button disabled');
-    
+
     getSetting = old_getSetting;
     setSetting = old_setSetting;
     $ = old_$;
   });
-  
+
   test('initializeSoundPlayer', function() {
     expect(7);
     var old_Audio = Audio;
     var ended_event_callback;
     var selector = $('#sound_alert select');
     var button = $('#play_sound');
-    
+
     initializeSoundPlayer();
-    
+
     Audio = function(value) {
       equal(value, 'b', 'Value passed to Audio()');
       return {
@@ -813,7 +813,7 @@ $(function() {
     ended_event_callback();
     equal(selector.attr('disabled'), false, 'Selector disabled');
     equal(button.attr('disabled'), false, 'Play button disabled');
-    
+
     Audio = old_Audio;
   });
 });

@@ -46,7 +46,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 (function() {
   // The number of updated pages that has been last shown on the badge.
   var last_count = 0;
-  
+
   // Triggers a sound alert if one is enabled.
   triggerSoundAlert = function() {
     var sound_alert = getSetting(SETTINGS.sound_alert);
@@ -56,14 +56,14 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       });
     }
   };
-  
+
   // Triggers a desktop notification if they are enabled, notifing the user of
   // updates to the pages specified in the argument.
   triggerDesktopNotification = function(pages) {
     if (!getSetting(SETTINGS.notifications_enabled)) return;
-    
+
     var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
-    
+
     var title;
     if (pages.length == 1) {
       title = chrome.i18n.getMessage('page_updated_single');
@@ -71,7 +71,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       title = chrome.i18n.getMessage('page_updated_multi',
                                      pages.length.toString());
     }
-    
+
     var content = $.map(pages, function(page) {
       return page.name;
     }).join(', ');
@@ -79,14 +79,14 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/,
                                 '$1...');
     }
-    
+
     var notification = webkitNotifications.createNotification(
         NOTIFICATION_ICON, title, content);
 
     notification.show();
     setTimeout(function() { notification.cancel(); }, timeout);
   };
-  
+
   // Checks if any pages are marked as updated, and if so, displays their count
   // on the browser action badge. If no pages are updated and the badge is
   // displayed, removes it. This also triggers sound alerts and/or desktop
@@ -100,12 +100,12 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       });
       chrome.browserAction.setBadgeText({ text: count ? String(count) : '' });
       chrome.browserAction.setIcon({ path: BROWSER_ICON });
-    
+
       if (count > last_count) {
         triggerSoundAlert();
         triggerDesktopNotification(updated_pages);
       }
-      
+
       last_count = count;
     });
   };
@@ -118,11 +118,11 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 (function() {
   // The ID of the timeout that initiates the next check.
   var check_timeout_id = 0;
-  
+
   // The time when the next check should be performed. Use by the watchdog to
   // make sure no check is missed.
   var projected_check_time = 0;
-  
+
   // Performs the page checks. Called by check() to do the actual work.
   actualCheck = function(force, callback, page_callback) {
     getAllPages(function(pages) {
@@ -134,13 +134,13 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
         return projected_check <= current_time;
       });
       var pages_checked = 0;
-      
+
       function notifyAllChecksFinished() {
         updateBadge();
         scheduleCheck();
         (callback || $.noop)();
       }
-      
+
       function notifyCheckFinished(url) {
         (page_callback || $.noop)(url);
         pages_checked++;
@@ -149,7 +149,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           notifyAllChecksFinished();
         }
       }
-      
+
       if (pages_to_check.length) {
         $.each(pages_to_check, function(i, page) {
           checkPage(page.url, notifyCheckFinished);
@@ -173,10 +173,10 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // time.
   scheduleCheck = function() {
     var current_time = Date.now();
-    
+
     getAllPages(function(pages) {
       if (pages.length == 0) return;
-      
+
       var times = $.map(pages, function(page) {
         if (page.updated || !page.last_check) {
           return current_time;
@@ -186,16 +186,16 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           return page.last_check + check_interval - current_time;
         }
       });
-  
+
       var min_time = Math.min.apply(Math, times);
-      
+
       if (min_time < MINIMUM_CHECK_SPACING) {
         min_time = MINIMUM_CHECK_SPACING;
       } else if (min_time == current_time) {
         // No pages need to be checked.
         min_time = DEFAULT_CHECK_INTERVAL;
       }
-      
+
       applySchedule(min_time);
     });
   };
@@ -240,7 +240,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
 (function() {
   var version = null;
-  
+
   // A utility function that returns the extension version, as defined in the
   // manifest.
   getExtensionVersion = function() {
@@ -252,7 +252,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       manifest = JSON.parse(manifest || 'null');
       if (manifest) version = manifest.version;
     }
-    
+
     return version; 
   };
 })();
@@ -265,7 +265,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 // required. Once all pages are impoirted, the callback is called.
 function insertPages(pages, callback) {
   var pages_to_insert = pages.length;
-  
+
   for (var i = 0; i < pages.length; i++) {
     addPage(pages[i], function() {
       if (--pages_to_insert == 0) {
@@ -278,7 +278,7 @@ function insertPages(pages, callback) {
 // Converts pages list from the 1.x format to the 3.x format.
 function importVersionOnePages(callback) {
   var pages = [];
-  
+
   $.each(getSetting('pages_to_check') || {}, function(url, vals) {
     pages.push({
       url: url,
@@ -287,7 +287,7 @@ function importVersionOnePages(callback) {
       regex: vals.regex || null
     });
   });
-  
+
   insertPages(pages, callback);
 }
 
@@ -295,7 +295,7 @@ function importVersionOnePages(callback) {
 function importVersionTwoPages(callback) {
   var pages = getSetting('pages');
   var pages_to_import = [];
-  
+
   for (var i in pages) {
     var url = pages[i];
     pages_to_import.push({
@@ -312,7 +312,7 @@ function importVersionTwoPages(callback) {
       last_changed: getSetting(url + ' last_changed')
     });
   }
-  
+
   insertPages(pages_to_import, callback);
 }
 
@@ -335,7 +335,7 @@ function bringUpToDate(from_version, callback) {
       removeUnusedSettings(localStorage);
       (callback || $.noop)();
     }
-  
+
     if (from_version < 1) {
       setSetting(SETTINGS.badge_color, [0, 180, 0, 255]);
       setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL);
@@ -346,19 +346,19 @@ function bringUpToDate(from_version, callback) {
       setSetting(SETTINGS.animations_disabled, false);
       setSetting(SETTINGS.sort_by, 'date added');
       setSetting(SETTINGS.view_all_action, 'original');
-      
+
       updateDone();
     } else if (from_version < 2) {
       setSetting(SETTINGS.view_all_action, 'original');
       delSetting('last_check');
-      
+
       importVersionOnePages(updateDone);
     } else if (from_version < 3) {
       setSetting(SETTINGS.check_interval, getSetting('timeout') ||
                                           DEFAULT_CHECK_INTERVAL);
       setSetting(SETTINGS.view_all_action, 'original');
       delSetting('timeout');
-      
+
       importVersionTwoPages(updateDone);
     } else {
       updateDone();

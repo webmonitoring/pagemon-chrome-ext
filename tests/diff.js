@@ -15,7 +15,7 @@ $(function() {
          [' ', '<span>', 'abc', '\n\n', 'def', '<br />', ' \t', '</span>'],
          'Mix of everything');
   });
-  
+
   test('isSelfClosingTag', function() {
     same(isSelfClosingTag(''), null, 'Empty string');
     same(isSelfClosingTag('abc'), null, 'Non-tag');
@@ -31,9 +31,9 @@ $(function() {
          'Slash-closed tag with attributes');
     same(isSelfClosingTag('<br class="abc">'), true,
          'Non-closed "empty" tag with attributes');
-  
+
   });
-  
+
   test('wrapText', function() {
     same(wrapText([], 'a', 'b'), [], 'Empty string');
     same(wrapText(['  '], 'a', 'b'), ['a', '  ', 'b'], 'Spaces');
@@ -50,32 +50,32 @@ $(function() {
     same(wrapText(['<span>', '<img src="img.jpg">', '</span>'], 'a', 'b'),
          ['<span>', 'a', '<img src="img.jpg">', 'b', '</span>'],
          'A bunch of HTML tags');
-    
+
     var tmp = [' ', '<span>', 'abc', '\n\n', 'def', '<br />', ' \t', '</span>'];
     same(wrapText(tmp, 'a', 'b'),
          ['a', ' ', 'b', '<span>', 'a', 'abc', '\n\n', 'def', '<br />', ' \t',
           'b', '</span>'],
          'Mix of everything');
   });
-  
+
   test('calculateHtmlDiff', function() {
     equal(calculateHtmlDiff('', ''), '', 'Empty string');
-    
+
     equal(calculateHtmlDiff('', ' '), '<ins> </ins>', 'Space addition');
     equal(calculateHtmlDiff(' ', ''), '<del> </del>', 'Space removal');
-    
+
     equal(calculateHtmlDiff('', 'a'), '<ins>a</ins>', 'Letter addition');
     equal(calculateHtmlDiff('a', ''), '<del>a</del>', 'Letter removal');
     equal(calculateHtmlDiff('a', 'b'),
           '<del>a</del><ins>b</ins>',
           'Letter swap');
-          
+
     equal(calculateHtmlDiff('', 'hello'), '<ins>hello</ins>', 'Word addition');
     equal(calculateHtmlDiff('hello', ''), '<del>hello</del>', 'Word removal');
     equal(calculateHtmlDiff('hello', 'world'),
           '<del>hello</del><ins>world</ins>',
           'Word swap');
-          
+
     equal(calculateHtmlDiff('', '<br>'), '<ins><br></ins>',
           'Self-closing tag addition');
     equal(calculateHtmlDiff('<br>', ''), '<del><br></del>',
@@ -83,7 +83,7 @@ $(function() {
     equal(calculateHtmlDiff('<br>', '<br />'),
           '<del><br></del><ins><br /></ins>',
           'Self-closing tag swap');
-          
+
     equal(calculateHtmlDiff('', '<span>'), '<span>',
           'Non-closing tag addition');
     equal(calculateHtmlDiff('<span>', ''), '<span>',
@@ -91,31 +91,31 @@ $(function() {
     equal(calculateHtmlDiff('<span>', '<p>'),
           '<span><p>',
           'Non-closing tag swap');
-          
+
     equal(calculateHtmlDiff('<span>hello<br>world</span>! This is a test.',
                             '<img src="hello_world.png"><span>Testing</span>'),
           '<ins><img src="hello_world.png"></ins><span><del>hello<br>world' +
           '</del><ins>Testing</ins></span><del>! This is a test.</del>',
           'Mixed swap');
   });
-  
+
   test('calculateTextDiff', function() {
     equal(calculateTextDiff('', ''), '<pre></pre>', 'Empty string');
-    
+
     equal(calculateTextDiff('', ' '),
           '<pre><ins> </ins></pre>',
           'Space addition');
     equal(calculateTextDiff(' ', ''),
           '<pre><del> </del></pre>',
           'Space removal');
-    
+
     equal(calculateTextDiff('', '\n'),
           '<pre><ins><br /></ins></pre>',
           'Newline addition');
     equal(calculateTextDiff('\r\n', ''),
           '<pre><del><br /></del></pre>',
           'Newline removal');
-    
+
     equal(calculateTextDiff('', 'a'),
           '<pre><ins>a</ins></pre>',
           'Letter addition');
@@ -125,7 +125,7 @@ $(function() {
     equal(calculateTextDiff('a', 'b'),
           '<pre><del>a</del><ins>b</ins></pre>',
           'Letter swap');
-          
+
     equal(calculateTextDiff('', 'hello'),
           '<pre><ins>hello</ins></pre>',
           'Word addition');
@@ -135,7 +135,7 @@ $(function() {
     equal(calculateTextDiff('hello', 'world'),
           '<pre><del>hello</del><ins>world</ins></pre>',
           'Word swap');
-          
+
     equal(calculateTextDiff('', '<span>'),
           '<pre><ins>&lt;span&gt;</ins></pre>',
           'Non-closing tag addition');
@@ -145,23 +145,23 @@ $(function() {
     equal(calculateTextDiff('<span>', '<p>'),
           '<pre>&lt;<del>span</del><ins>p</ins>&gt;</pre>',
           'Non-closing tag swap');
-          
+
     equal(calculateTextDiff('hello\n  there\n  nice\n  world!',
                             'there are\n\nno tests.'),
           '<pre><del>hello<br />  there<br />  nice<br />  world!</del><ins>' +
           'there are<br /><br />no tests.</ins></pre>',
           'Generic text swap with lots of distorted spacing');
-          
+
     equal(calculateTextDiff('hello\nthere\nnice\nworld!',
                             'there\nis\na\nworld!'),
           '<pre><del>hello<br />there<br />nice</del><ins>there<br />is' +
           '<br />a</ins><br />world!</pre>',
           'Multi-line with shared suffix');
   });
-  
+
   test('generateControls', function() {
     var $controls = generateControls('test');
-    
+
     ok($controls.is('#chrome_page_monitor_ext_orig_link'), 'Block id');
     equal($('a', $controls).length, 2, 'Links in block');
     equal($('br', $controls).length, 1, 'Line breaks in block');
@@ -184,7 +184,7 @@ $(function() {
     equal($('#del_test').css('display'), 'inline',
           '<del> display after second click');
   });
-  
+
   test('calculateBaseUrl', function() {
     equal(calculateBaseUrl('a', '', ''), 'a', 'Empty strings');
     equal(calculateBaseUrl('a', '<span>hello</span>', '<br />'), 'a',
@@ -200,7 +200,7 @@ $(function() {
     equal(calculateBaseUrl('a', '<base attr="x" href="b" type="d" />', ''), 'b',
           'Self-closed base in src with extra attributes');
   });
-  
+
   test('getInlineStyles', function() {
     equal(getInlineStyles(''), '', 'Empty string');
     equal(getInlineStyles('<span>test</span>'), '', 'Irrelevant HTML');
@@ -219,7 +219,7 @@ $(function() {
           'abc',
           'Style tag with attributes');
   });
-  
+
   test('getReferencedStyles', function() {
     equal(getReferencedStyles('').length, 0, 'Empty string');
     equal(getReferencedStyles('<span>abc</span>').length, 0, 'Irrelevant HTML');
@@ -241,39 +241,39 @@ $(function() {
                               ' rel="stylesheet"></head></html>').length, 2,
           'Two valid stylesheet link tag in HTML');
   });
-  
+
   test('findFirstChangePosition', function() {
     var content_div = $('body>div');
     var old_content = content_div.html();
-    
+
     content_div.html('');
     same(findFirstChangePosition(), { left: 0, top: 0 }, 'No <del>/<ins> tags');
-    
+
     content_div.html('<del></del>');
     same(findFirstChangePosition(), { left: 0, top: 0 }, 'Empty <del> tag');
-    
+
     content_div.html('<del>   \t\r\n   </del>');
     same(findFirstChangePosition(), { left: 0, top: 0 },
          'Whitespace-only <del> tag');
-    
+
     content_div.html('<del>a</del>');
     same(findFirstChangePosition(), $('del', content_div).position(),
          '<del> tag with content');
-    
+
     content_div.html('<ins>a</ins>');
     same(findFirstChangePosition(), $('ins', content_div).position(),
          '<ins> tag with content');
-    
+
     content_div.html('<ins>a</ins><br/><del>b</del>');
     same(findFirstChangePosition(), $('ins', content_div).position(),
          'Both <ins> and <del> tags with content');
-    
+
     content_div.html(old_content);
   });
-  
+
   test('applyDiff', function() {
     expect(28);
-    
+
     var old_calculateBaseUrl = calculateBaseUrl;
     var old_getInlineStyles = getInlineStyles;
     var old_getReferencedStyles = getReferencedStyles;
@@ -285,7 +285,7 @@ $(function() {
     var old_scrollTo = scrollTo;
     var old_alert = alert;
     var old_html = $.fn.html;
-    
+
     calculateBaseUrl = function(url, src, dest) {
       ok(true, 'calculateBaseUrl() called.');
       equal(url, 'url', 'URL passed to calculateBaseUrl()');
@@ -341,16 +341,16 @@ $(function() {
       equal(this.selector, 'body', 'Selector used when calling $.fn.html()');
       equal(html, 'diff', 'Diff passed to $.fn.html()');
     }
-    
+
     applyDiff('url', 'src', 'dest', 'text/html');
-    
+
     equal($('base[href=url2]').length, 1, '<base> tags added');
     equal($('style:last').text(), 'style1', '<style> tag content');
     equal($('link[rel=test]').length, 1, '<link> tags added');
     equal($('div.test_genControls').length, 1, 'Control blocks added');
-    
+
     $('base,style:last,link[rel=test],.test_genControls').remove();
-    
+
     calculateBaseUrl = old_calculateBaseUrl;
     getInlineStyles = old_getInlineStyles;
     getReferencedStyles = old_getReferencedStyles;
@@ -363,10 +363,10 @@ $(function() {
     alert = old_alert;
     $.fn.html = old_html;
   });
-  
+
   test('initiateDiff (valid page)', function() {
     expect(15);
-    
+
     var old_getPage = getPage;
     var old_ajax = $.ajax;
     var old_canonizePage = canonizePage;
@@ -374,7 +374,7 @@ $(function() {
     var old_setPageSettings = setPageSettings;
     var old_hide = $.fn.hide;
     var old_html = $.fn.html;
-    
+
     getPage = function(url, callback) {
       ok(true, 'getPage() called.');
       equal(url, 'test_url', 'URL passed to getPage()');
@@ -412,9 +412,9 @@ $(function() {
     $.fn.html = function() {
       ok(false, '$.fn.html() called when it shouldn\'t have.');
     }
-    
+
     initiateDiff('test_url');
-    
+
     getPage = old_getPage;
     $.ajax = old_ajax;
     canonizePage = old_canonizePage;
@@ -423,10 +423,10 @@ $(function() {
     $.fn.hide = old_hide;
     $.fn.html = old_html;
   });
-  
+
   test('initiateDiff (invalid page)', function() {
     expect(14);
-    
+
     var old_getPage = getPage;
     var old_ajax = $.ajax;
     var old_canonizePage = canonizePage;
@@ -434,7 +434,7 @@ $(function() {
     var old_setPageSettings = setPageSettings;
     var old_hide = $.fn.hide;
     var old_html = $.fn.html;
-    
+
     getPage = function(url, callback) {
       ok(true, 'getPage() called.');
       equal(url, 'test_url', 'URL passed to getPage()');
@@ -472,9 +472,9 @@ $(function() {
       ok(true, '$.fn.html() called.');
       equal(this.selector, 'div:first', 'Selector used with $.fn.html()');
     }
-    
+
     initiateDiff('test_url');
-        
+
     getPage = old_getPage;
     $.ajax = old_ajax;
     canonizePage = old_canonizePage;

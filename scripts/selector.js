@@ -44,7 +44,7 @@ function generateControls() {
                          .replace('%parent%', parent)
                          .replace('%done%', done)
                          .replace('%help%', help);
-  
+
   return $(controls);
 }
 
@@ -52,9 +52,9 @@ function generateControls() {
 // depending on the value of current_element.
 function currentElementChanged() {
   $('*').removeClass(TEMP_OUTLINE_CLASS).removeClass(OUTLINE_CLASS);
-        
+
   done_button.attr('disabled', !current_element);
-  
+
   if (current_element) {
     $(current_element).addClass(OUTLINE_CLASS);
     parent_button.removeClass(DISABLED_CLASS);
@@ -72,9 +72,9 @@ function currentElementChanged() {
 // Elements outside of <body> return null.
 function elementToSelector(element) {
   var path = [];
-  
+
   element = $(element);
-  
+
   if (element.is('body')) {
     return 'body';
   } else if (element.closest('body').length == 0) {
@@ -89,24 +89,24 @@ function elementToSelector(element) {
                            .replace(/\s+/g, '.');
 
       var selector = classname ? (tagname + '.' + classname) : tagname;
-      
+
       if (element.siblings(selector).length > 0) {
         selector += ':nth-child(' + (element.index() + 1) + ')';
       }
-      
+
       path.push(selector);
-      
+
       element = element.parent();
     }
-    
+
     if (element.attr('id')) {
       path.push('#' + element.attr('id'));
     } else {
       path.push('');
     }
-    
+
     path.reverse();
-    
+
     return path.join('>');
   }
 }
@@ -125,7 +125,7 @@ function setUpBodyHandlers() {
       $(e.target).addClass(TEMP_OUTLINE_CLASS);
     }
   });
-  
+
   $('body').click(function(e) {
     if (pick_mode) {
       var element = e.target;
@@ -154,7 +154,7 @@ function setUpButtonHandlers() {
     currentElementChanged();
     $(this).addClass(ACTIVE_CLASS);
   });
-  
+
   parent_button.click(function() {
     if (!$(this).hasClass(DISABLED_CLASS) && current_element) {
       var parent = $(current_element).parent();
@@ -166,7 +166,7 @@ function setUpButtonHandlers() {
       }
     }
   });
-  
+
   done_button.click(function() {
     if (current_selector) {
       chrome.extension.sendRequest({
@@ -177,7 +177,7 @@ function setUpButtonHandlers() {
       window.close();
     }
   });
-  
+
   help_button.click(function() {
     alert(chrome.i18n.getMessage('selector_gui_help_text'));
   });
@@ -188,13 +188,13 @@ function setUpButtonHandlers() {
 // setUpBodyHandlers() and setUpButtonHandlers().
 function initialize() {
   generateControls().appendTo('body');
-  
+
   frame = $('#' + FRAME_ID);
   pick_button = $('span[title=Pick]', frame);
   parent_button = $('span[title=Parent]', frame);
   done_button = $('input[type=button][title=Done]', frame);
   help_button = $('input[type=button][title=Help]', frame);
-  
+
   setUpButtonHandlers();
   setUpBodyHandlers();
 }

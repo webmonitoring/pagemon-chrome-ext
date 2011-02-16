@@ -14,7 +14,7 @@ $(function() {
            'Link in div from cell');
     equals(getNotificationUrl($('body')), null, 'Outside of table');
   });
-  
+
   test('markPageVisited', function() {
     expect(22);
     var old_getNotificationUrl = getNotificationUrl;
@@ -22,7 +22,7 @@ $(function() {
     var old_$ = $;
     var old_fillNotifications = fillNotifications;
     var length = null;
-    
+
     getNotificationUrl = function(arg) {
       equals(arg, 'test1', 'Argument to getNotificationUrl()');
       return 'test2';
@@ -61,7 +61,7 @@ $(function() {
       $.state = 1;
       callback();
     };
-    
+
     length = 0;
     $.state = 0;
     $.animate = function() {
@@ -69,7 +69,7 @@ $(function() {
     };
     fillNotifications = function() {
       ok(true, 'Notifications refilled.');
-      
+
       // Second test has to wait until the end of the first, which happens at
       // this point.
       length = 1;
@@ -81,7 +81,7 @@ $(function() {
         equals(callback, fillNotifications, 'Callback argument to animate()');
       };
       markPageVisited.call('test1');
-    
+
       fillNotifications = old_fillNotifications;
       $ = old_$;
       BG = old_BG;
@@ -89,13 +89,13 @@ $(function() {
     };
     markPageVisited.call('test1');
   });
-  
+
   test('monitorCurrentPage', function() {
     expect(5);
     var old_getSelected = chrome.tabs.getSelected;
     var old_addPage = addPage;
     var old_updateButtonsState = updateButtonsState;
-    
+
     chrome.tabs.getSelected = function(id, callback) {
       equals(id, null, 'ID argument to getSelected()');
       ok($('#monitor_page').hasClass('inprogress'), 'In-progress class added.');
@@ -111,20 +111,20 @@ $(function() {
     updateButtonsState = function() {
       ok(true, 'Buttons state updated.');
     };
-    
+
     monitorCurrentPage();
-    
+
     updateButtonsState = old_updateButtonsState;
     addPage = old_addPage;
     chrome.tabs.getSelected = old_getSelected;
   });
-  
+
   test('fillNotifications', function() {
     expect(4);
     var old_getAllUpdatedPages = getAllUpdatedPages;
     var old_updateButtonsState = updateButtonsState;
     var old_getFavicon = getFavicon;
-    
+
     getAllUpdatedPages = function(callback) {
       callback([{ url: 'u1', name: 'n1' }, { url: 'u2', name: 'n2' }]);
     };
@@ -134,35 +134,35 @@ $(function() {
     getFavicon = function(url) {
       return 'test_' + url;
     };
-    
+
     fillNotifications(function() {
       var expected = $('#notifications_expected tbody').html();
       var got = $('#notifications tbody').html();
       equals(got.replace(/^\s+|\s+$/, ''), expected.replace(/^\s+|\s+$/, ''),
              'Contents of table when 2 pages are supplied');
     });
-    
+
     getAllUpdatedPages = function(callback) { callback([]); };
     fillNotifications(function() {
       var expected = $('#templates .empty').get(0).outerHTML;
       var got = $('#notifications tbody').get(0).innerHTML;
       equals(got, expected, 'Contents of table when no pages are supplied');
     });
-    
+
     getFavicon = old_getFavicon;
     updateButtonsState = old_updateButtonsState;
     getAllUpdatedPages = old_getAllUpdatedPages;
   });
-  
+
   test('updateButtonsState / Monitor This Page', function() {
     expect(9);
     var old_getSelected = chrome.tabs.getSelected;
     var old_isPageMonitored = isPageMonitored;
-    
+
     function isMonitorButtonEnabled() {
       var page_monitored_message = chrome.i18n.getMessage('page_monitored');
       var monitor_message = chrome.i18n.getMessage('monitor');
-      
+
       if ($('#monitor_page').hasClass('inactive') &&
           $('#monitor_page span').text() == page_monitored_message &&
           $('#monitor_page img').attr('src') == 'img/monitor_inactive.png') {
@@ -175,7 +175,7 @@ $(function() {
         throw new Error('Inconsistent monitoring button state.');
       };
     }
-    
+
     chrome.tabs.getSelected = function(id, callback) {
       equals(id, null, 'ID argument to getSelected()');
       callback({ url: 'qqq://example.com/' });
@@ -186,7 +186,7 @@ $(function() {
     };
     updateButtonsState();
     ok(!isMonitorButtonEnabled(), 'Disabled with invalid URL.');
-    
+
     chrome.tabs.getSelected = function(id, callback) {
       equals(id, null, 'ID argument to getSelected()');
       callback({ url: 'http://example.com/' });
@@ -197,36 +197,36 @@ $(function() {
     };
     updateButtonsState();
     ok(isMonitorButtonEnabled(), 'Enabled with valid, unmonitored URL.');
-    
+
     isPageMonitored = function(url, callback) {
       equals(url, 'http://example.com/', 'URL argument to isPageMonitored()');
       callback(true);
     };
     updateButtonsState();
     ok(!isMonitorButtonEnabled(), 'Disabled with valid, monitored URL.');
-    
+
     isPageMonitored = old_isPageMonitored;
     chrome.tabs.getSelected = old_getSelected;
   });
-  
+
   test('updateButtonsState / View All', function() {
     $('#notifications').html('');
     updateButtonsState();
     ok($('#view_all').hasClass('inactive'), 'Added inactive class.');
     equal($('#view_all img').attr('src'), 'img/view_all_inactive.png',
           'Inactive image.');
-    
+
     $('#templates .notification').appendTo('#notifications');
     updateButtonsState();
     ok(!$('#view_all').hasClass('inactive'), 'Removed inactive class.');
     equal($('#view_all img').attr('src'), 'img/view_all.png',
           'Active image.');
   });
-  
+
   test('updateButtonsState / Check All Now', function() {
     var old_getAllPageURLs = getAllPageURLs;
     var old_getAllUpdatedPages = getAllUpdatedPages;
-    
+
     getAllPageURLs = function(callback) {
       callback([]);
     };
@@ -237,7 +237,7 @@ $(function() {
     ok($('#check_now').hasClass('inactive'), 'Added inactive class.');
     equal($('#check_now img').attr('src'), 'img/refresh_inactive.png',
           'Inactive image.');
-    
+
     getAllPageURLs = function(callback) {
       callback(['a', 'b']);
     };
@@ -245,7 +245,7 @@ $(function() {
     ok(!$('#check_now').hasClass('inactive'), 'Removed inactive class.');
     equal($('#check_now img').attr('src'), 'img/refresh.png',
           'Active image.');
-    
+
     getAllPageURLs = function(callback) {
       callback([1, 2, 3]);
     };
@@ -256,11 +256,11 @@ $(function() {
     ok($('#check_now').hasClass('inactive'), 'Readded inactive class.');
     equal($('#check_now img').attr('src'), 'img/refresh_inactive.png',
           'Inactive image.');
-    
+
     getAllPageURLs = old_getAllPageURLs;
     getAllUpdatedPages = old_getAllUpdatedPages;
   });
-  
+
   test('checkAllPages', function() {
     expect(29);
     var old_getAllPageURLs = getAllPageURLs;
@@ -270,9 +270,9 @@ $(function() {
     var old_show = $.fn.show;
     var old_click = $.fn.click;
     var old_fillNotifications = fillNotifications;
-    
+
     BG = {};
-    
+
     getAllPageURLs = function(callback) {
       callback([]);
     };
@@ -280,14 +280,14 @@ $(function() {
       ok(false, 'Check called when there are no URLs to check.');
     };
     checkAllPages();
-    
+
     $('#templates .notification').appendTo('#notifications');
     getAllPageURLs = function(callback) {
       callback(['a']);
     };
     checkAllPages();
-    
-    
+
+
     $('#notifications').html('');
     getAllPageURLs = function(callback) {
       callback(['a']);
@@ -301,7 +301,7 @@ $(function() {
       ok(this.is('#notifications'), 'Animating #notifications.');
       same(properties, { opacity: 0.01 }, 'Animation target');
       equal(speed, 'slow', 'Animation speed');
-      
+
       $.fn.show = function() {
         ok($(this).is('#check_all_test'), 'Showing #check_all_test.');
         return this;
@@ -317,12 +317,12 @@ $(function() {
       ok($('#check_all_test').hasClass('loading'), 'Added loading class.');
       var expected = $('#templates .loading_spacer').get(0).outerHTML;
       equal($('#check_all_test').html(), expected, 'Loading bar content');
-      
+
       return this;
     };
     BG.check = function(force, callback) {
       equal(force, true, 'Force argument to BG.check()');
-      
+
       $.fn.animate = function(properties, speed, callback) {
         ok(this.is('#notifications'), 'Animating #notifications again.');
         same(properties, { opacity: 0 }, 'Animation target');
@@ -334,7 +334,7 @@ $(function() {
     fillNotifications = function(callback) {
       var notifications = $('#notifications');
       notifications.html('test');
-      
+
       var expected_properties = { height: notifications.height() + 'px' };
       $.fn.animate = function(properties, speed, callback) {
         ok(this.is('#notifications'), 'Animating #notifications yet again.');
@@ -343,7 +343,7 @@ $(function() {
         ok(!notifications.hasClass('loading'), 'Loading class removed.');
         equal(notifications.html(), '', 'Table contents');
         equal(notifications.css('height'), '50px', 'Table height');
-        
+
         $.fn.animate = function(properties, speed) {
           ok(this.is('#notifications'), 'Final #notifications animation.');
           same(properties, { opacity: 1 }, 'Animation target');
@@ -360,8 +360,8 @@ $(function() {
       callback();
     };
     checkAllPages();
-    
-    
+
+
     fillNotifications = old_fillNotifications;
     $.fn.click = old_click;
     $.fn.show = old_show;
@@ -370,12 +370,12 @@ $(function() {
     BG = old_BG;
     getAllPageURLs = old_getAllPageURLs;
   });
-  
+
   test('openAllPages', function() {
     expect(4);
     var old_getSetting = getSetting;
     var old_click = $.fn.click;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.view_all_action, 'Name of the requested setting');
       return 'diff';
@@ -384,7 +384,7 @@ $(function() {
       equal(this.selector, '#notifications .view_diff', 'Links triggered');
     };
     openAllPages();
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.view_all_action, 'Name of the requested setting');
       return 'originals';
@@ -393,29 +393,29 @@ $(function() {
       equal(this.selector, '#notifications .page_link', 'Links triggered');
     };
     openAllPages();
-    
+
     $.fn.click = old_click;
     getSetting = old_getSetting;
   });
-  
+
   test('openLinkInNewTab', function() {
     expect(2);
     var old_create = chrome.tabs.create;
     var event = {preventDefault: function() { ok(true, 'Default prevented.'); }};
-    
+
     chrome.tabs.create = function(arg) {
       same(arg, { url: 'test', selected: false }, 'Argument to create()');
     };
     openLinkInNewTab.call({ href: 'test' }, event);
-    
+
     chrome.tabs.create = old_create;
   });
-  
+
   test('openDiffPage', function() {
     expect(2);
     var old_create = chrome.tabs.create;
     var old_getNotificationUrl = getNotificationUrl;
-    
+
     chrome.tabs.create = function(arg) {
       same(arg, { url: 'diff.htm#' + btoa('test2'), selected: false },
            'Argument to create()');
@@ -425,16 +425,16 @@ $(function() {
       return 'test2';
     };
     openDiffPage.call('test1');
-    
+
     getNotificationUrl = old_getNotificationUrl;
     chrome.tabs.create = old_create;
   });
-  
+
   test('stopMonitoring', function() {
     expect(2);
     var old_removePage = BG.removePage;
     var old_getNotificationUrl = getNotificationUrl;
-    
+
     BG.removePage = function(arg) {
       equal(arg, 'test2', 'Argument to create()');
     };
@@ -443,16 +443,16 @@ $(function() {
       return 'test2';
     };
     stopMonitoring.call('test1');
-    
+
     getNotificationUrl = old_getNotificationUrl;
     BG.removePage = old_removePage;
   });
-  
+
   test('setUpHandlers', function() {
     expect(11);
     var old_click = $.fn.click;
     var old_live = $.fn.live;
-    
+
     $.fn.click = function(handler) {
       switch (this.selector) {
         case '#monitor_page':
@@ -488,7 +488,7 @@ $(function() {
       }
     };
     setUpHandlers();
-    
+
     $.fn.live = old_live;
     $.fn.click = old_click;
   });
