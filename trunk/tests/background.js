@@ -9,23 +9,23 @@ $(function() {
       ok(window[constants[i]] !== undefined, constants[i] + ' is defined.');
     }
   });
-  
+
   /****************************************************************************/
   module('Update Notifications');
   /****************************************************************************/
-  
+
   test('triggerSoundAlert', function() {
     expect(4);
     var old_getSetting = getSetting;
     var old_Audio = Audio;
-    
+
     getSetting = function(name) {
       equal(name, SETTINGS.sound_alert, 'Name of requested setting');
       return 'test';
     };
     Audio = function(url) {
       equal(url, 'test', 'Audio URL');
-      
+
       return {
         addEventListener: function(event, handler) {
           equal(event, 'canplaythrough', 'Audio event');
@@ -38,11 +38,11 @@ $(function() {
       };
     };
     triggerSoundAlert();
-    
+
     Audio = old_Audio;
     getSetting = old_getSetting;
   });
-  
+
   test('triggerDesktopNotification', function() {
     expect(12);
     var old_getSetting = getSetting;
@@ -55,7 +55,7 @@ $(function() {
                                'test test test test test test test test test ' +
                                'test test test test test test test test test ' +
                                'test test test...';
-    
+
     setTimeout = function(callback, timeout) {
       equal(timeout, 12345, 'Timeout delay');
       callback();
@@ -70,7 +70,7 @@ $(function() {
       }
     };
     triggerDesktopNotification([{ name: page_title }]);
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.notifications_enabled) {
         return true;
@@ -95,7 +95,7 @@ $(function() {
       };
     };
     triggerDesktopNotification([{ name: page_title }]);
-    
+
     webkitNotifications.createNotification = function(icon, title, content) {
       equal(title, chrome.i18n.getMessage('page_updated_multi', '2'),
             'Notification title');
@@ -110,12 +110,12 @@ $(function() {
       };
     };
     triggerDesktopNotification([{ name: 'a' }, { name: 'b' }]);
-    
+
     setTimeout = old_setTimeout;
     webkitNotifications.createNotification = old_createNotification;
     getSetting = old_getSetting;
   });
-  
+
   test('updateBadge', function() {
     expect(11);
     var old_getAllUpdatedPages = getAllUpdatedPages;
@@ -123,7 +123,7 @@ $(function() {
     var old_triggerSoundAlert = triggerSoundAlert;
     var old_triggerDesktopNotification = triggerDesktopNotification;
     var old_getSetting = getSetting;
-    
+
     getAllUpdatedPages = function(callback) { callback([1, 2, 3]); };
     getSetting = function(name) {
       if (name == SETTINGS.badge_color) {
@@ -148,7 +148,7 @@ $(function() {
       same(pages, [1, 2, 3], 'Pages passed to desktop notification trigger');
     };
     updateBadge();
-    
+
     triggerSoundAlert = function() {
       ok(false, 'Sound alert triggered on duplicate update.');
     };
@@ -156,7 +156,7 @@ $(function() {
       ok(false, 'Desktop notification triggered on duplicate update.');
     };
     updateBadge();
-    
+
     getAllUpdatedPages = function(callback) { callback([]); };
     chrome.browserAction.setBadgeText = function(text) {
       same(text, { text: '' }, 'Badge text');
@@ -168,18 +168,18 @@ $(function() {
       ok(false, 'Desktop notification triggered on empty update.');
     };
     updateBadge();
-    
+
     getSetting = old_getSetting;
     triggerDesktopNotification = old_triggerDesktopNotification;
     triggerSoundAlert = old_triggerSoundAlert;
     chrome.browserAction = old_browserAction;
     getAllUpdatedPages = old_getAllUpdatedPages;
   });
-  
+
   /****************************************************************************/
   module('Check Scheduling');
   /****************************************************************************/
-  
+
   test('actualCheck', function() {
     expect(10);
     var old_getAllPages = getAllPages;
@@ -189,7 +189,7 @@ $(function() {
     var old_getSetting = getSetting;
     var old_checkPage = checkPage;
     var old_EPSILON = EPSILON;
-    
+
     getAllPages = function(callback) {
       callback([{ url: 'a', check_interval: 109, last_check: 500 },
                 { url: 'b', check_interval: 110, last_check: 500 },
@@ -210,7 +210,7 @@ $(function() {
       }
     };
     EPSILON = 10;
-    
+
     var pages_checked = 0;
     checkPage = function(url, callback) {
       if (url == 'a' || url == 'b' || url == 'e' || url == 'f') {
@@ -236,7 +236,7 @@ $(function() {
         ok(false, 'Too many page callbacks called.');
       }
     });
-    
+
     var pages_checked = 0;
     checkPage = function(url, callback) {
       pages_checked++;
@@ -258,7 +258,7 @@ $(function() {
         ok(false, 'Too many page callbacks called.');
       }
     });
-    
+
     EPSILON = old_EPSILON;
     getAllPages = old_getAllPages;
     Date.now = old_Date_now;
@@ -267,13 +267,13 @@ $(function() {
     getSetting = old_getSetting;
     checkPage = old_checkPage;
   });
-  
+
   test('applySchedule', function() {
     expect(6);
     var old_Date_now = Date.now;
     var old_clearTimeout = clearTimeout;
     var old_setTimeout = setTimeout;
-    
+
     Date.now = function() { return 100; };
     clearTimeout = function() {
       ok(true, 'Timeout cleared.');
@@ -288,12 +288,12 @@ $(function() {
       equal(timeout_id, 123, 'Old timeout ID');
     };
     applySchedule(42);
-    
+
     Date.now = old_Date_now;
     clearTimeout = old_clearTimeout;
     setTimeout = old_setTimeout;
   });
-  
+
   test('scheduleCheck', function() {
     expect(3);
     var old_Date_now = Date.now;
@@ -301,7 +301,7 @@ $(function() {
     var old_getSetting = getSetting;
     var old_applySchedule = applySchedule;
     var old_MINIMUM_CHECK_SPACING = MINIMUM_CHECK_SPACING;
-    
+
     Date.now = function() { return 100; };
     getAllPages = function(callback) {
       callback([{ last_check: 100, check_interval: 42 },
@@ -309,7 +309,7 @@ $(function() {
                 { last_check: 100 }]);
     };
     MINIMUM_CHECK_SPACING = 30;
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.check_interval) {
         return 75;
@@ -321,7 +321,7 @@ $(function() {
       equal(time, 42, 'Schedule application time (page)');
     };
     scheduleCheck();
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.check_interval) {
         return 40;
@@ -333,7 +333,7 @@ $(function() {
       equal(time, 40, 'Schedule application time (global)');
     };
     scheduleCheck();
-    
+
     getSetting = function(name) {
       if (name == SETTINGS.check_interval) {
         return 25;
@@ -345,20 +345,20 @@ $(function() {
       equal(time, 30, 'Schedule application time (min)');
     };
     scheduleCheck();
-    
+
     Date.now = old_Date_now;
     getAllPages = old_getAllPages;
     getSetting = old_getSetting;
     applySchedule = old_applySchedule;
     MINIMUM_CHECK_SPACING = old_MINIMUM_CHECK_SPACING;
   });
-  
+
   test('check', function() {
     expect(7);
     var old_$ = $;
     var old_actualCheck = actualCheck;
     var old_applySchedule = applySchedule;
-    
+
     $ = { ajax: function(args) {
       equal(args.type, 'HEAD', 'Request type');
       equal(args.url, RELIABLE_CHECKPOINT, 'Checkpoint URL');
@@ -370,13 +370,13 @@ $(function() {
       equal(page_callback, 789, 'Page callback argument to actualCheck');
     };
     check(123, 456, 789);
-    
+
     $ = { ajax: function(args) { args.complete({ status: 404 }); } };
     applySchedule = function(delay) {
       equal(delay, RESCHEDULE_DELAY, 'Rescheduling delay');
     };
     check(null, function() { ok(true, 'Callback called.'); }, null);
-    
+
     $ = old_$;
     actualCheck = old_actualCheck;
     applySchedule = old_applySchedule;
@@ -388,7 +388,7 @@ $(function() {
     var old_setTimeout = setTimeout;
     var old_WATCHDOG_TOLERANCE = WATCHDOG_TOLERANCE;
     var old_scheduleCheck = scheduleCheck;
-    
+
     Date.now = function() { return 100; };
     applySchedule(100);
 
@@ -398,17 +398,17 @@ $(function() {
     scheduleCheck = function() { ok(true, 'Check scheduled.'); };
     Date.now = function() { return 220; };
     watchdog();
-    
+
     scheduleCheck = function() { ok(false, 'Unnecessary check scheduled.'); };
     Date.now = function() { return 200; };
     watchdog();
-    
+
     scheduleCheck = old_scheduleCheck;
     Date.now = old_Date_now;
     setTimeout = old_setTimeout;
     WATCHDOG_TOLERANCE = old_WATCHDOG_TOLERANCE;
   });
-  
+
   /****************************************************************************/
   module('Initialization');
   /****************************************************************************/
@@ -416,29 +416,29 @@ $(function() {
   test('getExtensionVersion', function() {
     expect(3);
     var old_$ = $;
-    
+
     $ = { ajax: function(args) {
       equal(args.url, 'manifest.json', 'Requested file');
       equal(args.async, false, 'Asynchronous request');
       return { responseText: '{ "version": 123 }' };
     } };
     equal(getExtensionVersion(), 123, 'Dummy extension version');
-    
+
     $ = old_$;
   });
 
   test('insertPages', function() {
     expect(4);
     var old_addPage = addPage;
-    
+
     var page_expected = 1;
     addPage = function(page, callback) {
       equal(page, page_expected++, 'Page added');
       callback();
     }
-    
+
     insertPages([1, 2, 3], function() { ok(true, 'Final callback called.'); });
-    
+
     addPage = old_addPage;
   });
 
@@ -446,7 +446,7 @@ $(function() {
     expect(2);
     var old_insertPages = insertPages;
     var old_getSetting = getSetting;
-    
+
     var raw_pages = {
       'a': { name: 'an', regex: 'hello' },
       'b': { name: 'bn', regex: false },
@@ -457,7 +457,7 @@ $(function() {
       { url: 'b', name: 'bn', mode: 'text', regex: null },
       { url: 'c', name: 'cn', mode: 'text', regex: null }
     ];
-    
+
     getSetting = function(name) {
       if (name == 'pages_to_check') {
         return raw_pages;
@@ -465,14 +465,14 @@ $(function() {
         ok(false, 'Invalid setting requested.');
       }
     };
-    
+
     insertPages = function(page, callback) {
       same(page, expected_pages, 'Pages to insert');
       equal(callback, 123, 'Dummy callback');
     };
-    
+
     importVersionOnePages(123);
-    
+
     getSetting = old_getSetting;
     insertPages = old_insertPages;
   });
@@ -481,7 +481,7 @@ $(function() {
     expect(2);
     var old_insertPages = insertPages;
     var old_getSetting = getSetting;
-    
+
     var raw_pages = {'a': { name: 'an', mode: 'am', regex: 'ar', selector: 'as',
                             timeout: 'at', html: 'ah', crc: 'ac', updated: 'au',
                             last_check: 'al', last_changed: 'al2' },
@@ -496,7 +496,7 @@ $(function() {
         check_interval: 'bt', html: 'bh', crc: 'bc', updated: 'bu',
         last_check: 'bl', last_changed: 'bl2' }
     ];
-    
+
     getSetting = function(name) {
       if (name == 'pages') {
         return ['a', 'b'];
@@ -505,14 +505,14 @@ $(function() {
         return raw_pages[parts[0]][parts[1]];
       }
     };
-    
+
     insertPages = function(page, callback) {
       same(page, expected_pages, 'Pages to insert');
       equal(callback, 123, 'Dummy callback');
     };
-    
+
     importVersionTwoPages(123);
-    
+
     getSetting = old_getSetting;
     insertPages = old_insertPages;
   });
@@ -520,12 +520,12 @@ $(function() {
   test('removeUnusedSettings', function() {
     expect(1);
     var old_SETTINGS = SETTINGS;
-    
+
     storage = { a: 1, b: 2, c: 3, d: 4 };
     SETTINGS = { a: 5, c: 6 };
     removeUnusedSettings(storage);
     same(storage, { a: 1, c: 3 }, 'Local storage after cleaning');
-    
+
     SETTINGS = old_SETTINGS;
   });
 
@@ -539,9 +539,9 @@ $(function() {
     var old_setSetting = setSetting;
     var old_delSetting = delSetting;
     var old_getSetting = getSetting;
-    
+
     var settings_set = {};
-    
+
     initializeStorage = function(callback) {
       callback();
     };
@@ -562,12 +562,12 @@ $(function() {
       ok(true, 'Imported from V1.');
       callback();
     };
-    
+
     // Version 3.x.
     settings_set = {};
     bringUpToDate(3, function() { ok(true, 'Callback called.'); });
     same(settings_set, { version: 42 }, 'V3 updates');
-    
+
     // Version 2.x.
     settings_set = {};
     delSetting = function(name) {
@@ -583,7 +583,7 @@ $(function() {
       view_all_action: 'original',
       check_interval: 456
     }, 'V2 updates');
-    
+
     // Version 1.x.
     settings_set = {};
     delSetting = function(name) {
@@ -594,7 +594,7 @@ $(function() {
       version: 42,
       view_all_action: 'original'
     }, 'V1 updates');
-    
+
     // First install.
     settings_set = {};
     bringUpToDate(0.5, function() { ok(true, 'Callback called.'); });
@@ -611,7 +611,7 @@ $(function() {
       version: 42,
       view_all_action: 'original'
     }, 'First install updates');
-    
+
     initializeStorage = old_initializeStorage;
     getExtensionVersion = old_getExtensionVersion;
     removeUnusedSettings = old_removeUnusedSettings;

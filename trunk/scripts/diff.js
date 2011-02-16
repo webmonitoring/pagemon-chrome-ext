@@ -27,10 +27,10 @@ function htmlToList(html) {
   var mode = CHAR;
   var current = '';
   var buffer = [];
-  
+
   for (var pos = 0; pos < html.length; pos++) {
     var character = html[pos];
-    
+
     if (mode == TAG) {
       current += character;
       if (character == '>') {
@@ -52,13 +52,13 @@ function htmlToList(html) {
     }
   }
   buffer.push(current);
-  
+
   var filtered = [];
-  
+
   for (var i = 0; i < buffer.length; i++) {
     if (buffer[i] != '') filtered.push(buffer[i]);
   }
-  
+
   return filtered;
 }
 
@@ -69,10 +69,10 @@ function htmlToList(html) {
 function isSelfClosingTag(tag) {
   if (!tag.match(/^<[^]*>$/)) return null;
   if (tag.match(/\/\s*>$/)) return true;
-  
+
   var tagname = tag.substring(1).match(/^\w+\b/);
   if (tagname && tagname[0].match(EMPTY_HTML_TAGS_REGEX)) return true;
-  
+
   return false;
 }
 
@@ -83,7 +83,7 @@ function isSelfClosingTag(tag) {
 function wrapText(list, prefix, suffix) {
   var out = [];
   var buffer = [];
-  
+
   for (var i = 0; i < list.length; i++) {
     if (list[i][0] == '<' && !isSelfClosingTag(list[i])) {
       if (buffer.length > 0) {
@@ -97,14 +97,14 @@ function wrapText(list, prefix, suffix) {
       buffer.push(list[i]);
     }
   }
-  
+
   if (buffer.length > 0) {
     out.push(prefix);
     out = out.concat(buffer);
     out.push(suffix);
     buffer = [];
   }
-  
+
   return out;
 }
 
@@ -115,17 +115,17 @@ function wrapText(list, prefix, suffix) {
 function calculateHtmlDiff(src, dst) {
   src = htmlToList(src);
   dst = htmlToList(dst);
-  
+
   var opcodes = new difflib.SequenceMatcher(src, dst).get_opcodes();
   var buffer = [];
-  
+
   for (var i = 0; i < opcodes.length; i++) {
     var opcode = opcodes[i][0];
     var src_start = opcodes[i][1];
     var src_end = opcodes[i][2];
     var dst_start = opcodes[i][3];
     var dst_end = opcodes[i][4];
-    
+
     switch (opcode) {
       case 'replace':
         var deleted = src.slice(src_start, src_end);
@@ -150,7 +150,7 @@ function calculateHtmlDiff(src, dst) {
         return null;
     }
   }
-  
+
   return buffer.join('');
 }
 
@@ -164,7 +164,7 @@ function calculateTextDiff(src, dst) {
   var opcodes = differ.diff_main(src, dst);
   differ.diff_cleanupSemantic(opcodes);
   var buffer = [];
-  
+
   buffer.push('<pre>');
   for (var i = 0; i < opcodes.length; i++) {
     var mode = opcodes[i][0];
@@ -172,7 +172,7 @@ function calculateTextDiff(src, dst) {
                                .replace(/</g, '&lt;')
                                .replace(/>/g, '&gt;')
                                .replace(/\r\n|\r|\n/g, '<br />');
-    
+
     switch (mode) {
       case DIFF_DELETE:
         buffer.push('<del>' + content + '</del>');
@@ -190,7 +190,7 @@ function calculateTextDiff(src, dst) {
     }
   }
   buffer.push('</pre>');
-  
+
   return buffer.join('');
 }
 
@@ -217,9 +217,9 @@ function generateControls(url) {
                          .replace('%title%', title)
                          .replace('%original%', original)
                          .replace('%hide%', hide);
-  
+
   var $controls = $(controls);
-  
+
   $('a:last', $controls).click(function() {
     if ($(this).text() == show) {
       $(this).text(hide);
@@ -229,7 +229,7 @@ function generateControls(url) {
     $('del').toggle();
     return false;
   });
-  
+
   return $controls;
 }
 
@@ -245,7 +245,7 @@ function calculateBaseUrl(url, src, dst) {
   } else if (dst_base && dst_base.length > 0) {
     base = dst_base[dst_base.length - 1];
   }
-  
+
   return base;
 }
 
@@ -254,13 +254,13 @@ function calculateBaseUrl(url, src, dst) {
 function getInlineStyles(html) {
   var styles = html.match(/<style[^>]*>(.*?)<\/style>/ig);
   var buffer = [];
-  
+
   if (styles) {
     for (var i = 0; i < styles.length; i++) {
       buffer.push(styles[i].replace(/<\/?style[^>]*>/ig, ''));
     }
   }
-  
+
   return buffer.join('\n');
 }
 
@@ -268,7 +268,7 @@ function getInlineStyles(html) {
 // the supplied HTML string.
 function getReferencedStyles(html) {
   var links = html.match(/<link[^>]*>/ig);
-  
+
   return links ? $(links.join('')).filter('[rel=stylesheet]') : $([]);
 }
 
@@ -277,7 +277,7 @@ function findFirstChangePosition() {
   var pos = $('ins,del').filter(function() {
     return $(this).text().replace(/^\s*$/, '');
   }).first().position();
-  
+
   return pos || { left: 0, top: 0 };
 }
 
@@ -290,17 +290,17 @@ function applyDiff(url, src, dst, type) {
   $('<base />').attr('href', calculateBaseUrl(url, src, dst)).appendTo('head');
   $('<style type="text/css">').text(getInlineStyles(src)).appendTo('head');
   getReferencedStyles(src).appendTo('head');
-  
+
   // Get diffed body.
   var is_type_html = type.match(/\b(x|xht|ht)ml\b/);
   var differ = is_type_html ? calculateHtmlDiff : calculateTextDiff;
   var compiled = differ(getStrippedBody(src), getStrippedBody(dst));
   if (compiled === null) alert(chrome.i18n.getMessage('diff_error'));
   $('body').html(compiled);
-  
+
   // Insert controls.
   generateControls(url).appendTo('body');
-  
+
   // Scroll to the first change.
   var pos = findFirstChangePosition();
   window.scrollTo(pos.left, pos.top - SCROLL_MARGIN);
@@ -318,7 +318,7 @@ function initiateDiff(url) {
       dataType: 'text',
       success: function(new_html, _, xhr) {
         var type = xhr.getResponseHeader('Content-type');
-          
+
         if (page.html) {
           applyDiff(url, page.html, canonizePage(new_html, type), type);
         } else {

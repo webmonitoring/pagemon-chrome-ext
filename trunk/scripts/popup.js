@@ -16,11 +16,11 @@ function getNotificationUrl(context) {
 function markPageVisited() {
   var url = getNotificationUrl(this);
   var that = this;
-  
+
   BG.setPageSettings(url, { updated: false }, function() {
     BG.updateBadge();
     BG.takeSnapshot(url, BG.scheduleCheck);
-    
+
     $(that).closest('.notification td').slideUp('slow', function() {
       if ($('#notifications .notification').length == 1) {
         $('#notifications').animate(
@@ -51,30 +51,30 @@ function monitorCurrentPage() {
 function fillNotifications(callback) {
   getAllUpdatedPages(function(pages) {
     $('#notifications').html('');
-    
+
     if (pages.length > 0) {
       $.each(pages, function(i, page) {
         var notification = $('#templates .notification').clone();
-    
+
         var name = page.name || chrome.i18n.getMessage('untitled', page.url);
         if (name.length > 60) {
           name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
         }
-        
+
         notification.find('.page_link').attr('href', page.url).text(name);
         notification.find('.favicon').attr({ src: getFavicon(page.url) });
         notification.find('.view_diff').attr({
           href: 'diff.htm#' + btoa(page.url)
         });
-      
+
         notification.appendTo('#notifications');
       });
     } else {
       $('#templates .empty').clone().appendTo('#notifications');
     }
-    
+
     updateButtonsState();
-    
+
     (callback || $.noop)();
   });
 }
@@ -105,7 +105,7 @@ function updateButtonsState() {
       }
     });
   });
-  
+
   // Enable/Disable the View All button.
   if ($('#notifications .notification').length) {
     $('#view_all').removeClass('inactive');
@@ -114,7 +114,7 @@ function updateButtonsState() {
     $('#view_all').addClass('inactive');
     $('#view_all img').attr('src', 'img/view_all_inactive.png');
   }
-  
+
   // Enable/disable the Check All Now button.
   getAllPageURLs(function(urls) {
     getAllUpdatedPages(function(updated_urls) {
@@ -137,15 +137,15 @@ function checkAllPages() {
   getAllPageURLs(function(urls) {
     var records_displayed = $('#notifications .notification').length;
     var fadeout_target;
-    
+
     // If there are no pages to check, return.
     if (urls.length - records_displayed <= 0) {
       return;
     }
-    
+
     // Disable this event handler.
     $('#check_now').unbind('click');
-    
+
     // Slide in the notifications list.
     // NOTE: Setting opacity to 0 leads to jumpiness (maybe setting
     //       display: none), so using 0.01 as a workaround.
@@ -154,7 +154,7 @@ function checkAllPages() {
     } else {
       fadeout_target = { opacity: 0.01 };
     }
-    
+
     $('#notifications').animate(fadeout_target, 'slow', function() {
       // Once the list has slid into its minimal state, remove all contents
       // and fade in the loader.
@@ -162,7 +162,7 @@ function checkAllPages() {
       $('#templates .loading_spacer').clone().appendTo($(this));
       $(this).show().animate({ opacity: 1.0 }, 400);
     });
-    
+
     // Run the actual check.
     BG.check(true, function() {
       // Fade out the loader.
@@ -173,7 +173,7 @@ function checkAllPages() {
           // Remember the height and content of the table.
           var height = that.height();
           var html = that.html();
-          
+
           // Remove the loader, empty the table, and reset its height back to
           // 50px. The user does not see any change from the time the fade-out
           // finished.
@@ -229,7 +229,7 @@ function setUpHandlers() {
   $('#monitor_page').click(monitorCurrentPage);
   $('#check_now').click(checkAllPages);
   $('#view_all').click(openAllPages);
-  
+
   // Live handlers for the per-notifications buttons.
   var buttons = $('.page_link,.mark_visited,.view_diff,.stop_monitoring');
   buttons.live('click', markPageVisited);

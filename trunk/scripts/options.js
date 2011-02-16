@@ -36,7 +36,7 @@ function shadeBackground(show) {
   var dark = $('#shader');
   if (dark.length == 0) dark = $('<div id="shader" />').appendTo('body');
   dark.height($('body').get(0).scrollHeight);
-  
+
   if (show) {
     dark.css('display', 'block').animate({ opacity: 0.7 });
   } else {
@@ -107,7 +107,7 @@ function setPageCheckInterval(url, minutes) {
 // enable argument.
 function setPageRegexOrSelector(url, mode, value) {
   if (mode != 'regex' && mode != 'selector') throw(new Error('Invalid mode.'));
-  
+
   if (value === null)  {
     setPageSettings(url, { mode: 'text', regex: null, selector: null });
   } else {
@@ -137,21 +137,21 @@ function setPageRegexOrSelector(url, mode, value) {
 // string is passed to the supplied calback.
 function exportPagesList(callback) {
   if (!callback) return;
-  
+
   getAllPages(function(pages) {
     var buffer = [];
     var add_date = Date.now();
-    
+
     buffer.push('<!DOCTYPE NETSCAPE-Bookmark-file-1>\n\n<!-- This is an' +
                 ' automatically generated file.\n     It will be read and' +
                 ' overwritten.\n     DO NOT EDIT! -->\n<META HTTP-EQUIV=' +
                 '"Content-Type" CONTENT="text/html; charset=UTF-8">\n<TITLE>' +
                 'Bookmarks</TITLE>\n<H1>Bookmarks</H1>\n<DL><p>\n');
-    
+
     for (var i in pages) {
       buffer.push('        <DT><A HREF="' + pages[i].url + '" ADD_DATE="' +
                   add_date + '">' + pages[i].name + '</A>\n');
-      
+
       var encoded_settings = JSON.stringify({
         mode: pages[i].mode,
         regex: pages[i].regex,
@@ -164,9 +164,9 @@ function exportPagesList(callback) {
       buffer.push('            <!--PageMonitorAdvancedPageData=' +
                   encoded_settings + '-->\n');
     }
-    
+
     buffer.push('</DL><p>');
-    
+
     callback(buffer.join(''));
   });
 }
@@ -181,25 +181,25 @@ function importPagesList(bookmarks) {
                               '(\{.*?\})-->)?', 'g');
   var match;
   var matches_count = 0;
-  
+
   while (match = page_regex.exec(bookmarks, page_regex.lastIndex)) {
     var link = $(match[1]);
     var url = link.attr('HREF') || '';
     var name = link.text() || chrome.i18n.getMessage('untitled', url);
-    
+
     var advanced = {};
     if (match[2]) {
       advanced = JSON.parse(match[2].replace(/&amp;/g, '&')
                                     .replace(/&lt;/g, '<')
                                     .replace(/&gt;/g, '>'));
     }
-    
+
     if (url) {
       addPage($.extend({ url: url, name: name }, advanced));
       matches_count++;
     }
   }
-  
+
   return matches_count;
 }
 
@@ -233,15 +233,15 @@ function initializeColorPicker() {
   var toHex = function(d) {
     return d >= 16 ? d.toString(16) : '0' + d.toString(16);
   }
-  
+
   var badge_color = getSetting(SETTINGS.badge_color) || [0, 180, 0, 255];
   var badge_color = '#' + toHex(badge_color[0]) + 
                           toHex(badge_color[1]) +
                           toHex(badge_color[2]);
-  
+
   $('#badge_color input').val(badge_color).change(function() {
     var color = $(this).val();
-  
+
     setSetting(SETTINGS.badge_color, [parseInt(color.slice(1,3), 16),
                                       parseInt(color.slice(3,5), 16),
                                       parseInt(color.slice(5,7), 16),
@@ -278,7 +278,7 @@ function initializeSorter() {
 function initializeIntervalSliders() {
   var interval = getSetting(SETTINGS.check_interval) || (180 * 60 * 1000);
   var textboxes = $('#interval input, #basic_interval input');
-  
+
   textboxes.val(timeAbsoluteToLog(interval / (60 * 1000))).change(function() {
     var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
     textboxes.siblings('.range_value_label').text(describeTime(val_ms));
@@ -287,16 +287,16 @@ function initializeIntervalSliders() {
     textboxes.not(this).val($(this).val());
     setSetting(SETTINGS.check_interval, val_ms);
   }).mouseup().change();
-  
+
   var slider = $('#basic_interval input[type=range]');
   var label = $('#basic_interval .range_value_label');
-  
+
   var position = slider.offset();
   var width = slider.width();
   var height = slider.height();
   var label_width = label.width();
   var label_height = label.height();
-  
+
   var new_left = position.left + width / 2 - label_width / 2;
   label.css({ left: new_left });
 }
@@ -308,7 +308,7 @@ function initializeIntervalSliders() {
 // to permit them then the value of the dropdown is updated if they do.
 function initializeNotificationsToggler() {
   var $togglers = $('#notifications select, #basic_notifications select');
-  
+
   $togglers.change(function() {
     var val = $(this).val();
     $togglers.not(this).val(val);
@@ -322,7 +322,7 @@ function initializeNotificationsToggler() {
 // events that validates the contents and saves the new value.
 function initializeNotificationsTimeout() {
   var timeout = (getSetting(SETTINGS.notifications_timeout) / 1000) || 30;
-  
+
   $('#notifications_timeout input').val(timeout).change(function() {
     var val_ms = parseFloat($(this).val()) * 1000;
     $(this).siblings('.range_value_label').text(describeTime(val_ms));
@@ -338,19 +338,19 @@ function initializeNotificationsTimeout() {
 function initializeSoundSelector() {
   var selects = $('#sound_alert select, #basic_sound_alert select');
   var play_button = $('#play_sound');
-  
+
   var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
   $.each(custom_sounds, function(i, v) {
     $('<option>').text(v.name).attr('value', v.url).appendTo(selects);
   });
-  
+
   selects.change(function() {
     var audio_file = $(this).val();
     selects.not(this).val(audio_file);
     setSetting(SETTINGS.sound_alert, audio_file);
     play_button.attr({ disabled: audio_file == '' });
   });
-  
+
   selects.val(getSetting(SETTINGS.sound_alert) || '');
   selects.change();
 }
@@ -360,13 +360,13 @@ function initializeSoundSelector() {
 function initializeSoundPlayer() {
   var select = $('#sound_alert select');
   var play_button = $('#play_sound');
-  
+
   play_button.click(function() {
     select.attr('disabled', true);
     play_button.attr('disabled', true);
-    
+
     var audio = new Audio(select.val());
-    
+
     audio.addEventListener('ended', function() {
       select.attr('disabled', false);
       play_button.attr('disabled', false);
@@ -384,48 +384,48 @@ function initializeSoundPlayer() {
 function initializeSoundCreator() {
   var new_button = $('#new_sound');
   var new_form = $('#new_sound_form');
-  
+
   // Center the form.
   new_form.css({
     top: (window.innerHeight - new_form.height()) / 2,
     left: (window.innerWidth - new_form.width()) / 2
   });
-  
+
   // Show form.
   new_button.click(function() {
     $('input', new_form).val('');
     shadeBackground(true);
     new_form.fadeIn();
   });
-  
+
   // Cancel form.
   $('#new_sound_cancel').click(function() {
     shadeBackground(false);
     new_form.fadeOut();
   });
-  
+
   // Try to create a new sound entry.
   $('#new_sound_create').click(function() {
     var name = $('#new_sound_name').val();
     var url = $('#new_sound_url').val();
     var create_button = $(this);
-    
+
     if (!(url && name)) {
       alert(chrome.i18n.getMessage('new_sound_prompt'));
       return;
     }
-    
+
     create_button.attr('disabled', true);
     create_button.css('cursor', 'progress');
-    
+
     var restoreCreateButton = function() {
       create_button.attr('disabled', false);
       create_button.css('cursor', 'auto');
     }
-    
+
     // Make sure we can play the file.
     var audio_file = new Audio(url);
-    
+
     audio_file.addEventListener('error', function() {
       alert(chrome.i18n.getMessage('new_sound_failed'));
       restoreCreateButton();
@@ -434,10 +434,10 @@ function initializeSoundCreator() {
       var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
       custom_sounds.push({ name: name, url: url });
       setSetting(SETTINGS.custom_sounds, custom_sounds);
-      
+
       $('<option>').text(name).attr('value', url)
                    .appendTo('#sound_alert select, #basic_sound_alert select');
-      
+
       restoreCreateButton();
       shadeBackground(false);
       new_form.fadeOut();
@@ -460,7 +460,7 @@ function initializeViewAllSelector() {
 // hide it.
 function initializeExporter() {
   var form = $('#export_form');
-  
+
   $('#export').click(function() {
     exportPagesList(function(result) {
       $('textarea', form).val(result);
@@ -479,17 +479,17 @@ function initializeExporter() {
 // Import/Cancel buttons in the form itself.
 function initializeImporter() {
   var form = $('#import_form');
-  
+
   $('#import').click(function() {
     shadeBackground(true);
     form.fadeIn();
   });
-    
+
   $('#import_cancel', form).click(function() {
     form.fadeOut();
     shadeBackground(false);
   });
-  
+
   $('#import_perform', form).click(function() {
     var count = 0;
     try {
@@ -525,7 +525,7 @@ function initializeGlobalChecker() {
     getAllPageURLs(function(pages) {
       var progress_message = chrome.i18n.getMessage('check_in_progress') + '..';
       $('.last_check_time').text(progress_message);
-      
+
       BG.check(true, $.noop, function(url) {
         var page_record = findPageRecord(url);
         $('.last_check_time', page_record).trigger('time_updated');
@@ -539,17 +539,17 @@ function initializeGlobalChecker() {
 // is running.
 (function() {
   var switching = false;
-  
+
   initializeAdvancedSwitch = function() {
     if (switching) return false;
     switching = true;
-    
+
     $('#options_switch input').click(function() {
       var checked = $(this).is(':checked');
-      
+
       var label_state = checked ? 'hidden': 'visible';
       $('#basic_interval .range_value_label').css('visibility', label_state);
-      
+
       var to_hide = checked ? '#basic_options' : '#advanced_options';
       var to_show = checked ? '#advanced_options' : '#basic_options';
       $(to_hide).slideUp('slow', function() {
@@ -570,9 +570,9 @@ function initializePageControls() {
   initializePageRename();
   initializePageRemove();
   initializePageCheck();
-  
+
   initializePageAdvancedToggler();
-  
+
   initializePageCheckInterval();
   initializePageModeSelector();
   initializePageModeTester();
@@ -586,23 +586,23 @@ function initializePageRename() {
   $('.rename').live('click', function() {
     var record = findPageRecord(this);
     var page_link = record.find('.page_link');
-    
+
     if (!page_link.is(':hidden')) {
       var textbox = $('<input type="text" value="' + page_link.text() + '" />');
       var cancel_button = $('<input type="button" value="' +
                             chrome.i18n.getMessage('cancel') + '" />');
       var ok_button = $('<input type="button" value="' +
                         chrome.i18n.getMessage('ok') + '" />');
-      
+
       page_link.hide().after(cancel_button).after(ok_button).after(textbox);
-      
+
       cancel_button.click(function() {
         textbox.remove();
         ok_button.remove();
         cancel_button.remove();
         page_link.show();
       });
-      
+
       ok_button.click(function() {
         page_link.text(textbox.val());
         setPageSettings(findUrl(this), { name: textbox.val() });
@@ -618,11 +618,11 @@ function initializePageRename() {
 function initializePageRemove() {
   $('.stop_monitoring').live('click', function() {
     var url = findUrl(this);
-    
+
     removePage(url, BG.updateBadge);
-    
+
     var scroll_position = scrollY;
-    
+
     $('td', findPageRecord(this)).slideUp('slow', function() {
       if ($('#pages .page_record').length == 1) {
         $('#pages').animate(
@@ -644,7 +644,7 @@ function initializePageCheck() {
     var timestamp = $('.last_check_time', findPageRecord(this));
     var url = findUrl(this);
     var progress_message = chrome.i18n.getMessage('check_in_progress') + '..';
-    
+
     timestamp.text(progress_message);  
     BG.checkPage(url, function(url) {
       timestamp.trigger('time_updated');
@@ -663,11 +663,11 @@ function initializePageAdvancedToggler() {
   $('.advanced_toggle input[type=checkbox]').live('click', function() {
     var url = findUrl(this);
     var page_record = findPageRecord(this);
-    
+
     if ($(this).is(':checked')) {
       $('.advanced_toggle', page_record).addClass('toggled');
       $('.advanced_controls', page_record).slideDown('fast');
-      
+
       // Apply previously-set advanced settings.
       var interval_div = $('.page_interval', page_record);
       if ($(':checked', interval_div).length > 0) {
@@ -675,7 +675,7 @@ function initializePageAdvancedToggler() {
         var interval = timeLogToAbsolute(interval_log);
         setPageCheckInterval(url, interval);
       }
-      
+
       if ($('.mode :checked', page_record).length > 0) {
         var custom_mode = $('.mode select', page_record).val();
         var custom_mode_string = $('.mode_string', page_record).val();
@@ -685,15 +685,15 @@ function initializePageAdvancedToggler() {
       $('.advanced_controls', page_record).slideUp('fast', function() {
         $('.advanced_toggle', page_record).removeClass('toggled');
       });
-      
+
       setPageCheckInterval(url, null);
       setPageRegexOrSelector(url, 'regex', null);
     }
   });
-  
+
   $('.advanced_controls input[type=checkbox]').live('click', function() {
     var checked = $(this).is(':checked');
-    
+
     $(this).nextAll('span').toggleClass('enabled', checked)
                            .toggleClass('disabled', !checked);
     $('input,select', $(this).parent()).not(this).attr({ disabled: !checked });
@@ -716,7 +716,7 @@ function initializePageCheckInterval() {
       setPageCheckInterval(url, null);
     }
   });
-  
+
   $('.page_interval input[type=range]').live('change', function() {
     var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
     $(this).siblings('.range_value_label').text(describeTime(val_ms));
@@ -738,20 +738,20 @@ function initializePageModeSelector() {
   $('.mode input[type=checkbox]').live('click', function() {
     var url = findUrl(this);
     var record = findPageRecord(this);
-    
+
     if ($(this).is(':checked')) {
       $('.mode_string', record).keyup();
     } else {
       setPageSettings(url, { mode: 'text', regex: null, selector: null });
     }
   });
-  
+
   $('.mode select').live('change', function() {
     var record = findPageRecord(this);
     $('.mode_string', record).keyup();
     $('.mode_pick', record).attr({ disabled: $(this).val() == 'regex' });
   });
-  
+
   $('.mode_string').live('keyup', function() {
     var mode = $('select', findPageRecord(this)).val();
     setPageRegexOrSelector(findUrl(this), mode, $(this).val());
@@ -771,7 +771,7 @@ function initializePageModeTester() {
     var mode = $('select', record).val();
     var mode_string = $('.mode_string', record).val();
     var button = $(this);
-    
+
     button.val(chrome.i18n.getMessage('test_progress'))
           .add($('.mode_string', record)).attr({ disabled: true });
 
@@ -784,7 +784,7 @@ function initializePageModeTester() {
           $('textarea', form).val(results);
           shadeBackground(true);
           form.fadeIn();
-        
+
           cleanAndHashPage(html, mode, mode_string, mode_string, function(crc) {
             setPageSettings(url, { crc: crc });
           });
@@ -799,7 +799,7 @@ function initializePageModeTester() {
       }
     });
   });
-  
+
   $('button', form).click(function() {
     form.fadeOut();
     shadeBackground(false);
@@ -839,15 +839,15 @@ function initializePageModePicker() {
 function fillPagesList(callback) {
   getAllPages(function(pages) {
     sortPagesInplace(pages, getSetting(SETTINGS.sort_by) || 'date added');
-    
+
     $('#pages').html('');
-    
+
     if (pages.length > 0) {
       $.each(pages, function(_, page) { addPageToTable(page); });
     } else {
       $('#templates .empty').clone().appendTo('#pages');
     }
-    
+
     (callback || $.noop)();
   });
 }
@@ -865,7 +865,7 @@ function fillPagesList(callback) {
 function sortPagesInplace(pages, sort_order) {
   if (sort_order != 'date added') {
     var global_check_interval = getSetting(SETTINGS.check_interval);
-    
+
     pages.sort(function(a, b) {
       if (sort_order == 'name') {
         a = a.name;
@@ -885,7 +885,7 @@ function sortPagesInplace(pages, sort_order) {
       } else {
         throw(new Error('Invalid sort order.'));
       }
-      
+
       return (a < b) ? -1 : 1;
     });
   }
@@ -905,16 +905,16 @@ function addPageToTable(page) {
   if (name.length > 60) {
     name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
   }
-  
+
   page_record.find('.page_link').attr({
     href: page.url,
     target: '_blank'
   }).text(name);
-  
+
   page_record.find('.favicon').attr({
     src: getFavicon(page.url)
   });
-  
+
   // Last check time ticker.
   var last_check_span = page_record.find('.last_check_time');
   last_check_span.bind('time_updated', function() {
@@ -922,7 +922,7 @@ function addPageToTable(page) {
     getPage(page.url, function(page) {
       var last_check = page.last_check ? describeTimeSince(page.last_check)
                                        : chrome.i18n.getMessage('never');
-      
+
       if (last_check != $span.text()) {
         $span.fadeOut('slow', function() {
           $span.text(last_check).fadeIn('slow');
@@ -932,7 +932,7 @@ function addPageToTable(page) {
   });
   last_check_span.trigger('time_updated');
   setInterval(function() { last_check_span.trigger('time_updated'); }, 15000);
-  
+
   // Check interval range slider.
   var interval = check_interval / (60 * 1000);
   var interval_log = timeAbsoluteToLog(interval);
@@ -944,7 +944,7 @@ function addPageToTable(page) {
     $('input[type=checkbox]', interval_div).attr({ checked: true });
     advanced_set = true;
   }
-  
+
   // Custom monitoring mode textbox.
   if (page.mode == null) {
     if (page.regex) {
@@ -953,27 +953,27 @@ function addPageToTable(page) {
       page.mode = 'text';
     }
   }
-  
+
   if (page.mode != 'text') {
     var mode_div = $('.mode', page_record);
     var mode_string = (page.mode == 'regex') ? page.regex : page.selector;
-    
+
     mode_div.children('span').addClass('enabled').removeClass('disabled');
     $('input,select', mode_div).attr({ disabled: false });
     $('input[type=checkbox]', mode_div).attr({ checked: true });
     $('select', mode_div).val(page.mode).change();
     $('.mode_string', mode_div).val(mode_string).keyup();
-    
+
     advanced_set = true;
   }
-  
+
   // Advanced checkbox.
   if (advanced_set) {
     $('.advanced_toggle', page_record).addClass('toggled');
     $('.advanced_toggle input', page_record).attr({ checked: true });
     $('.advanced_controls', page_record).css({ display: 'block' });
   }
-  
+
   page_record.appendTo('#pages');
 }
 
@@ -1007,12 +1007,12 @@ function selectorServer(request, _, callback) {
 // Completely initializes the page.
 function init() {
   if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
-  
+
   applyLocalization();
   $('title').text(chrome.i18n.getMessage('options_title'));
   $('.mode_test').val(chrome.i18n.getMessage('test_button'));
   $('.mode_pick').val(chrome.i18n.getMessage('pick_button'));
-  
+
   initializeGlobalControls();
   initializePageControls();
 

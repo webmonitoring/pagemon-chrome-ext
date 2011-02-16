@@ -62,16 +62,16 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
   // Takes a string and returns its crc32 checksum.
   crc = function(str) {
     if (typeof str != 'string') return null;
-    
+
     str = encodeUTF8(str);
-    
+
     var length = str.length;
     var crc = 0xFFFFFFFF; 
 
     for (var i = 0; i < length; i++) {
       crc = (crc >>> 8) ^ table[(crc & 0xFF) ^ str.charCodeAt(i)];
     }
-    
+
     return crc ^ -1;
   };
 })();
@@ -107,9 +107,9 @@ function describeTime(milliseconds) {
   var minutes = Math.floor(seconds / 60) % 60;
   var hours = Math.floor(seconds / (60 * 60)) % 24;
   var days = Math.floor(seconds / (60 * 60 * 24));
-  
+
   var label = '';
-  
+
   if (days) {
     var singular = chrome.i18n.getMessage('day');
     var plural = chrome.i18n.getMessage('days', days.toString());
@@ -130,7 +130,7 @@ function describeTime(milliseconds) {
     var plural = chrome.i18n.getMessage('seconds', seconds.toString());
     label += ' ' + ((seconds == 1) ? singular : plural);
   }
-  
+
   return label.replace(/^\s+|\s+$/g, '');
 }
 
@@ -157,7 +157,7 @@ function getStrippedBody(html) {
   } else {
     body = html;
   }
-  
+
   return body.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/ig, '');
 }
 
@@ -230,7 +230,7 @@ function sqlResultToArray(result) {
 // their check interval set to the global setting.
 function getPage(url, callback) {
   if (!callback) return;
-  
+
   executeSql('SELECT * FROM pages WHERE url = ?', [url], function(result) {
     console.assert(result.rows.length <= 1);
     if (result.rows.length) {
@@ -249,7 +249,7 @@ function getPage(url, callback) {
 // an argument.
 function getAllPageURLs(callback) {
   if (!callback) return;
-  
+
   executeSql('SELECT url FROM pages', [], function(result) {
     var urls = [];
     for (var i = 0; i < result.rows.length; i++) {
@@ -263,7 +263,7 @@ function getAllPageURLs(callback) {
 // an argument.
 function getAllPages(callback) {
   if (!callback) return;
-  
+
   executeSql('SELECT * FROM pages', [], function(result) {
     callback(sqlResultToArray(result));
   });
@@ -273,7 +273,7 @@ function getAllPages(callback) {
 // the callback with them as an argument.
 function getAllUpdatedPages(callback) {
   if (!callback) return;
-  
+
   executeSql('SELECT * FROM pages WHERE updated = 1', [], function(result) {
     callback(sqlResultToArray(result));
   });
@@ -287,7 +287,7 @@ function getAllUpdatedPages(callback) {
 function setPageSettings(url, settings, callback) {
   var buffer = [];
   var args = [];
-  
+
   for (var name in settings) {
     buffer.push(name + ' = ?');
     if (typeof(settings[name]) == 'boolean') {
@@ -296,10 +296,10 @@ function setPageSettings(url, settings, callback) {
     args.push(settings[name]);
   }
   args.push(url);
-  
+
   if (buffer) {
     var query = 'UPDATE pages SET ' + buffer.join(', ') + ' WHERE url = ?';
-    
+
     executeSql(query, args, null, callback);
   } else {
     (callback || $.noop)();
@@ -317,7 +317,7 @@ function addPage(page, callback) {
                                  check_interval, html, crc, updated, \
                                  last_check, last_changed) \
                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-  
+
   executeSql(query, [
     page.url,
     page.name || chrome.i18n.getMessage('untitled', page.url),
@@ -368,7 +368,7 @@ function isPageMonitored(url, callback) {
 // results in empty output.
 function canonizePage(page, type) {
   if (!page) return page;
-  
+
   return type.match(/\b(x|xht|ht)ml\b/) ? page.replace(/\s+/g, ' ') : page;
 }
 
@@ -379,10 +379,10 @@ function canonizePage(page, type) {
 function findAndFormatRegexMatches(text, regex, callback) {
   if (!callback) return;
   if (!regex) return callback('');
-  
+
   var called = false;
   var worker = new Worker(REGEX_WORKER_PATH);
-  
+
   function finishMatching(result) {
     if (!called) {
       called = true;
@@ -390,14 +390,14 @@ function findAndFormatRegexMatches(text, regex, callback) {
       (callback || $.noop)(result ? result.data : null);
     }
   }
-  
+
   worker.onmessage = finishMatching;
   worker.postMessage(JSON.stringify({
     command: 'run',
     text: text,
     regex: regex
   }));
-  
+
   setTimeout(finishMatching, REGEX_TIMEOUT);
 }
 
@@ -411,7 +411,7 @@ function findAndFormatSelectorMatches(html, selector, callback) {
     var result = $(selector, body).map(function() {
       return '"' + $('<div>').append(this).html() + '"';
     }).get().join('\n');
-    
+
     (callback || $.noop)(result);
   } catch (e) {
     (callback || $.noop)(null);
@@ -447,7 +447,7 @@ function cleanHtmlPage(html, callback) {
   html = html.replace(/\d+ ?(st|nd|rd|th|am|pm|seconds?|minutes?|hours?|days?|weeks?|months?)\b/g, '');
   // Remove everything other than letters (unicode letters are preserved).
   html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
-  
+
   (callback || $.noop)(html);
 }
 
@@ -460,11 +460,11 @@ function cleanHtmlPage(html, callback) {
 // out of the HTML (see the function for more details).
 function cleanAndHashPage(html, mode, regex, selector, callback) {
   if (!callback) return;
-  
+
   function callBackWithCrc(result) {
     callback(crc(result || ''));
   }
-  
+
   if (mode == 'regex' && regex) {
     findAndFormatRegexMatches(html, regex, callBackWithCrc);
   } else if (mode == 'selector' && selector) {
@@ -494,7 +494,7 @@ function checkPage(url, callback, force_snapshot) {
       (callback || $.noop)(url);
       return;
     }
-    
+
     $.ajax({
       url: url,
       dataType: 'text',
@@ -504,7 +504,7 @@ function checkPage(url, callback, force_snapshot) {
           cleanAndHashPage(html, page.mode, page.regex, page.selector,
                            function(crc) {
             var settings = {};
-            
+
             if (crc != page.crc) {
               settings = {
                 updated: true,
@@ -515,7 +515,7 @@ function checkPage(url, callback, force_snapshot) {
             } else {
               settings = { html: canonizePage(html, type) };
             }
-            
+
             settings.last_check = Date.now();
             setPageSettings(url, settings, function() {
               (callback || $.noop)(url);
