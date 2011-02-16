@@ -504,8 +504,13 @@ function initializeImporter() {
       var singular = chrome.i18n.getMessage('import_success_single');
       var plural = chrome.i18n.getMessage('import_success_multi',
                                           count.toString());
-      alert(count == 1 ? singular : plural);
-      fillPagesList();
+      // TODO: Remove this temporary workaround once this issue is fixed:
+      // http://code.google.com/p/chromium/issues/detail?id=73125
+      fillPagesList(function() {
+        setTimeout(function() {
+          alert(count == 1 ? singular : plural);
+        }, 100);
+      });
     } else {
       alert(chrome.i18n.getMessage('import_empty'));
     }
@@ -830,7 +835,8 @@ function initializePageModePicker() {
 // containing basic info about the page and controls to edit per-page settings.
 // The pages are sorted per SETTINGS.sort_by. If no pages are being monitored,
 // a copy of the row with class=empty from the tebplates table is inserted.
-function fillPagesList() {
+// After the list is filled, executes the callback (if provided).
+function fillPagesList(callback) {
   getAllPages(function(pages) {
     sortPagesInplace(pages, getSetting(SETTINGS.sort_by) || 'date added');
     
@@ -841,6 +847,8 @@ function fillPagesList() {
     } else {
       $('#templates .empty').clone().appendTo('#pages');
     }
+    
+    (callback || $.noop)();
   });
 }
 
