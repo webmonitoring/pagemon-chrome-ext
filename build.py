@@ -1,3 +1,6 @@
+"""Builds a minified version of Page Monitor for distribution."""
+
+
 import glob
 import lxml.html
 import os
@@ -6,7 +9,11 @@ import shutil
 import sys
 
 
+# Matches sections in teh HTML to be removed when building.
 DEV_ONLY_REGEX = re.compile('<!--DEV_ONLY-->.*?<!--/DEV_ONLY-->', re.DOTALL)
+# The DOCTYPE to insert into HTML documents (lxml eats the existing doctype).
+DOCTYPE = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+"http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">'''
 
 
 def compileJS(text):
@@ -47,14 +54,14 @@ def compileHTML(filename):
     if style.text:
       style.text = compileCSS(style.text)
 
-  return lxml.html.tostring(doc)
+  return DOCTYPE + lxml.html.tostring(doc)
 
 
 def stripDotfiles(src, names):
   return [i for i in names if i.startswith('.')]
 
 
-if __name__ == '__main__':
+def main():
   # Remove old build folder.
   if os.path.exists('build'):
     print 'Cleaning old folder'
@@ -100,3 +107,7 @@ if __name__ == '__main__':
     open(f, 'w').write(data)
 
   raw_input('Done. Press enter to continue.')
+
+
+if __name__ == '__main__':
+  main()
