@@ -84,7 +84,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
         NOTIFICATION_ICON, title, content);
 
     notification.show();
-    setTimeout(notification.cancel, timeout);
+    setTimeout(function() { notification.cancel(); }, timeout);
   };
   
   // Checks if any pages are marked as updated, and if so, displays their count
