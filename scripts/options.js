@@ -596,6 +596,14 @@ function initializePageRename() {
 
       page_link.hide().after(cancel_button).after(ok_button).after(textbox);
 
+      textbox.focus().keyup(function(event) {
+        if (event.which == 13) {  // Enter.
+          ok_button.click();
+        } else if (event.which == 27) {  // Escape.
+          cancel_button.click();
+        }
+      });
+
       cancel_button.click(function() {
         textbox.remove();
         ok_button.remove();
