@@ -504,12 +504,10 @@ function initializeImporter() {
       var singular = chrome.i18n.getMessage('import_success_single');
       var plural = chrome.i18n.getMessage('import_success_multi',
                                           count.toString());
-      // TODO: Remove this temporary workaround once this issue is fixed:
-      // http://code.google.com/p/chromium/issues/detail?id=73125
       fillPagesList(function() {
-        setTimeout(function() {
-          alert(count == 1 ? singular : plural);
-        }, 100);
+        // TODO: Uncomment this once this issue is fixed:
+        // http://code.google.com/p/chromium/issues/detail?id=73125
+        //alert(count == 1 ? singular : plural);
       });
     } else {
       alert(chrome.i18n.getMessage('import_empty'));
