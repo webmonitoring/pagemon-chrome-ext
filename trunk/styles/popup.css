@@ -25,20 +25,19 @@ hr {
   text-align: left;
   color: #849ccb;
   cursor: pointer;
-  margin: 0px 30px;
+  margin: 0 1.9em;
 }
 
 .page_controls>span {
   color: #849ccb;
-  margin-top: 10px;
-  margin-left: 50px;
+  margin-left: 3.15em;
   width: auto;
   text-align: right;
   cursor: pointer;
 }
 
 .main_controls>span:hover, .page_controls>span:hover {
-  text-shadow: #849ccb 0px -1px 0px;
+  text-shadow: #849ccb 0 -1px 0;
 }
 
 .main_controls>span img, .page_controls>span img {
@@ -67,7 +66,7 @@ hr {
 }
 
 .loading_spacer {
-  height: 49px;
+  height: 2.7em;
 }
 
 .loading_spacer td {

@@ -4,6 +4,9 @@
   per-notification controls.
 */
 
+// Sizing constants. Must be kept in sync with base.css and popup.css.
+var RECORD_HEIGHT = '2.7em';
+
 // Returns the URL of the page referenced by a .notification record given any
 // element inside it. Returns null if not found.
 function getNotificationUrl(context) {
@@ -24,7 +27,7 @@ function markPageVisited() {
     $(that).closest('.notification td').slideUp('slow', function() {
       if ($('#notifications .notification').length == 1) {
         $('#notifications').animate(
-          { height: '50px', opacity: 1 }, 'slow', fillNotifications
+          { height: '2.7em', opacity: 1 }, 'slow', fillNotifications
         );
       } else {
         fillNotifications();
@@ -101,8 +104,8 @@ function updateButtonsState() {
         $('#monitor_page span').text(chrome.i18n.getMessage(message));
       } else {
         $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
-        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
         $('#monitor_page img').attr('src', 'img/monitor.png');
+        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
       }
     });
   });
@@ -151,7 +154,7 @@ function checkAllPages() {
     // NOTE: Setting opacity to 0 leads to jumpiness (maybe setting
     //       display: none), so using 0.01 as a workaround.
     if (records_displayed > 0) {
-      fadeout_target = { height: '50px', opacity: 0.01 };
+      fadeout_target = { height: '2.7em', opacity: 0.01 };
     } else {
       fadeout_target = { opacity: 0.01 };
     }
@@ -178,7 +181,7 @@ function checkAllPages() {
           // Remove the loader, empty the table, and reset its height back to
           // 50px. The user does not see any change from the time the fade-out
           // finished.
-          that.removeClass('loading').html('').height(50);
+          that.removeClass('loading').html('').css('height', '2.7em');
           // Slide the table to our pre-calculated height.
           that.animate({ height: height + 'px' }, 'slow', function() {
             // Put the table contents back and fade it in.
@@ -196,8 +199,8 @@ function checkAllPages() {
 // page_link links, depending on the value of SETTINGS.view_all_action ("diff"
 // or "original").
 function openAllPages() {
-  var target = getSetting(SETTINGS.view_all_action) == 'diff' ?
-               'view_diff' : 'page_link';
+  var action = getSetting(SETTINGS.view_all_action);
+  var target = (action == 'diff') ? 'view_diff' : 'page_link';
   $('#notifications .' + target).click();
 }
 
