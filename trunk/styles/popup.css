@@ -6,6 +6,16 @@
 
 body {
   overflow: hidden;
+  width: 35.1em;
+  height: 6.2em;
+  /*
+  Height breakdown:
+    Single-row notification table: 2.7em.
+    HR bottom margin: 0.5em.
+    Controls top margin: 1em.
+    Controls height: 1em.
+    Controls bottom margin: 1em.
+  */
 }
 
 hr {
@@ -19,6 +29,11 @@ hr {
 .main_controls {
   text-align: center;
   white-space: nowrap;
+  height: 1em;
+  margin-top: 1em;
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 1em;
 }
 
 .main_controls>span {
