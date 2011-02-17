@@ -96,8 +96,9 @@ function updateButtonsState() {
     isPageMonitored(tab.url, function(monitored) {
       if (monitored || !tab.url.match(/^https?:/)) {
         $('#monitor_page').unbind('click').addClass('inactive');
-        $('#monitor_page span').text(chrome.i18n.getMessage('page_monitored'));
         $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+        var message = monitored ? 'page_monitored' : 'monitor';
+        $('#monitor_page span').text(chrome.i18n.getMessage(message));
       } else {
         $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
         $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
