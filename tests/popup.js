@@ -75,7 +75,7 @@ $(function() {
       length = 1;
       $.state = 0;
       $.animate = function(settings, speed, callback) {
-        same(settings, { height: '50px', opacity: 1 },
+        same(settings, { height: '2.7em', opacity: 1 },
              'Settings argument to animate()');
         equals(speed, 'slow', 'Speed argument to animate()');
         equals(callback, fillNotifications, 'Callback argument to animate()');
@@ -164,7 +164,8 @@ $(function() {
       var monitor_message = chrome.i18n.getMessage('monitor');
 
       if ($('#monitor_page').hasClass('inactive') &&
-          $('#monitor_page span').text() == page_monitored_message &&
+          ($('#monitor_page span').text() == monitor_message ||
+           $('#monitor_page span').text() == page_monitored_message) &&
           $('#monitor_page img').attr('src') == 'img/monitor_inactive.png') {
         return false;
       } else if (!$('#monitor_page').hasClass('inactive') &&
@@ -342,7 +343,7 @@ $(function() {
         equal(speed, 'slow', 'Animation speed');
         ok(!notifications.hasClass('loading'), 'Loading class removed.');
         equal(notifications.html(), '', 'Table contents');
-        equal(notifications.css('height'), '50px', 'Table height');
+        equal(notifications.css('height'), '2.7em', 'Table height');
 
         $.fn.animate = function(properties, speed) {
           ok(this.is('#notifications'), 'Final #notifications animation.');

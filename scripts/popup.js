@@ -48,6 +48,15 @@ function monitorCurrentPage() {
   });
 }
 
+// Clamps a page name to 60 characters.
+function trimPageName(page) {
+  var name = page.name || chrome.i18n.getMessage('untitled', page.url);
+  if (name.length > 60) {
+    name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
+  }
+  return name;
+}
+
 // Fill the notifications list with notifications for each updated page. If
 // no pages are updated, set the appropriate message. Calls updateButtonsState()
 // when done constructing the table.
@@ -58,11 +67,7 @@ function fillNotifications(callback) {
     if (pages.length > 0) {
       $.each(pages, function(i, page) {
         var notification = $('#templates .notification').clone();
-
-        var name = page.name || chrome.i18n.getMessage('untitled', page.url);
-        if (name.length > 60) {
-          name = name.replace(/([^]{20,60})(\w)\b.*$/, '$1$2...');
-        }
+        var name = trimPageName(page);
 
         notification.find('.page_link').attr('href', page.url).text(name);
         notification.find('.favicon').attr({ src: getFavicon(page.url) });
@@ -179,14 +184,13 @@ function checkAllPages() {
           var html = that.html();
 
           // Remove the loader, empty the table, and reset its height back to
-          // 50px. The user does not see any change from the time the fade-out
+          // 2.7em. The user does not see any change from the time the fade-out
           // finished.
           that.removeClass('loading').html('').css('height', '2.7em');
           // Slide the table to our pre-calculated height.
           that.animate({ height: height + 'px' }, 'slow', function() {
             // Put the table contents back and fade it in.
-            that.css({ height: 'auto' }).html(html)
-                .animate({ opacity: 1 }, 400);
+            that.css('height', 'auto').html(html).animate({ opacity: 1 }, 400);
             $('#check_now').click(checkAllPages);
           });
         });
