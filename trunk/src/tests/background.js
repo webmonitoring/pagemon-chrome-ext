@@ -530,12 +530,13 @@ $(function() {
   });
 
   test('bringUpToDate', function() {
-    expect(17);
+    expect(24);
     var old_initializeStorage = initializeStorage;
     var old_getExtensionVersion = getExtensionVersion;
     var old_removeUnusedSettings = removeUnusedSettings;
     var old_importVersionOnePages = importVersionOnePages;
     var old_importVersionTwoPages = importVersionTwoPages;
+    var old_fixSoundAlerts = fixSoundAlerts;
     var old_setSetting = setSetting;
     var old_delSetting = delSetting;
     var old_getSetting = getSetting;
@@ -563,7 +564,18 @@ $(function() {
       callback();
     };
 
-    // Version 3.x.
+    // Version 3.1.
+    fixSoundAlerts = function() {
+      ok(false, 'Unnecessarily fixed sound alerts.');
+    };
+    settings_set = {};
+    bringUpToDate(3.1, function() { ok(true, 'Callback called.'); });
+    same(settings_set, { version: 42 }, 'V3.1 updates');
+
+    // Version 3.0.x.
+    fixSoundAlerts = function() {
+      ok(true, 'Fixed sound alerts.');
+    };
     settings_set = {};
     bringUpToDate(3, function() { ok(true, 'Callback called.'); });
     same(settings_set, { version: 42 }, 'V3 updates');
@@ -602,7 +614,6 @@ $(function() {
       version: 42,
       badge_color: [0, 180, 0, 255],
       check_interval: DEFAULT_CHECK_INTERVAL,
-      custom_sounds: [],
       sound_alert: null,
       notifications_enabled: false,
       notifications_timeout: 30 * 1000,
@@ -617,6 +628,7 @@ $(function() {
     removeUnusedSettings = old_removeUnusedSettings;
     importVersionOnePages = old_importVersionOnePages;
     importVersionTwoPages = old_importVersionTwoPages;
+    fixSoundAlerts = old_fixSoundAlerts;
     setSetting = old_setSetting;
     delSetting = old_delSetting;
     getSetting = old_getSetting;
