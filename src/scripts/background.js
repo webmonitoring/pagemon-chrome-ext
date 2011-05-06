@@ -326,6 +326,29 @@ function removeUnusedSettings(storage_object) {
   }
 }
 
+// Adds the default sound alerts and replaces deprecated values.
+function fixSoundAlerts() {
+  // Add defaults.
+  var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
+  custom_sounds.unshift({
+    name: chrome.i18n.getMessage('sound_cuckoo'),
+    url: chrome.extension.getURL('audio/cuckoo.ogg')
+  });
+  custom_sounds.unshift({
+    name: chrome.i18n.getMessage('sound_chime'),
+    url: chrome.extension.getURL('audio/bell.ogg')
+  });
+  setSetting(SETTINGS.custom_sounds, custom_sounds);
+
+  // Remove outdated audio alert if one is enabled.
+  var regex = /^http:\/\/work\.max99x\.com\/(bell.ogg|cuckoo.ogg)$/;
+  var sound_alert = getSetting(SETTINGS.sound_alert);
+  if (regex.test(sound_alert)) {
+    var file = 'audio/' + sound_alert.match(regex)[1];
+    setSetting(SETTINGS.sound_alert, chrome.extension.getURL(file));
+  }
+}
+
 // Brings up the pages list and settings format to the current version if they
 // are outdated, then calls the callback.
 function bringUpToDate(from_version, callback) {
@@ -336,10 +359,11 @@ function bringUpToDate(from_version, callback) {
       (callback || $.noop)();
     }
 
+    if (from_version < 3.1) fixSoundAlerts();
+
     if (from_version < 1) {
       setSetting(SETTINGS.badge_color, [0, 180, 0, 255]);
       setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL);
-      setSetting(SETTINGS.custom_sounds, []);
       setSetting(SETTINGS.sound_alert, null);
       setSetting(SETTINGS.notifications_enabled, false);
       setSetting(SETTINGS.notifications_timeout, 30 * 1000);

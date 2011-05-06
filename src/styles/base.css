@@ -1,7 +1,8 @@
 /* Global styles */
 
 body {
-  font-family: Calibri, Tahoma, Arial, sans-serif;
+  font-family: Verdana, Tahoma, Arial, sans-serif;
+  font-size: 90%;
   padding: 0;
   margin: 0;
 }
