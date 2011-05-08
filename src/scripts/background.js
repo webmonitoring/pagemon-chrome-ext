@@ -26,7 +26,7 @@ var MINIMUM_CHECK_SPACING = 1000;
 
 // Browser action and notification icons.
 var BROWSER_ICON = 'img/browser_icon.png';
-var NOTIFICATION_ICON = 'http://static.max99x.com/chrome/page-monitor-icon.png';
+var NOTIFICATION_ICON = chrome.extension.getURL('img/notification-icon.png');
 
 // The maximum time offset in the future in milliseconds to look for pages
 // to update.

@@ -1,3 +1,4 @@
+#!/usr/bin/python2
 """Builds a minified version of Page Monitor for distribution."""
 
 
@@ -9,7 +10,7 @@ import shutil
 import sys
 
 
-# Matches sections in teh HTML to be removed when building.
+# Matches sections in the HTML to be removed when building.
 DEV_ONLY_REGEX = re.compile('<!--DEV_ONLY-->.*?<!--/DEV_ONLY-->', re.DOTALL)
 # The DOCTYPE to insert into HTML documents (lxml eats the existing doctype).
 DOCTYPE = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
@@ -94,7 +95,7 @@ def main():
     open(f, 'w').write(compileCSS(data))
 
   # Compile javascript.
-  if '--compile_js' in sys.argv:
+  if '--nocompilejs' not in sys.argv:
     for f in glob.glob('build/scripts/*.js'):
       print 'Compiling JS:', f
       data = open(f).read()
@@ -106,7 +107,7 @@ def main():
     data = compileHTML(f)
     open(f, 'w').write(data)
 
-  raw_input('Done. Press enter to continue.')
+  raw_input('Done. Press Enter to continue.')
 
 
 if __name__ == '__main__':
