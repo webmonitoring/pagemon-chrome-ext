@@ -13,7 +13,10 @@
 var SCROLL_MARGIN = 75;
 
 // A regex that lists all HTML4/HTML5 tags that do not require a closing tag.
-var EMPTY_HTML_TAGS_REGEX = /AREA|BASE|BASEFONT|BR|COL|FRAME|HR|IMG|INPUT|ISINDEX|LINK|META|PARAM|COMMAND|EMBED|KEYGEN|SOURCE|WBR/i;
+var EMPTY_HTML_TAGS = ['AREA', 'BASE', 'BASEFONT', 'BR', 'COL', 'FRAME', 'HR',
+                       'IMG', 'INPUT', 'ISINDEX', 'LINK', 'META', 'PARAM',
+                       'COMMAND', 'EMBED', 'KEYGEN', 'SOURCE', 'WBR'];
+var EMPTY_HTML_TAGS_REGEX = RegExp(EMPTY_HTML_TAGS.join('|'), 'i');
 
 /*******************************************************************************
 *                                   Diffing                                    *
@@ -85,7 +88,6 @@ function isSelfClosingTag(tag) {
 function wrapText(list, prefix, suffix, remove_unwrapped) {
   var out = [];
   var buffer = [];
-  remove_unwrapped = Boolean(remove_unwrapped);
 
   for (var i = 0; i < list.length; i++) {
     if (list[i][0] == '<' && !isSelfClosingTag(list[i])) {
@@ -271,7 +273,6 @@ function getInlineStyles(html) {
 // the supplied HTML string.
 function getReferencedStyles(html) {
   var links = html.match(/<link[^>]*>/ig);
-
   return links ? $(links.join('')).filter('[rel=stylesheet]') : $([]);
 }
 
@@ -280,7 +281,6 @@ function findFirstChangePosition() {
   var pos = $('ins,del').filter(function() {
     return $(this).text().replace(/^\s*$/, '');
   }).first().position();
-
   return pos || { left: 0, top: 0 };
 }
 
@@ -310,10 +310,10 @@ function applyDiff(url, src, dst, type) {
 }
 
 // Retrieves a saved snapshot of the URL, then the current live version, and
-// runs a diff between them using applyDiff(). If the response received is of
-// the type text/plain, it's converted to HTML using textToHtml(). If no saved
-// snapshot is available, displays a diff_coruption error message in the first
-// div of the page.
+// runs a diff between them using applyDiff(). The content-type header of the
+// live version is used to select whether to run a text or an html diff. If no
+// saved snapshot is available, displays a diff_coruption error message in the
+// first div of the page.
 function initiateDiff(url) {
   getPage(url, function(page) {
     $.ajax({
