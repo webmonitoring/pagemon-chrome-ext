@@ -79,10 +79,13 @@ function isSelfClosingTag(tag) {
 // Takes a list of strings, where each string is either an HTML tag or plain
 // text, then inserts the prefix before each run of plain text or self-closing
 // tags (or a mix of the two), and the suffix after each run. Returns a list
-// of strings with the prefixes and suffixes inserted.
-function wrapText(list, prefix, suffix) {
+// of strings with the prefixes and suffixes inserted. If the optional
+// remove_unwrapped argument is true, non-self-closing tags are discarded
+// completely.
+function wrapText(list, prefix, suffix, remove_unwrapped) {
   var out = [];
   var buffer = [];
+  remove_unwrapped = Boolean(remove_unwrapped);
 
   for (var i = 0; i < list.length; i++) {
     if (list[i][0] == '<' && !isSelfClosingTag(list[i])) {
@@ -92,7 +95,7 @@ function wrapText(list, prefix, suffix) {
         out.push(suffix);
         buffer = [];
       }
-      out.push(list[i]);
+      if (!remove_unwrapped) out.push(list[i]);
     } else {
       buffer.push(list[i]);
     }
@@ -130,12 +133,12 @@ function calculateHtmlDiff(src, dst) {
       case 'replace':
         var deleted = src.slice(src_start, src_end);
         var inserted = dst.slice(dst_start, dst_end);
-        buffer = buffer.concat(wrapText(deleted, '<del>', '</del>'));
+        buffer = buffer.concat(wrapText(deleted, '<del>', '</del>', true));
         buffer = buffer.concat(wrapText(inserted, '<ins>', '</ins>'));
         break;
       case 'delete':
         var deleted = src.slice(src_start, src_end);
-        buffer = buffer.concat(wrapText(deleted, '<del>', '</del>'));
+        buffer = buffer.concat(wrapText(deleted, '<del>', '</del>', true));
         break;
       case 'insert':
         var inserted = dst.slice(dst_start, dst_end);
