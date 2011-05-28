@@ -10,6 +10,7 @@
     <script type="text/javascript" src="scripts/popup.js"></script>
     <script type="text/javascript">
       $(function() {
+        BG.hideDesktopNotification();
         if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
         applyLocalization();
         setUpHandlers();

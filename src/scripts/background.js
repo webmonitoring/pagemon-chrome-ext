@@ -46,8 +46,10 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 (function() {
   // The number of updated pages that has been last shown on the badge.
   var last_count = 0;
+  // The last shown notification. Saved so it can be hidden later.
+  var notification = null;
 
-  // Triggers a sound alert if one is enabled.
+  // Triggers a sound alert if it is enabled.
   triggerSoundAlert = function() {
     var sound_alert = getSetting(SETTINGS.sound_alert);
     if (sound_alert) {
@@ -80,11 +82,18 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
                                 '$1...');
     }
 
-    var notification = webkitNotifications.createNotification(
+    notification = webkitNotifications.createNotification(
         NOTIFICATION_ICON, title, content);
 
     notification.show();
-    setTimeout(function() { notification.cancel(); }, timeout);
+    setTimeout(hideDesktopNotification, timeout);
+  };
+  
+  hideDesktopNotification = function() {
+    if (notification) {
+      notification.cancel();
+      notification = null;
+    }
   };
 
   // Checks if any pages are marked as updated, and if so, displays their count
