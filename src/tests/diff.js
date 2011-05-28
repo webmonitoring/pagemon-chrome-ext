@@ -86,10 +86,9 @@ $(function() {
 
     equal(calculateHtmlDiff('', '<span>'), '<span>',
           'Non-closing tag addition');
-    equal(calculateHtmlDiff('<span>', ''), '<span>',
+    equal(calculateHtmlDiff('<span>', ''), '',
           'Non-closing tag removal');
-    equal(calculateHtmlDiff('<span>', '<p>'),
-          '<span><p>',
+    equal(calculateHtmlDiff('<span>', '<p>'), '<p>',
           'Non-closing tag swap');
 
     equal(calculateHtmlDiff('<span>hello<br>world</span>! This is a test.',
