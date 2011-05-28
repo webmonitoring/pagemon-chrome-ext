@@ -3,7 +3,12 @@ del {
   color: black !important;
   text-decoration: none !important;
 }
-del img {
+del * {
+  background: #d65;
+  color: black;
+  text-decoration: none;
+}
+del>img {
   outline: 1px #d65 solid !important;
 }
 ins {
@@ -11,7 +16,12 @@ ins {
   color: black !important;
   text-decoration: none !important;
 }
-ins img {
+ins * {
+  background: #6d5;
+  color: black;
+  text-decoration: none;
+}
+ins>img {
   outline: 1px #6d5 solid !important;
 }
 #chrome_page_monitor_ext_orig_link {
