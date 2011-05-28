@@ -1,63 +1,4 @@
 $(function() {
-  test('htmlToList', function() {
-    same(htmlToList(''), [], 'Empty string');
-    same(htmlToList('  '), ['  '], 'Double-spacing');
-    same(htmlToList(' \r\n\t '), [' \r\n\t '], 'Mixed spacing');
-    same(htmlToList('hello'), ['hello'], 'Single word');
-    same(htmlToList('hello world'), ['hello', ' ', 'world'], 'Two words');
-    same(htmlToList('hello<br />world'),
-         ['hello', '<br />', 'world'],
-         'Two words with HTML in between');
-    same(htmlToList('<span><img src="img.jpg"></span>'),
-         ['<span>', '<img src="img.jpg">', '</span>'],
-         'A bunch of HTML tags');
-    same(htmlToList(' <span>abc\n\ndef<br /> \t</span>'),
-         [' ', '<span>', 'abc', '\n\n', 'def', '<br />', ' \t', '</span>'],
-         'Mix of everything');
-  });
-
-  test('isSelfClosingTag', function() {
-    same(isSelfClosingTag(''), null, 'Empty string');
-    same(isSelfClosingTag('abc'), null, 'Non-tag');
-    same(isSelfClosingTag('<br>'), true, 'Non-closed HTML4 "empty" tag');
-    same(isSelfClosingTag('<command>'), true, 'Non-closed HTML5 "void" tag');
-    same(isSelfClosingTag('<br />'), true, 'Slash-closed HTML4 "empty" tag');
-    same(isSelfClosingTag('<p />'), true, 'Slash-closed HTML4 "non-empty" tag');
-    same(isSelfClosingTag('<q />'), true, 'Slash-closed undefined tag');
-    same(isSelfClosingTag('<p>'), false, 'Non-closed HTML4 "non-empty" tag');
-    same(isSelfClosingTag('<p class="abc">'), false,
-         'Non-closed tag with attributes');
-    same(isSelfClosingTag('<p class="abc" />'), true,
-         'Slash-closed tag with attributes');
-    same(isSelfClosingTag('<br class="abc">'), true,
-         'Non-closed "empty" tag with attributes');
-
-  });
-
-  test('wrapText', function() {
-    same(wrapText([], 'a', 'b'), [], 'Empty string');
-    same(wrapText(['  '], 'a', 'b'), ['a', '  ', 'b'], 'Spaces');
-    same(wrapText(['hello'], 'a', 'b'), ['a', 'hello', 'b'], 'Single word');
-    same(wrapText(['hello', ' ', 'world'], 'a', 'b'),
-         ['a', 'hello', ' ', 'world', 'b'],
-         'Two words with space in between');
-    same(wrapText(['hello', '<br>', 'world'], 'a', 'b'),
-         ['a', 'hello', '<br>', 'world', 'b'],
-         'Two words with closed HTML in between');
-    same(wrapText(['hello', '<span>', 'world'], 'a', 'b'),
-         ['a', 'hello', 'b', '<span>', 'a', 'world', 'b'],
-         'Two words with non-closed HTML in between');
-    same(wrapText(['<span>', '<img src="img.jpg">', '</span>'], 'a', 'b'),
-         ['<span>', 'a', '<img src="img.jpg">', 'b', '</span>'],
-         'A bunch of HTML tags');
-
-    var tmp = [' ', '<span>', 'abc', '\n\n', 'def', '<br />', ' \t', '</span>'];
-    same(wrapText(tmp, 'a', 'b'),
-         ['a', ' ', 'b', '<span>', 'a', 'abc', '\n\n', 'def', '<br />', ' \t',
-          'b', '</span>'],
-         'Mix of everything');
-  });
-
   test('calculateHtmlDiff', function() {
     equal(calculateHtmlDiff('', ''), '', 'Empty string');
 
@@ -81,20 +22,23 @@ $(function() {
     equal(calculateHtmlDiff('<br>', ''), '<del><br></del>',
           'Self-closing tag removal');
     equal(calculateHtmlDiff('<br>', '<br />'),
-          '<del><br></del><ins><br /></ins>',
+          '<br>',
           'Self-closing tag swap');
 
-    equal(calculateHtmlDiff('', '<span>'), '<span>',
+    equal(calculateHtmlDiff('', '<span>'), '<ins><span></span></ins>',
           'Non-closing tag addition');
-    equal(calculateHtmlDiff('<span>', ''), '',
+    equal(calculateHtmlDiff('<span>', ''), '<del><span></span></del>',
           'Non-closing tag removal');
-    equal(calculateHtmlDiff('<span>', '<p>'), '<p>',
+    equal(calculateHtmlDiff('<span>', '<p>'), '<del><span></span></del><ins><p></p></ins>',
           'Non-closing tag swap');
 
     equal(calculateHtmlDiff('<span>hello<br>world</span>! This is a test.',
                             '<img src="hello_world.png"><span>Testing</span>'),
-          '<ins><img src="hello_world.png"></ins><span><del>hello<br>world' +
-          '</del><ins>Testing</ins></span><del>! This is a test.</del>',
+          '<del><span>hello<br>world</span>! This is a</del>' +
+          '<del> </del>' +
+          '<ins><img src="hello_world.png"></ins>' +
+          '<del>test.</del>' +
+          '<ins><span>Testing</span></ins>',
           'Mixed swap');
   });
 
@@ -294,12 +238,12 @@ $(function() {
     }
     getInlineStyles = function(src) {
       ok(true, 'getInlineStyles() called.');
-      equal(src, 'src', 'Src passed to getInlineStyles()');
+      equal(src, 'dest', 'Dest passed to getInlineStyles()');
       return 'style1';
     }
     getReferencedStyles = function(src) {
       ok(true, 'getReferencedStyles() called.');
-      equal(src, 'src', 'Src passed to getReferencedStyles()');
+      equal(src, 'dest', 'Dest passed to getReferencedStyles()');
       return $('<link rel="test" />');
     }
     calculateHtmlDiff = function(src, dest) {
