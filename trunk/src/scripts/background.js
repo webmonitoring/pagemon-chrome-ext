@@ -21,9 +21,8 @@ var RESCHEDULE_DELAY = 15 * 60 * 1000;
 // The minimum time in milliseconds between checks.
 var MINIMUM_CHECK_SPACING = 1000;
 
-// Browser action and notification icons.
+// Browser action icon.
 var BROWSER_ICON = 'img/browser_icon.png';
-var NOTIFICATION_ICON = chrome.extension.getURL('img/notification-icon.png');
 
 // The maximum time offset in the future in milliseconds to look for pages
 // to update.
@@ -58,34 +57,18 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
   // Triggers a desktop notification if they are enabled, notifing the user of
   // updates to the pages specified in the argument.
-  triggerDesktopNotification = function(pages) {
+  triggerDesktopNotification = function() {
     if (!getSetting(SETTINGS.notifications_enabled)) return;
-
+    if (chrome.extension.getViews({ type: 'popup' }).length > 0) return;
     var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
 
-    var title;
-    if (pages.length == 1) {
-      title = chrome.i18n.getMessage('page_updated_single');
-    } else {
-      title = chrome.i18n.getMessage('page_updated_multi',
-                                     pages.length.toString());
-    }
-
-    var content = $.map(pages, function(page) {
-      return page.name;
-    }).join(', ');
-    if (content.length > 150) {
-      content = content.replace(/^([^]{50,150}\b(?!\w)|[^]{50,150})[^]*$/,
-                                '$1...');
-    }
-
-    notification = webkitNotifications.createNotification(
-        NOTIFICATION_ICON, title, content);
+    var url = 'notification.htm';
+    notification = webkitNotifications.createHTMLNotification(url);
 
     notification.show();
     setTimeout(hideDesktopNotification, timeout);
   };
-  
+
   hideDesktopNotification = function() {
     if (notification) {
       notification.cancel();
@@ -109,7 +92,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 
       if (count > last_count) {
         triggerSoundAlert();
-        triggerDesktopNotification(updated_pages);
+        triggerDesktopNotification();
       }
 
       last_count = count;
