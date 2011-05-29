@@ -34,6 +34,9 @@ var REGEX_TIMEOUT = 7 * 1000;
 // The path to the worker script that runs asynchronous regex matches.
 var REGEX_WORKER_PATH = 'scripts/regex.js';
 
+// Maximum request timeout (in milliseconds).
+var REQUEST_TIMEOUT = 10000;
+
 // The minimum length of content after the </body> tag that cannot be ignored.
 var MIN_BODY_TAIL_LENGTH = 100;
 
@@ -539,3 +542,6 @@ function takeSnapshot(url, callback) {
     setPageSettings(url, { updated: false }, callback);
   }, true);
 }
+
+// Sets AJAX timeout and always prevents caching.
+$.ajaxSetup({ timeout: REQUEST_TIMEOUT, cache: false });
