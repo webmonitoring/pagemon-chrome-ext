@@ -106,16 +106,19 @@ $(function() {
     var $controls = generateControls('test');
 
     ok($controls.is('#chrome_page_monitor_ext_orig_link'), 'Block id');
-    equal($('a', $controls).length, 2, 'Links in block');
-    equal($('br', $controls).length, 1, 'Line breaks in block');
+    equal($('a', $controls).length, 3, 'Links in block');
+    equal($('br', $controls).length, 2, 'Line breaks in block');
     equal($('a:first', $controls).attr('href'), 'test', 'Injected URL');
     equal($('a:first', $controls).attr('title'),
           chrome.i18n.getMessage('diff_original_title'),
           'Original link title');
-    equal($('a:first', $controls).text(),
+    equal($('.pm_original', $controls).text(),
           chrome.i18n.getMessage('diff_original'),
           'Original link text');
-    equal($('a:last', $controls).text(),
+    equal($('.pm_textize', $controls).text(),
+          chrome.i18n.getMessage('diff_textize'),
+          'Textize button text');
+    equal($('.pm_hide', $controls).text(),
           chrome.i18n.getMessage('diff_hide_deletions'),
           'Hide button text');
 
@@ -126,6 +129,8 @@ $(function() {
     $('a:last', $controls).click();
     equal($('#del_test').css('display'), 'inline',
           '<del> display after second click');
+
+    // TODO: Test textize switcher.
   });
 
   test('calculateBaseUrl', function() {

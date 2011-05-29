@@ -25,6 +25,8 @@ ins>img {
   outline: 1px #6d5 solid !important;
 }
 #chrome_page_monitor_ext_orig_link {
+  font-family: Calibri, Tahoma, sans-serif !important;
+  font-size: medium !important;
   position: fixed !important;
   bottom: 0px !important;
   right: 30px !important;
@@ -37,6 +39,8 @@ ins>img {
   padding-top: 5px !important;
   text-align: center !important;
   z-index: 9999 !important;
+  line-height: 1.25 !important;
+  word-spacing: 1px !important;
 }
 #chrome_page_monitor_ext_orig_link a:link,
 #chrome_page_monitor_ext_orig_link a:visited {
@@ -46,6 +50,7 @@ ins>img {
   color: #849ccb !important;
   text-decoration: underline !important;
   letter-spacing: 2px !important;
+  display: inline !important;
 }
 #chrome_page_monitor_ext_orig_link a:hover,
 #chrome_page_monitor_ext_orig_link a:focus {
