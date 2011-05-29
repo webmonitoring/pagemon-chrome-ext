@@ -500,7 +500,7 @@ $(function() {
   });
 
   test('initializeIntervalSliders', function() {
-    expect(26);
+    expect(35);
     var old_getSetting = getSetting;
     var old_setSetting = setSetting;
     var old_timeAbsoluteToLog = timeAbsoluteToLog;
@@ -514,10 +514,18 @@ $(function() {
     };
     setSetting = function(name, value) {
       equal(name, SETTINGS.check_interval, 'Setting passed to setSetting');
-      equal(value, 67890 * 60 * 1000, 'Value passed to setSetting');
+      if (value == 67890 * 60 * 1000 || value == 3325 * 60 * 1000) {
+        ok(true, 'Valid value passed to setSetting()');
+      } else {
+        ok(false, 'Invalid value passed to setSetting()');
+      }
     };
     timeAbsoluteToLog = function(value) {
-      equal(value, 123 / (60 * 1000), 'Value passed to timeAbsoluteToLog');
+      if (value == 123 / (60 * 1000) || value == 3325) {
+        ok(true, 'Valid value passed to timeAbsoluteToLog');
+      } else {
+        ok(false, 'Invalid value passed to val()');
+      }
       return 12345;
     };
     timeLogToAbsolute = function(value) {
@@ -533,7 +541,12 @@ $(function() {
         if (arg === undefined) {
           return 12345;
         } else {
-          equal(arg, 12345, 'Value passed to val()');
+          if (arg == 12345 || arg == 67890 || arg == 3325 ||
+              arg == 123 / (60 * 1000)) {
+            ok(true, 'Valid value passed to val()');
+          } else {
+            ok(false, 'Invalid value passed to val()');
+          }
           return this;
         }
       },
@@ -559,7 +572,11 @@ $(function() {
         return this;
       },
       text: function(text) {
-        equal(text, 'abc', 'Text passed to text()');
+        if (text == 'abc' || text == 'minutes') {
+          ok(true, 'Valid text passed to text()');
+        } else {
+          ok(false, 'Invalid text passed to text()');
+        }
         return this;
       },
       not: function(excluder) {
@@ -583,7 +600,8 @@ $(function() {
       }
     };
     $ = function(arg) {
-      if (arg == '#interval input, #basic_interval input' ||
+      if (arg == '#interval input' ||
+          arg == '#interval .check_every_label' ||
           arg == '#basic_interval input[type=range]' ||
           arg == '#basic_interval .range_value_label' ||
           arg == dispatcher) {
