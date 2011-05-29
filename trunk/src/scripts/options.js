@@ -276,29 +276,49 @@ function initializeSorter() {
 // events. The change event updates the range label while the mouseup event
 // saves the new value and synchronizes the value of the other textbox.
 function initializeIntervalSliders() {
-  var interval = getSetting(SETTINGS.check_interval) || (180 * 60 * 1000);
-  var textboxes = $('#interval input, #basic_interval input');
+  var interval_ms = getSetting(SETTINGS.check_interval) || (180 * 60 * 1000);
+  var interval_min = interval_ms / (60 * 1000);
+  var slider = $('#basic_interval input[type=range]');
+  var slider_label = $('#basic_interval .range_value_label');
+  var textbox = $('#interval input');
+  var textbox_label = $('#interval .check_every_label');
 
-  textboxes.val(timeAbsoluteToLog(interval / (60 * 1000))).change(function() {
+  textbox.val(interval_min).change(function() {
+    var val_ms = parseFloat($(this).val()) * 60 * 1000;
+    if (val_ms < 5000) val_ms = 5000;
+    if (val_ms > 199500000) val_ms = 199500000;
+    var val_min = val_ms / (60 * 1000);
+    textbox.val(val_min);
+    slider.val(timeAbsoluteToLog(val_min)).change();
+    var message;
+    if (val_min == 1) {
+      message = chrome.i18n.getMessage('minute');
+    } else {
+      message = chrome.i18n.getMessage('minutes', '2');
+    }
+    textbox_label.text(message.split(' ')[1]);
+
+    setSetting(SETTINGS.check_interval, val_ms);
+  }).change();
+
+  slider.val(timeAbsoluteToLog(interval_min)).change(function() {
     var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
-    textboxes.siblings('.range_value_label').text(describeTime(val_ms));
+    slider.siblings('.range_value_label').text(describeTime(val_ms));
   }).mouseup(function() {
-    var val_ms = timeLogToAbsolute(parseFloat($(this).val())) * 60 * 1000;
-    textboxes.not(this).val($(this).val());
+    var val_min = timeLogToAbsolute(parseFloat($(this).val()));
+    var val_ms = val_min * 60 * 1000;
+    textbox.val(val_min);
     setSetting(SETTINGS.check_interval, val_ms);
   }).mouseup().change();
-
-  var slider = $('#basic_interval input[type=range]');
-  var label = $('#basic_interval .range_value_label');
 
   var position = slider.offset();
   var width = slider.width();
   var height = slider.height();
-  var label_width = label.width();
-  var label_height = label.height();
+  var label_width = slider_label.width();
+  var label_height = slider_label.height();
 
   var new_left = position.left + width / 2 - label_width / 2;
-  label.css({ left: new_left });
+  slider_label.css({ left: new_left });
 }
 
 // Initializes the two desktop notification togglers. Updates their state from
