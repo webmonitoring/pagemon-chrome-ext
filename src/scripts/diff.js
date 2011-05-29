@@ -216,30 +216,63 @@ function calculateTextDiff(src, dst) {
 // attached.
 function generateControls(url) {
   var template = '<div id="chrome_page_monitor_ext_orig_link"> \
-                    <a href="%url%" title="%title%">%original%</a> \
+                    <a class="pm_original" href="%url%" \
+                       title="%title%">%original%</a> \
                     <br /> \
-                    <a href="#">%hide%</a> \
+                    <a class="pm_textize" href="#">%textize%</a> \
+                    <br /> \
+                    <a class="pm_hide" href="#">%hide%</a> \
                   </div>';
 
   var title = chrome.i18n.getMessage('diff_original_title');
   var original = chrome.i18n.getMessage('diff_original');
+  var textize = chrome.i18n.getMessage('diff_textize');
+  var untextize = chrome.i18n.getMessage('diff_untextize');
   var hide = chrome.i18n.getMessage('diff_hide_deletions');
   var show = chrome.i18n.getMessage('diff_show_deletions');
   var controls = template.replace('%url%', url)
                          .replace('%title%', title)
                          .replace('%original%', original)
+                         .replace('%textize%', textize)
                          .replace('%hide%', hide);
 
   var $controls = $(controls);
 
+  // Deletion visibility switcher.
   var deletions_shown = true;
-  $('a:last', $controls).click(function() {
-    if ($(this).text() == show) {
-      $(this).text(hide);
-    } else {
-      $(this).text(show);
-    }
+  $('.pm_hide', $controls).click(function() {
+    $(this).text($(this).text() == show ? hide : show);
     $('del').toggle(deletions_shown = !deletions_shown);
+    return false;
+  });
+
+  // Text-only switcher.
+  var links = $('link[rel=stylesheet]:not([href=styles/diff.css]),style');
+  var print = $('<link rel="stylesheet" type="text/css" href="diff_txt.css"/>');
+  var inline_styles = $('body *[style]').each(function() {
+    $(this).data('style', $(this).attr('style'));
+  });
+  var objs = $('img:visible,object:visible,applet:visible,video:visible');
+  var is_textized = false;
+
+  $('.pm_textize', $controls).click(function() {
+    $(this).text($(this).text() == untextize ? textize : untextize);
+    if (is_textized) {
+      links.appendTo('head');
+      print.detach();
+      inline_styles.each(function() {
+        $(this).attr('style', $(this).data('style'));
+      });
+      objs.show();
+    } else {
+      links.detach();
+      print.appendTo('head');
+      inline_styles.each(function() {
+        $(this).attr('style', '');
+      });
+      objs.hide();
+    }
+    is_textized = !is_textized;
     return false;
   });
 

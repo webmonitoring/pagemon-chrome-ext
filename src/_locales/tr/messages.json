@@ -31,6 +31,14 @@
     "message": "Silinenleri Gizle",
     "description": "Link to hide deletions on the diff page."
   },
+  "diff_textize": {
+    "message": "Metin Modu",
+    "description": "Link to switch the diff page to text-only mode."
+  },
+  "diff_untextize": {
+    "message": "Normal Modu",
+    "description": "Link to switch the diff page from text-only mode to normal."
+  },
   "diff_original": {
     "message": "Orijinal",
     "description": "Text of the link to the original page on the diff page."

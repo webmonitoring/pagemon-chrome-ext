@@ -31,6 +31,14 @@
     "message": "Hide Deletions",
     "description": "Link to hide deletions on the diff page."
   },
+  "diff_textize": {
+    "message": "Text Mode",
+    "description": "Link to switch the diff page to text-only mode."
+  },
+  "diff_untextize": {
+    "message": "Normal Mode",
+    "description": "Link to switch the diff page from text-only mode to normal."
+  },
   "diff_original": {
     "message": "Original",
     "description": "Text of the link to the original page on the diff page."
