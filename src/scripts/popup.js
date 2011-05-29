@@ -44,6 +44,11 @@ function monitorCurrentPage() {
       BG.takeSnapshot(tab.url);
       $('#monitor_page').removeClass('inprogress');
       updateButtonsState();
+      // Refresh options page if it's opened.
+      var tabs = chrome.extension.getViews({ type: 'tab' });
+      for (var i = 0; i < tabs.length; i++) {
+        if (tabs[i].fillPagesList) tabs[i].fillPagesList();
+      }
     });
   });
 }
