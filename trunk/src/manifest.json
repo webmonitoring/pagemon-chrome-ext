@@ -1,6 +1,6 @@
 {
   "name": "__MSG_name__",
-  "version": "3.1.2",
+  "version": "3.2",
   "description": "__MSG_description__",
   "default_locale": "en",
   "icons": {
@@ -8,7 +8,7 @@
     "48": "img/extension_icon.png",
     "32": "img/extension_icon.png",
     "16": "img/browser_icon.png"
-   },
+  },
   "background_page": "background.htm",
   "options_page": "options.htm",
   "browser_action": {
