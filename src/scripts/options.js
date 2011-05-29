@@ -395,9 +395,9 @@ function initializeSoundPlayer() {
   });
 }
 
-// ------------------------------------WARNING----------------------------------
-// --------------------EVERYTHING BELOW THIS LINE IS UNTESTED-------------------
-// -----------------------------------------------------------------------------
+//---------------------------------- WARNING ---------------------------------//
+//------------------ EVERYTHING BELOW THIS LINE IS UNTESTED ------------------//
+//---------------------------------- WARNING ---------------------------------//
 
 // Initializes the sound creation form, including the New button that displays
 // the form, and the Ok/Cancel buttons in the form itself.
