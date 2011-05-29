@@ -1,9 +1,9 @@
 $(function() {
   test('Constants', function() {
     var constants = [
-      'RELIABLE_CHECKPOINT', 'REQUEST_TIMEOUT', 'DEFAULT_CHECK_INTERVAL',
-      'RESCHEDULE_DELAY', 'MINIMUM_CHECK_SPACING', 'BROWSER_ICON',
-      'NOTIFICATION_ICON', 'EPSILON', 'WATCHDOG_INTERVAL', 'WATCHDOG_TOLERANCE'
+      'RELIABLE_CHECKPOINT', 'DEFAULT_CHECK_INTERVAL', 'RESCHEDULE_DELAY',
+       'MINIMUM_CHECK_SPACING', 'BROWSER_ICON', 'EPSILON', 'WATCHDOG_INTERVAL',
+       'WATCHDOG_TOLERANCE'
     ];
     for (var i = 0; i < constants.length; i++) {
       ok(window[constants[i]] !== undefined, constants[i] + ' is defined.');
@@ -44,21 +44,14 @@ $(function() {
   });
 
   test('triggerDesktopNotification', function() {
-    expect(12);
+    expect(5);
     var old_getSetting = getSetting;
-    var old_createNotification = webkitNotifications.createNotification;
+    var old_createHTMLNotification = webkitNotifications.createHTMLNotification;
     var old_setTimeout = setTimeout;
-    var page_title = 'Test test test test test test test test test test test ' +
-                     'test test test test test test test test test test test ' +
-                     'test test test test test test test test test test test';
-    var page_title_truncated = 'Test test test test test test test test test ' +
-                               'test test test test test test test test test ' +
-                               'test test test test test test test test test ' +
-                               'test test test...';
 
     setTimeout = function(callback, timeout) {
+      equal(callback, hideDesktopNotification, 'Timeout target');
       equal(timeout, 12345, 'Timeout delay');
-      callback();
     }
 
     getSetting = function(name) {
@@ -69,7 +62,10 @@ $(function() {
         ok(false, 'Invalid setting requested.');
       }
     };
-    triggerDesktopNotification([{ name: page_title }]);
+    webkitNotifications.createHTMLNotification = function(setting) {
+      ok(false, 'Notification created despite being disabled');
+    };
+    triggerDesktopNotification();
 
     getSetting = function(name) {
       if (name == SETTINGS.notifications_enabled) {
@@ -80,39 +76,14 @@ $(function() {
         ok(false, 'Invalid setting requested.');
       }
     };
-    webkitNotifications.createNotification = function(icon, title, content) {
-      equal(icon, NOTIFICATION_ICON, 'Notification icon');
-      equal(title, chrome.i18n.getMessage('page_updated_single'),
-            'Notification title');
-      equal(content, page_title_truncated, 'Notification content');
-      return {
-        show: function() {
-          ok(true, 'Notification shown.');
-        },
-        cancel: function() {
-          ok(true, 'Notification cancelled.');
-        }
-      };
+    webkitNotifications.createHTMLNotification = function(setting) {
+      equal(setting, 'notification.htm', 'Notification page');
+      return { show: function() { ok(true, 'Notification shown'); } };
     };
-    triggerDesktopNotification([{ name: page_title }]);
-
-    webkitNotifications.createNotification = function(icon, title, content) {
-      equal(title, chrome.i18n.getMessage('page_updated_multi', '2'),
-            'Notification title');
-      equal(content, 'a, b', 'Notification content');
-      return {
-        show: function() {
-          ok(true, 'Notification shown.');
-        },
-        cancel: function() {
-          ok(true, 'Notification cancelled.');
-        }
-      };
-    };
-    triggerDesktopNotification([{ name: 'a' }, { name: 'b' }]);
+    triggerDesktopNotification();
 
     setTimeout = old_setTimeout;
-    webkitNotifications.createNotification = old_createNotification;
+    webkitNotifications.createHTMLNotification = old_createHTMLNotification;
     getSetting = old_getSetting;
   });
 
@@ -144,8 +115,8 @@ $(function() {
       }
     };
     triggerSoundAlert = function() { ok(true, 'Sound alert triggered.'); };
-    triggerDesktopNotification = function(pages) {
-      same(pages, [1, 2, 3], 'Pages passed to desktop notification trigger');
+    triggerDesktopNotification = function() {
+      ok('Desktop notification triggered');
     };
     updateBadge();
 

@@ -69,6 +69,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     setTimeout(hideDesktopNotification, timeout);
   };
 
+  // Hides the currently shown desktop notification (if one is displayed).
   hideDesktopNotification = function() {
     if (notification) {
       notification.cancel();
