@@ -367,6 +367,21 @@ function initiateDiff(url) {
 
         if (page.html) {
           applyDiff(url, page.html, canonizePage(new_html, type), type);
+          // Undo diff highlights outside of selector for selector-mode pages.
+          if (page.mode == 'selector' && page.selector) {
+            $('del,ins', page.selector).addClass('preserve');
+            $(page.selector).each(function() {
+              var parent = $(this).parent();
+              if (parent.is('del,ins')) {
+                parent.addClass('preserve');
+              }
+            });
+
+            $('del:not(.preserve)').remove();
+            $('ins:not(.preserve)').each(function() {
+              $(this).replaceWith($(this).contents());
+            });
+          }
         } else {
           setPageSettings(url, { html: new_html });
           $('img').hide();
