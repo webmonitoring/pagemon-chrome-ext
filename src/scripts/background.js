@@ -11,9 +11,6 @@
 // The address to check when testing for network availability.
 var RELIABLE_CHECKPOINT = 'http://www.google.com/';
 
-// Maximum request timeout (in milliseconds).
-var REQUEST_TIMEOUT = 10000;
-
 // Default interval between checks.
 var DEFAULT_CHECK_INTERVAL = 3 * 60 * 60 * 1000;
 
