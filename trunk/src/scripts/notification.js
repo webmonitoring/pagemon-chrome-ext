@@ -5,24 +5,14 @@
 // A refernce to the background page of the extension.
 var BG = chrome.extension.getBackgroundPage();
 
-// Makes am <a href="...">...</a> link to the diff of a given page, limiting the
-// length of the link text to name_max.
-function makeLink(page, name_max) {
-  var diff_url = 'diff.htm#' + btoa(page.url);
+// Makes am <a href="...">...</a> link to the diff of a given page.
+function makeLink(page) {
   var buffer = [];
 
-  buffer.push('<a href="' + diff_url + '" \
+  buffer.push('<a href="diff.htm#' + btoa(page.url) + '" \
                   onclick="markPageVisited(\'' + page.url + '\');" \
                   target="_blank">');
-
-  var name = page.name;
-  if (name.length > name_max) {
-    var num = '{' + Math.floor(name_max * 0.6) + ',' + name_max + '}';
-    var regex = RegExp('^([^]' + num + '\b(?!\w)|[^]' + num + ')[^]*$');
-    name = name.replace(regex, '$1...');
-  }
-
-  buffer.push(name);
+  buffer.push(page.name);
   buffer.push('</a>');
 
   return buffer.join('');
@@ -57,13 +47,13 @@ function initialize() {
     var buffer = [];
     if (pages.length == 1) {
       buffer.push('<span>');
-      buffer.push(makeLink(pages[0], 25));
-      buffer.push('<span>');
+      buffer.push(makeLink(pages[0]));
+      buffer.push('</span>');
     } else {
       buffer.push('<ul>');
       pages.forEach(function(page) {
         buffer.push('<li>');
-        buffer.push(makeLink(page, 23));
+        buffer.push(makeLink(page));
         buffer.push('</li>');
       });
       buffer.push('</ul>');
