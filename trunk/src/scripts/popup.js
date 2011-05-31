@@ -249,4 +249,11 @@ function setUpHandlers() {
   $('.page_link').live('click', openLinkInNewTab);
   $('.view_diff').live('click', openDiffPage);
   $('.stop_monitoring').live('click', stopMonitoring);
+
+  // Add a margin when there's a scrollbar, after the popup is resized.
+  $(window).resize(function() {
+    var html = $('html').get(0);
+    var margin = (html.scrollHeight > html.clientHeight) ? '1em' : '0';
+    $('body').css('margin-right', margin);
+  });
 }
