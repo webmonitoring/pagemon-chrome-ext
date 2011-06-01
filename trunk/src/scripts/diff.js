@@ -20,6 +20,7 @@ var SCROLL_MARGIN = 75;
 // compiled version with <del> and <ins> tags added in the appropriate places.
 // Returns null if there's an error in the diff library. Called recursively to
 // diff each subtree. Uses difflib for calculating the diff.
+// TODO: Refactor this dinosaur.
 function calculateHtmlDiff(src, dst) {
   function tokenize(str) {
     var parts = [];
@@ -56,7 +57,40 @@ function calculateHtmlDiff(src, dst) {
         var haystack = src.slice(src_start, src_end) +
                        dst.slice(dst_start, dst_end);
         if (haystack.match(/<|>/)) {
-          opcodes_merged.push(opcodes[i]);
+          opcodes_merged = opcodes_merged.concat(del_run);
+          opcodes_merged = opcodes_merged.concat(ins_run);
+          del_run = [];
+          ins_run = [];
+          // Split off text prefixes and suffixes.
+          var src_body_start = src_start, src_body_end = src_end;
+          for (var i = src_start; i < src_end && !src[i].match(/^</); i++) {
+            src_body_start++;
+          }
+          for (var i = src_end - 1; i > src_start && !src[i].match(/>$/); i--) {
+            src_body_end--;
+          }
+
+          var dst_body_start = dst_start, dst_body_end = dst_end;
+          for (var i = dst_start; i < dst_end && !dst[i].match(/^</); i++) {
+            dst_body_start++;
+          }
+          for (var i = dst_end - 1; i > dst_start && !dst[i].match(/>$/); i--) {
+            dst_body_end--;
+          }
+
+          if (src_body_start != src_start || dst_body_start != dst_start) {
+            opcodes_merged.push(['replace',
+                                 src_body_start, src_start,
+                                 dst_body_start, dst_start]);
+          }
+          opcodes_merged.push(['replace',
+                               src_body_start, src_body_end,
+                               dst_body_start, dst_body_end]);
+          if (src_body_end != src_end || dst_body_end != dst_end) {
+            opcodes_merged.push(['replace',
+                                 src_body_end, src_end,
+                                 dst_body_end, dst_end]);
+          }
         } else {
           del_run.push(['delete', src_start, src_end, dst_start, dst_end]);
           ins_run.push(['insert', src_start, src_end, dst_start, dst_end]);
@@ -96,62 +130,79 @@ function calculateHtmlDiff(src, dst) {
         var deleted = src.slice(src_start, src_end);
         var inserted = dst.slice(dst_start, dst_end);
 
-        // It is often the case that minor changes in the last item of a run
-        // produce an overly greedy replace subsequence. Here we chop off the
-        // beginning of either the deleted or the inserted array to make sure
-        // both are of the same size before recursing.
-        if (deleted.length != inserted.length) {
-          var sharedLength = Math.min(deleted.length, inserted.length);
-          var deletedPrefix = deleted.slice(0, -sharedLength);
-          var insertedPrefix = inserted.slice(0, -sharedLength);
+        if (!deleted.join('').match(/<|>/) || !inserted.join('').match(/<|>/)) {
+          // If either of the replacement parts has no HTML tags, trying to
+          // recursively diff them one-by-one will produce a long
+          // del-ins-del-ins sequence, which is ugly. We merge them normally in
+          // this case.
+          buffer.push('<del>');
+          buffer = buffer.concat(deleted);
+          buffer.push('</del>');
+          buffer.push('<ins>');
+          buffer = buffer.concat(inserted);
+          buffer.push('</ins>');
+        } else {
+          // It is often the case that minor changes in the last item of a run
+          // produce an overly greedy replace subsequence. Here we chop off the
+          // beginning of either the deleted or the inserted array to make sure
+          // both are of the same size before recursing.
+          if (deleted.length != inserted.length) {
+            var sharedLength = Math.min(deleted.length, inserted.length);
+            var deletedPrefix = deleted.slice(0, -sharedLength);
+            var insertedPrefix = inserted.slice(0, -sharedLength);
 
-          if (deletedPrefix.length) {
-            buffer.push('<del>');
-            buffer = buffer.concat(deletedPrefix);
-            buffer.push('</del>');
+            if (deletedPrefix.length) {
+              buffer.push('<del>');
+              buffer = buffer.concat(deletedPrefix);
+              buffer.push('</del>');
+            }
+            if (insertedPrefix.length) {
+              buffer.push('<ins>');
+              buffer = buffer.concat(insertedPrefix);
+              buffer.push('</ins>');
+            }
+
+            deleted = deleted.slice(-sharedLength);
+            inserted = inserted.slice(-sharedLength);
           }
-          if (insertedPrefix.length) {
-            buffer.push('<ins>');
-            buffer = buffer.concat(insertedPrefix);
-            buffer.push('</ins>');
-          }
 
-          deleted = deleted.slice(-sharedLength);
-          inserted = inserted.slice(-sharedLength);
-        }
-
-        // Recursively diff each respective pair of deleted/inserted items if
-        // their top level tags match.
-        for (var j = 0; j < deleted.length; j++) {
-          var deletedTag = deleted[j].match(/^\s*<(\w+)[^>]*>/);
-          var insertedTag = inserted[j].match(/^\s*<(\w+)[^>]*>/);
-          if (deletedTag && insertedTag && deletedTag[0] == insertedTag[0]) {
-            var diff = calculateHtmlDiff($(deleted[j]).html(), 
-                                         $(inserted[j]).html());
-            buffer.push(insertedTag[0]);
-            buffer.push(diff);
-            buffer.push('</' + insertedTag[1] + '>');
-          } else {
-            buffer.push('<del>');
-            buffer.push(deleted[j]);
-            buffer.push('</del>');
-            buffer.push('<ins>');
-            buffer.push(inserted[j]);
-            buffer.push('</ins>');
+          // Recursively diff each respective pair of deleted/inserted items if
+          // their top level tags match.
+          for (var j = 0; j < deleted.length; j++) {
+            var deletedTag = deleted[j].match(/^\s*<(\w+)[^>]*>/);
+            var insertedTag = inserted[j].match(/^\s*<(\w+)[^>]*>/);
+            if (deletedTag && insertedTag && deletedTag[0] == insertedTag[0]) {
+              var diff = calculateHtmlDiff($(deleted[j]).html(), 
+                                           $(inserted[j]).html());
+              buffer.push(insertedTag[0]);
+              buffer.push(diff);
+              buffer.push('</' + insertedTag[1] + '>');
+            } else {
+              buffer.push('<del>');
+              buffer.push(deleted[j]);
+              buffer.push('</del>');
+              buffer.push('<ins>');
+              buffer.push(inserted[j]);
+              buffer.push('</ins>');
+            }
           }
         }
         break;
       case 'delete':
         var deleted = src.slice(src_start, src_end);
-        buffer.push('<del>');
-        buffer = buffer.concat(deleted);
-        buffer.push('</del>');
+        if (deleted.join('') != '') {
+          buffer.push('<del>');
+          buffer = buffer.concat(deleted);
+          buffer.push('</del>');
+        }
         break;
       case 'insert':
         var inserted = dst.slice(dst_start, dst_end);
-        buffer.push('<ins>');
-        buffer = buffer.concat(inserted);
-        buffer.push('</ins>');
+        if (inserted.join('') != '') {
+          buffer.push('<ins>');
+          buffer = buffer.concat(inserted);
+          buffer.push('</ins>');
+        }
         break;
       case 'equal':
         buffer = buffer.concat(dst.slice(dst_start, dst_end));
