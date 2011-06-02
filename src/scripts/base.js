@@ -371,7 +371,6 @@ function isPageMonitored(url, callback) {
 // results in empty output.
 function canonizePage(page, type) {
   if (!page) return page;
-
   return type.match(/\b(x|xht|ht)ml\b/) ? page.replace(/\s+/g, ' ') : page;
 }
 
@@ -422,7 +421,8 @@ function findAndFormatSelectorMatches(html, selector, callback) {
 }
 
 // Extract the text out of the HTML page, then calls the callback with the
-// result as an argument. The extraction includes:
+// result as an argument. If no callback is provided, simply returns the result.
+// The extraction includes:
 // 1. Trimming everything outside of <body> through getStrippedBody().
 // 2. Removing the contents of script, style, object, embed and applet tags.
 // 3. Replacing images with their src, surrounded by "startimg" and "endimg".
@@ -451,7 +451,11 @@ function cleanHtmlPage(html, callback) {
   // Remove everything other than letters (unicode letters are preserved).
   html = html.replace(/[\x00-\x40\x5B-\x60\x7B-\xBF]/g, '');
 
-  (callback || $.noop)(html);
+  if (callback) {
+    callback(html);
+  } else {
+    return html;
+  }
 }
 
 // Calculates the CRC of a page, after cleaning it, and calls the callback with

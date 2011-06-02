@@ -13,75 +13,104 @@
 var SCROLL_MARGIN = 75;
 
 /*******************************************************************************
-*                                   Diffing                                    *
+*                                HTML Diffing                                  *
 *******************************************************************************/
 
 // Calculates the diff between two HTML strings, src and dst, and returns a
 // compiled version with <del> and <ins> tags added in the appropriate places.
 // Returns null if there's an error in the diff library. Called recursively to
-// diff each subtree. Uses difflib for calculating the diff.
+// diff each subtree. Uses difflib for calculating the diff. If loose_compare is
+// true, comparisons use cleanHtmlPage(). See the documentation for that
+// function for details.
 // TODO: Refactor this dinosaur.
-function calculateHtmlDiff(src, dst) {
-  function tokenize(str) {
+function calculateHtmlDiff(src, dst, loose_compare) {
+  function tokenizeHtml(str) {
     var parts = [];
     $('<html/>').append(str).contents().each(function() {
-      if (this.data) {
+      if (this.nodeType == Node.TEXT_NODE) {
         parts = parts.concat(this.data.match(/\S+|\s+/g));
-      } else {
+      } else if (this.nodeType == Node.ELEMENT_NODE) {
         parts.push(this.outerHTML);
       }
     });
     return parts;
   }
 
-  // Split the HTML strings into nodes, tags or text.
-  src = tokenize(src);
-  dst = tokenize(dst);
+  function hashEach(tokens) {
+    return tokens.map(function(token) {
+      // For HTML tag tokens, make sure we compare only the actual text content.
+      if (/^</.test(token)) {
+        return crc(loose_compare ? cleanHtmlPage(token) : token);
+      } else {
+        return token;
+      }
+    });
+  }
 
-  // Diff the two token lists.
-  var opcodes = new difflib.SequenceMatcher(src, dst, false).get_opcodes();
+  // Split the HTML strings into nodes, tags or text.
+  src = tokenizeHtml(src);
+  src_hashed = hashEach(src);
+  dst = tokenizeHtml(dst);
+  dst_hashed = hashEach(dst);
+
+  // Diff the two hashed token lists.
+  var differ = new difflib.SequenceMatcher(src_hashed, dst_hashed);
+  var opcodes = differ.get_opcodes();
 
   // Merge del-ins-del-ins runs of plain text into {del-del}-{ins-ins}. Does not
   // touch 'replace' runs containing tags.
   var opcodes_merged = [];
   var del_run = [];
   var ins_run = [];
-  for (var i = 0; i < opcodes.length; i++) {
-    switch (opcodes[i][0]) {
+  for (var opcodeNum = 0; opcodeNum < opcodes.length; opcodeNum++) {
+    var opcode = opcodes[opcodeNum];
+    switch (opcode[0]) {
       case 'replace':
-        var opcode = opcodes[i][0];
-        var src_start = opcodes[i][1];
-        var src_end = opcodes[i][2];
-        var dst_start = opcodes[i][3];
-        var dst_end = opcodes[i][4];
-        var haystack = src.slice(src_start, src_end) +
-                       dst.slice(dst_start, dst_end);
-        if (haystack.match(/<|>/)) {
+        var src_start = opcode[1];
+        var src_end = opcode[2];
+        var dst_start = opcode[3];
+        var dst_end = opcode[4];
+
+        function hasTags(list, from, to) {
+          for (var i = from; i < to; i++) {
+            if (typeof(list[i]) == 'number') return true;
+          }
+          return false;
+        }
+        var src_has_tags = hasTags(src_hashed, src_start, src_end);
+        var dst_has_tags = hasTags(dst_hashed, dst_start, dst_end);
+
+        if (src_has_tags || dst_has_tags) {
           opcodes_merged = opcodes_merged.concat(del_run);
           opcodes_merged = opcodes_merged.concat(ins_run);
           del_run = [];
           ins_run = [];
+
           // Split off text prefixes and suffixes.
           var src_body_start = src_start, src_body_end = src_end;
           for (var i = src_start; i < src_end && !src[i].match(/^</); i++) {
             src_body_start++;
           }
-          for (var i = src_end - 1; i > src_start && !src[i].match(/>$/); i--) {
-            src_body_end--;
+          if (src_has_tags) {
+            for (var i = src_end - 1; i >= src_start && !src[i].match(/^</); i--) {
+              src_body_end--;
+            }
           }
 
           var dst_body_start = dst_start, dst_body_end = dst_end;
           for (var i = dst_start; i < dst_end && !dst[i].match(/^</); i++) {
             dst_body_start++;
           }
-          for (var i = dst_end - 1; i > dst_start && !dst[i].match(/>$/); i--) {
-            dst_body_end--;
+          if (dst_has_tags) {
+            for (var i = dst_end - 1; i >= dst_start && !dst[i].match(/^</); i--) {
+              dst_body_end--;
+            }
           }
 
           if (src_body_start != src_start || dst_body_start != dst_start) {
             opcodes_merged.push(['replace',
-                                 src_body_start, src_start,
-                                 dst_body_start, dst_start]);
+                                 src_start, src_body_start,
+                                 dst_start, dst_body_start]);
           }
           opcodes_merged.push(['replace',
                                src_body_start, src_body_end,
@@ -97,17 +126,17 @@ function calculateHtmlDiff(src, dst) {
         }
         break;
       case 'delete':
-        del_run.push(opcodes[i]);
+        del_run.push(opcode);
         break;
       case 'insert':
-        ins_run.push(opcodes[i]);
+        ins_run.push(opcode);
         break;
       case 'equal':
         opcodes_merged = opcodes_merged.concat(del_run);
         opcodes_merged = opcodes_merged.concat(ins_run);
         del_run = [];
         ins_run = [];
-        opcodes_merged.push(opcodes[i]);
+        opcodes_merged.push(opcode);
         break;
     }
   }
@@ -135,12 +164,16 @@ function calculateHtmlDiff(src, dst) {
           // recursively diff them one-by-one will produce a long
           // del-ins-del-ins sequence, which is ugly. We merge them normally in
           // this case.
-          buffer.push('<del>');
-          buffer = buffer.concat(deleted);
-          buffer.push('</del>');
-          buffer.push('<ins>');
-          buffer = buffer.concat(inserted);
-          buffer.push('</ins>');
+          if (deleted.join('').length) {
+            buffer.push('<del>');
+            buffer = buffer.concat(deleted);
+            buffer.push('</del>');
+          }
+          if (inserted.join('').length) {
+            buffer.push('<ins>');
+            buffer = buffer.concat(inserted);
+            buffer.push('</ins>');
+          }
         } else {
           // It is often the case that minor changes in the last item of a run
           // produce an overly greedy replace subsequence. Here we chop off the
@@ -151,12 +184,12 @@ function calculateHtmlDiff(src, dst) {
             var deletedPrefix = deleted.slice(0, -sharedLength);
             var insertedPrefix = inserted.slice(0, -sharedLength);
 
-            if (deletedPrefix.length) {
+            if (deletedPrefix.join('').length) {
               buffer.push('<del>');
               buffer = buffer.concat(deletedPrefix);
               buffer.push('</del>');
             }
-            if (insertedPrefix.length) {
+            if (insertedPrefix.join('').length) {
               buffer.push('<ins>');
               buffer = buffer.concat(insertedPrefix);
               buffer.push('</ins>');
@@ -172,25 +205,29 @@ function calculateHtmlDiff(src, dst) {
             var deletedTag = deleted[j].match(/^\s*<(\w+)[^>]*>/);
             var insertedTag = inserted[j].match(/^\s*<(\w+)[^>]*>/);
             if (deletedTag && insertedTag && deletedTag[0] == insertedTag[0]) {
-              var diff = calculateHtmlDiff($(deleted[j]).html(), 
-                                           $(inserted[j]).html());
               buffer.push(insertedTag[0]);
-              buffer.push(diff);
+              buffer.push(calculateHtmlDiff($(deleted[j]).html(), 
+                                            $(inserted[j]).html(),
+                                            loose_compare));
               buffer.push('</' + insertedTag[1] + '>');
             } else {
-              buffer.push('<del>');
-              buffer.push(deleted[j]);
-              buffer.push('</del>');
-              buffer.push('<ins>');
-              buffer.push(inserted[j]);
-              buffer.push('</ins>');
+              if (deleted[j].length) {
+                buffer.push('<del>');
+                buffer.push(deleted[j]);
+                buffer.push('</del>');
+              }
+              if (inserted[j].length) {
+                buffer.push('<ins>');
+                buffer.push(inserted[j]);
+                buffer.push('</ins>');
+              }
             }
           }
         }
         break;
       case 'delete':
         var deleted = src.slice(src_start, src_end);
-        if (deleted.join('') != '') {
+        if (deleted.join('').length) {
           buffer.push('<del>');
           buffer = buffer.concat(deleted);
           buffer.push('</del>');
@@ -198,7 +235,7 @@ function calculateHtmlDiff(src, dst) {
         break;
       case 'insert':
         var inserted = dst.slice(dst_start, dst_end);
-        if (inserted.join('') != '') {
+        if (inserted.join('').length) {
           buffer.push('<ins>');
           buffer = buffer.concat(inserted);
           buffer.push('</ins>');
@@ -216,6 +253,10 @@ function calculateHtmlDiff(src, dst) {
 
   return buffer.join('');
 }
+
+/*******************************************************************************
+*                                Text Diffing                                  *
+*******************************************************************************/
 
 // Calculates the diff between two text strings, src and dst, and returns a
 // compiled version with <del> and <ins> tags added in the appropriate places.
@@ -379,8 +420,9 @@ function findFirstChangePosition() {
 // Takes a URL, the source and destination HTML strings, and a MIME type. Diffs
 // the strings either as text or as HTML depending on the type, inserts the
 // result into the current page with appropriate changes and UI controls, then
-// scrolls to the first change.
-function applyDiff(url, src, dst, type) {
+// scrolls to the first change. If loose_compare is true and the diff is in HTML
+// mode, cleanHtmlPage() is used to ignore all but alphabetic changes.
+function applyDiff(url, src, dst, type, loose_compare) {
   // Get base and styles.
   $('<base />').attr('href', calculateBaseUrl(url, src, dst)).appendTo('head');
 
@@ -391,7 +433,9 @@ function applyDiff(url, src, dst, type) {
   // Get diffed body.
   var is_type_html = type.match(/\b(x|xht|ht)ml\b/);
   var differ = is_type_html ? calculateHtmlDiff : calculateTextDiff;
-  var compiled = differ(getStrippedBody(src), getStrippedBody(dst));
+  var compiled = differ(getStrippedBody(src),
+                        getStrippedBody(dst),
+                        loose_compare);
   if (compiled === null) alert(chrome.i18n.getMessage('diff_error'));
   $('body').html(compiled);
 
@@ -417,7 +461,8 @@ function initiateDiff(url) {
         var type = xhr.getResponseHeader('Content-type');
 
         if (page.html) {
-          applyDiff(url, page.html, canonizePage(new_html, type), type);
+          var loose = page.mode == 'text';
+          applyDiff(url, page.html, canonizePage(new_html, type), type, loose);
           // Undo diff highlights outside of selector for selector-mode pages.
           if (page.mode == 'selector' && page.selector) {
             $('del,ins', page.selector).addClass('preserve');
