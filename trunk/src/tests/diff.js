@@ -34,11 +34,11 @@ $(function() {
 
     equal(calculateHtmlDiff('<span>hello<br>world</span>! This is a test.',
                             '<img src="hello_world.png"><span>Testing</span>'),
-          '<del><span>hello<br>world</span>! This is a</del>' +
-          '<del> </del>' +
-          '<ins><img src="hello_world.png"></ins>' +
-          '<del>test.</del>' +
-          '<ins><span>Testing</span></ins>',
+          '<ins><img src=\"hello_world.png\"></ins>' +
+          '<span>' +
+          '<del>hello</del><ins>Testing</ins><del><br></del><del>world</del>' +
+          '</span>' +
+          '<del>! This is a test.</del>',
           'Mixed swap');
   });
 
