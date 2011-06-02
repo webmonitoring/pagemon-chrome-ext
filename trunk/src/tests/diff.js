@@ -2,43 +2,64 @@ $(function() {
   test('calculateHtmlDiff', function() {
     equal(calculateHtmlDiff('', ''), '', 'Empty string');
 
-    equal(calculateHtmlDiff('', ' '), '<ins> </ins>', 'Space addition');
-    equal(calculateHtmlDiff(' ', ''), '<del> </del>', 'Space removal');
+    equal(calculateHtmlDiff('', ' '),
+          '<ins class="chrome_page_monitor_ins"> </ins>',
+          'Space addition');
+    equal(calculateHtmlDiff(' ', ''),
+          '<del class="chrome_page_monitor_del"> </del>',
+          'Space removal');
 
-    equal(calculateHtmlDiff('', 'a'), '<ins>a</ins>', 'Letter addition');
-    equal(calculateHtmlDiff('a', ''), '<del>a</del>', 'Letter removal');
+    equal(calculateHtmlDiff('', 'a'),
+          '<ins class="chrome_page_monitor_ins">a</ins>',
+          'Letter addition');
+    equal(calculateHtmlDiff('a', ''),
+          '<del class="chrome_page_monitor_del">a</del>',
+          'Letter removal');
     equal(calculateHtmlDiff('a', 'b'),
-          '<del>a</del><ins>b</ins>',
+          '<del class="chrome_page_monitor_del">a</del>' +
+          '<ins class="chrome_page_monitor_ins">b</ins>',
           'Letter swap');
 
-    equal(calculateHtmlDiff('', 'hello'), '<ins>hello</ins>', 'Word addition');
-    equal(calculateHtmlDiff('hello', ''), '<del>hello</del>', 'Word removal');
+    equal(calculateHtmlDiff('', 'hello'),
+          '<ins class="chrome_page_monitor_ins">hello</ins>',
+          'Word addition');
+    equal(calculateHtmlDiff('hello', ''),
+          '<del class="chrome_page_monitor_del">hello</del>',
+          'Word removal');
     equal(calculateHtmlDiff('hello', 'world'),
-          '<del>hello</del><ins>world</ins>',
+          '<del class="chrome_page_monitor_del">hello</del>' +
+          '<ins class="chrome_page_monitor_ins">world</ins>',
           'Word swap');
 
-    equal(calculateHtmlDiff('', '<br>'), '<ins><br></ins>',
+    equal(calculateHtmlDiff('', '<br>'),
+          '<ins class="chrome_page_monitor_ins"><br></ins>',
           'Self-closing tag addition');
-    equal(calculateHtmlDiff('<br>', ''), '<del><br></del>',
+    equal(calculateHtmlDiff('<br>', ''),
+          '<del class="chrome_page_monitor_del"><br></del>',
           'Self-closing tag removal');
-    equal(calculateHtmlDiff('<br>', '<br />'),
-          '<br>',
-          'Self-closing tag swap');
+    equal(calculateHtmlDiff('<br>', '<br />'), '<br>', 'Self-closing tag swap');
 
-    equal(calculateHtmlDiff('', '<span>'), '<ins><span></span></ins>',
+    equal(calculateHtmlDiff('', '<span>'),
+          '<ins class="chrome_page_monitor_ins"><span></span></ins>',
           'Non-closing tag addition');
-    equal(calculateHtmlDiff('<span>', ''), '<del><span></span></del>',
+    equal(calculateHtmlDiff('<span>', ''),
+          '<del class="chrome_page_monitor_del"><span></span></del>',
           'Non-closing tag removal');
-    equal(calculateHtmlDiff('<span>', '<p>'), '<del><span></span></del><ins><p></p></ins>',
+    equal(calculateHtmlDiff('<span>', '<p>'),
+          '<del class="chrome_page_monitor_del"><span></span></del>' + 
+          '<ins class="chrome_page_monitor_ins"><p></p></ins>',
           'Non-closing tag swap');
 
     equal(calculateHtmlDiff('<span>hello<br>world</span>! This is a test.',
                             '<img src="hello_world.png"><span>Testing</span>'),
-          '<ins><img src=\"hello_world.png\"></ins>' +
+          '<ins class="chrome_page_monitor_ins">' +
+            '<img src="hello_world.png">' +
+          '</ins>' +
           '<span>' +
-          '<del>hello</del><ins>Testing</ins><del><br></del><del>world</del>' +
+            '<del class="chrome_page_monitor_del">hello<br>world</del>' +
+            '<ins class="chrome_page_monitor_ins">Testing</ins>' +
           '</span>' +
-          '<del>! This is a test.</del>',
+          '<del class="chrome_page_monitor_del">! This is a test.</del>',
           'Mixed swap');
   });
 
@@ -46,58 +67,64 @@ $(function() {
     equal(calculateTextDiff('', ''), '<pre></pre>', 'Empty string');
 
     equal(calculateTextDiff('', ' '),
-          '<pre><ins> </ins></pre>',
+          '<pre><ins class="chrome_page_monitor_ins"> </ins></pre>',
           'Space addition');
     equal(calculateTextDiff(' ', ''),
-          '<pre><del> </del></pre>',
+          '<pre><del class="chrome_page_monitor_del"> </del></pre>',
           'Space removal');
 
     equal(calculateTextDiff('', '\n'),
-          '<pre><ins><br /></ins></pre>',
+          '<pre><ins class="chrome_page_monitor_ins"><br /></ins></pre>',
           'Newline addition');
     equal(calculateTextDiff('\r\n', ''),
-          '<pre><del><br /></del></pre>',
+          '<pre><del class="chrome_page_monitor_del"><br /></del></pre>',
           'Newline removal');
 
     equal(calculateTextDiff('', 'a'),
-          '<pre><ins>a</ins></pre>',
+          '<pre><ins class="chrome_page_monitor_ins">a</ins></pre>',
           'Letter addition');
     equal(calculateTextDiff('a', ''),
-          '<pre><del>a</del></pre>',
+          '<pre><del class="chrome_page_monitor_del">a</del></pre>',
           'Letter removal');
     equal(calculateTextDiff('a', 'b'),
-          '<pre><del>a</del><ins>b</ins></pre>',
+          '<pre><del class="chrome_page_monitor_del">a</del>' +
+          '<ins class="chrome_page_monitor_ins">b</ins></pre>',
           'Letter swap');
 
     equal(calculateTextDiff('', 'hello'),
-          '<pre><ins>hello</ins></pre>',
+          '<pre><ins class="chrome_page_monitor_ins">hello</ins></pre>',
           'Word addition');
     equal(calculateTextDiff('hello', ''),
-          '<pre><del>hello</del></pre>',
+          '<pre><del class="chrome_page_monitor_del">hello</del></pre>',
           'Word removal');
     equal(calculateTextDiff('hello', 'world'),
-          '<pre><del>hello</del><ins>world</ins></pre>',
+          '<pre><del class="chrome_page_monitor_del">hello</del>' +
+          '<ins class="chrome_page_monitor_ins">world</ins></pre>',
           'Word swap');
 
     equal(calculateTextDiff('', '<span>'),
-          '<pre><ins>&lt;span&gt;</ins></pre>',
+          '<pre><ins class="chrome_page_monitor_ins">&lt;span&gt;</ins></pre>',
           'Non-closing tag addition');
     equal(calculateTextDiff('<span>', ''),
-          '<pre><del>&lt;span&gt;</del></pre>',
+          '<pre><del class="chrome_page_monitor_del">&lt;span&gt;</del></pre>',
           'Non-closing tag removal');
     equal(calculateTextDiff('<span>', '<p>'),
-          '<pre>&lt;<del>span</del><ins>p</ins>&gt;</pre>',
+          '<pre>&lt;<del class="chrome_page_monitor_del">span</del>' +
+          '<ins class="chrome_page_monitor_ins">p</ins>&gt;</pre>',
           'Non-closing tag swap');
 
     equal(calculateTextDiff('hello\n  there\n  nice\n  world!',
                             'there are\n\nno tests.'),
-          '<pre><del>hello<br />  there<br />  nice<br />  world!</del><ins>' +
+          '<pre><del class="chrome_page_monitor_del">hello<br />  there' +
+          '<br />  nice<br />  world!</del>' +
+          '<ins class="chrome_page_monitor_ins">' +
           'there are<br /><br />no tests.</ins></pre>',
           'Generic text swap with lots of distorted spacing');
 
     equal(calculateTextDiff('hello\nthere\nnice\nworld!',
                             'there\nis\na\nworld!'),
-          '<pre><del>hello<br />there<br />nice</del><ins>there<br />is' +
+          '<pre><del class="chrome_page_monitor_del">hello<br />there<br />' +
+          'nice</del><ins class="chrome_page_monitor_ins">there<br />is' +
           '<br />a</ins><br />world!</pre>',
           'Multi-line with shared suffix');
   });
