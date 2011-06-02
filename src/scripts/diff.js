@@ -291,6 +291,9 @@ function assembleHtmlDiff(opcodes, src, dst) {
     last_opcode = opcode[0];
   });
 
+  if (last_opcode == 'delete') buffer.push('</del>');
+  else if (last_opcode == 'insert') buffer.push('</ins>');
+
   return buffer.join('');
 }
 
