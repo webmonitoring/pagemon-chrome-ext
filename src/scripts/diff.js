@@ -12,119 +12,135 @@
 // The number of pixels to leave before the first change when scrolling to it.
 var SCROLL_MARGIN = 75;
 
+// TODO: Document.
+var SHORT_TEXT_LENGTH = 15;
+
 /*******************************************************************************
 *                                HTML Diffing                                  *
 *******************************************************************************/
 
-// Calculates the diff between two HTML strings, src and dst, and returns a
-// compiled version with <del> and <ins> tags added in the appropriate places.
-// Returns null if there's an error in the diff library. Called recursively to
-// diff each subtree. Uses difflib for calculating the diff. If loose_compare is
-// true, comparisons use cleanHtmlPage(). See the documentation for that
-// function for details.
-// TODO: Refactor this dinosaur.
-function calculateHtmlDiff(src, dst, loose_compare) {
-  function tokenizeHtml(str) {
-    var parts = [];
-    $('<html/>').append(str).contents().each(function() {
-      if (this.nodeType == Node.TEXT_NODE) {
-        parts = parts.concat(this.data.match(/\S+|\s+/g));
-      } else if (this.nodeType == Node.ELEMENT_NODE) {
-        parts.push(this.outerHTML);
-      }
-    });
-    return parts;
+// TODO: Document.
+function tokenizeHtml(str) {
+  var parts = [];
+  $('<html/>').append(str).contents().each(function() {
+    if (this.nodeType == Node.TEXT_NODE) {
+      parts = parts.concat(this.data.match(/\S+|\s+/g));
+    } else if (this.nodeType == Node.ELEMENT_NODE) {
+      parts.push(this.outerHTML);
+    }
+  });
+  return parts;
+}
+
+// TODO: Document.
+function hashEach(tokens, loose_compare) {
+  return tokens.map(function(token) {
+    // For HTML tag tokens, make sure we compare only the actual text content.
+    if (/^</.test(token)) {
+      return crc(loose_compare ? cleanHtmlPage(token) : token);
+    } else {
+      return token;
+    }
+  });
+}
+
+// TODO: Document.
+function hasTags(hashed_tokens) {
+  for (var i = 0; i < hashed_tokens.length; i++) {
+    if (typeof(hashed_tokens[i]) == 'number') return true;
+  }
+  return false;
+}
+
+// TODO: Document.
+function alignTagRuns(opcodes, src, dst, src_hashed, dst_hashed) {
+  var opcodes_aligned = [];
+
+  function pushChange(src_start, src_end, dst_start, dst_end, split) {
+    if (src_start == src_end && dst_start == dst_end) return;
+    var type = (src_start == src_end) ? 'insert' :
+               (dst_start == dst_end) ? 'delete' :
+               'replace';
+    if (type == 'replace') {
+      var src_run = src.slice(src_start, src_end).join('');
+      var dst_run = dst.slice(dst_start, dst_end).join('');
+      if (src_run == dst_run) type = 'equal';
+    }
+    if (split && type == 'replace') {
+      opcodes_aligned.push(['delete', src_start, src_end, 0, 0]);
+      opcodes_aligned.push(['insert', 0, 0, dst_start, dst_end]);
+    } else {
+      opcodes_aligned.push([type, src_start, src_end, dst_start, dst_end]);
+    }
   }
 
-  function hashEach(tokens) {
-    return tokens.map(function(token) {
-      // For HTML tag tokens, make sure we compare only the actual text content.
-      if (/^</.test(token)) {
-        return crc(loose_compare ? cleanHtmlPage(token) : token);
-      } else {
-        return token;
-      }
-    });
-  }
-
-  // Split the HTML strings into nodes, tags or text.
-  src = tokenizeHtml(src);
-  src_hashed = hashEach(src);
-  dst = tokenizeHtml(dst);
-  dst_hashed = hashEach(dst);
-
-  // Diff the two hashed token lists.
-  var differ = new difflib.SequenceMatcher(src_hashed, dst_hashed);
-  var opcodes = differ.get_opcodes();
-
-  // Merge del-ins-del-ins runs of plain text into {del-del}-{ins-ins}. Does not
-  // touch 'replace' runs containing tags.
-  var opcodes_merged = [];
-  var del_run = [];
-  var ins_run = [];
   for (var opcodeNum = 0; opcodeNum < opcodes.length; opcodeNum++) {
     var opcode = opcodes[opcodeNum];
-    switch (opcode[0]) {
-      case 'replace':
-        var src_start = opcode[1];
-        var src_end = opcode[2];
-        var dst_start = opcode[3];
-        var dst_end = opcode[4];
+    var operation = opcode[0];
 
-        function hasTags(list, from, to) {
-          for (var i = from; i < to; i++) {
-            if (typeof(list[i]) == 'number') return true;
-          }
-          return false;
-        }
-        var src_has_tags = hasTags(src_hashed, src_start, src_end);
-        var dst_has_tags = hasTags(dst_hashed, dst_start, dst_end);
+    if (operation != 'replace') {
+      opcodes_aligned.push(opcode);
+    } else {
+      var src_start = opcode[1];
+      var src_end = opcode[2];
+      var dst_start = opcode[3];
+      var dst_end = opcode[4];
+      var src_has_tags = hasTags(src_hashed.slice(src_start, src_end));
+      var dst_has_tags = hasTags(dst_hashed.slice(dst_start, dst_end));
 
-        if (src_has_tags || dst_has_tags) {
-          opcodes_merged = opcodes_merged.concat(del_run);
-          opcodes_merged = opcodes_merged.concat(ins_run);
-          del_run = [];
-          ins_run = [];
-
-          // Split off text prefixes and suffixes.
-          var src_body_start = src_start, src_body_end = src_end;
+      if (src_has_tags || dst_has_tags) {
+        // Split off text prefixes and suffixes.
+        var src_body_start = src_start, src_body_end = src_end;
+        if (src_has_tags) {
           for (var i = src_start; i < src_end && !src[i].match(/^</); i++) {
             src_body_start++;
           }
-          if (src_has_tags) {
-            for (var i = src_end - 1; i >= src_start && !src[i].match(/^</); i--) {
-              src_body_end--;
-            }
-          }
+        }
+        for (var i = src_end - 1; i >= src_start && !src[i].match(/^</); i--) {
+          src_body_end--;
+        }
 
-          var dst_body_start = dst_start, dst_body_end = dst_end;
+        var dst_body_start = dst_start, dst_body_end = dst_end;
+        if (dst_has_tags) {
           for (var i = dst_start; i < dst_end && !dst[i].match(/^</); i++) {
             dst_body_start++;
           }
-          if (dst_has_tags) {
-            for (var i = dst_end - 1; i >= dst_start && !dst[i].match(/^</); i--) {
-              dst_body_end--;
-            }
-          }
-
-          if (src_body_start != src_start || dst_body_start != dst_start) {
-            opcodes_merged.push(['replace',
-                                 src_start, src_body_start,
-                                 dst_start, dst_body_start]);
-          }
-          opcodes_merged.push(['replace',
-                               src_body_start, src_body_end,
-                               dst_body_start, dst_body_end]);
-          if (src_body_end != src_end || dst_body_end != dst_end) {
-            opcodes_merged.push(['replace',
-                                 src_body_end, src_end,
-                                 dst_body_end, dst_end]);
-          }
-        } else {
-          del_run.push(['delete', src_start, src_end, dst_start, dst_end]);
-          ins_run.push(['insert', src_start, src_end, dst_start, dst_end]);
         }
-        break;
+        for (var i = dst_end - 1; i >= dst_start && !dst[i].match(/^</); i--) {
+          dst_body_end--;
+        }
+
+        pushChange(src_start, src_body_start, dst_start, dst_body_start, true);
+        pushChange(src_body_start, src_body_end, dst_body_start, dst_body_end);
+        pushChange(src_body_end, src_end, dst_body_end, dst_end, true);
+      } else {
+        pushChange(src_start, src_end, dst_start, dst_end, true);
+      }
+    }
+  }
+
+  return opcodes_aligned;
+}
+
+// TODO: Document.
+// Merge del-ins-del-ins runs of plain text into {del-del}-{ins-ins}. Does not
+// touch 'replace' runs containing tags.
+function mergeRuns(opcodes, src, dst, src_hashed, dst_hashed) {
+  var opcodes_merged = [];
+  var del_run = [];
+  var ins_run = [];
+
+  for (var opcodeNum = 0; opcodeNum < opcodes.length; opcodeNum++) {
+    var opcode = opcodes[opcodeNum];
+    var operation = opcode[0];
+    var src_start = opcode[1];
+    var src_end = opcode[2];
+    var dst_start = opcode[3];
+    var dst_end = opcode[4];
+    var src_has_tags = hasTags(src_hashed.slice(src_start, src_end));
+    var dst_has_tags = hasTags(dst_hashed.slice(dst_start, dst_end));
+
+    switch (operation) {
       case 'delete':
         del_run.push(opcode);
         break;
@@ -132,6 +148,24 @@ function calculateHtmlDiff(src, dst, loose_compare) {
         ins_run.push(opcode);
         break;
       case 'equal':
+        console.log('TRY');
+        console.log([src.slice(src_start, src_end).join('').length,
+                     dst.slice(dst_start, dst_end).join('').length,
+                     !src_has_tags,
+                     !dst_has_tags]);
+        if ((del_run.length || del_run.length) &&
+            !src_has_tags && !dst_has_tags &&
+            src.slice(src_start, src_end).join('').length < SHORT_TEXT_LENGTH &&
+            dst.slice(dst_start, dst_end).join('').length < SHORT_TEXT_LENGTH) {
+          console.log('  MATCH {' + src.slice(src_start, src_end).join('') + '}->{' + dst.slice(dst_start, dst_end).join('') + '}');
+          // Short text matches can be merged into preceding runs.
+          del_run.push(['delete', src_start, src_end, dst_start, dst_end]);
+          ins_run.push(['insert', src_start, src_end, dst_start, dst_end]);
+          break;
+        }
+        // Fallthrough.
+      case 'replace':
+        // Dump current runs and start new ones from the next opcode.
         opcodes_merged = opcodes_merged.concat(del_run);
         opcodes_merged = opcodes_merged.concat(ins_run);
         del_run = [];
@@ -140,10 +174,15 @@ function calculateHtmlDiff(src, dst, loose_compare) {
         break;
     }
   }
+
   opcodes_merged = opcodes_merged.concat(del_run);
   opcodes_merged = opcodes_merged.concat(ins_run);
-  opcodes = opcodes_merged;
 
+  return opcodes_merged;
+}
+
+// TODO: Document.
+function assembleHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
   // Assemble the diff by surrounding deletions and insertions with <del> and
   // <ins>, respectively. Recurses when tags are being replaced.
   var buffer = [];
@@ -156,22 +195,22 @@ function calculateHtmlDiff(src, dst, loose_compare) {
 
     switch (opcode) {
       case 'replace':
-        var deleted = src.slice(src_start, src_end);
-        var inserted = dst.slice(dst_start, dst_end);
+        var src_has_tags = hasTags(src_hashed.slice(src_start, src_end));
+        var dst_has_tags = hasTags(dst_hashed.slice(dst_start, dst_end));
 
-        if (!deleted.join('').match(/<|>/) || !inserted.join('').match(/<|>/)) {
+        if (!(src_has_tags && dst_has_tags)) {
           // If either of the replacement parts has no HTML tags, trying to
           // recursively diff them one-by-one will produce a long
           // del-ins-del-ins sequence, which is ugly. We merge them normally in
           // this case.
-          if (deleted.join('').length) {
+          if (src_start != src_end) {
             buffer.push('<del>');
-            buffer = buffer.concat(deleted);
+            buffer = buffer.concat(src.slice(src_start, src_end));
             buffer.push('</del>');
           }
-          if (inserted.join('').length) {
+          if (dst_start != dst_end) {
             buffer.push('<ins>');
-            buffer = buffer.concat(inserted);
+            buffer = buffer.concat(dst.slice(dst_start, dst_end));
             buffer.push('</ins>');
           }
         } else {
@@ -179,6 +218,8 @@ function calculateHtmlDiff(src, dst, loose_compare) {
           // produce an overly greedy replace subsequence. Here we chop off the
           // beginning of either the deleted or the inserted array to make sure
           // both are of the same size before recursing.
+          var deleted = src.slice(src_start, src_end);
+          var inserted = dst.slice(dst_start, dst_end);
           if (deleted.length != inserted.length) {
             var sharedLength = Math.min(deleted.length, inserted.length);
             var deletedPrefix = deleted.slice(0, -sharedLength);
@@ -208,7 +249,7 @@ function calculateHtmlDiff(src, dst, loose_compare) {
               buffer.push(insertedTag[0]);
               buffer.push(calculateHtmlDiff($(deleted[j]).html(), 
                                             $(inserted[j]).html(),
-                                            loose_compare));
+                                            loose));
               buffer.push('</' + insertedTag[1] + '>');
             } else {
               if (deleted[j].length) {
@@ -250,6 +291,39 @@ function calculateHtmlDiff(src, dst, loose_compare) {
         return null;
     }
   }
+
+  return buffer;
+}
+
+// Calculates the diff between two HTML strings, src and dst, and returns a
+// compiled version with <del> and <ins> tags added in the appropriate places.
+// Returns null if there's an error in the diff library. Called recursively to
+// diff each subtree. Uses difflib for calculating the diff. If loose_compare is
+// true, comparisons use cleanHtmlPage(). See the documentation for that
+// function for details.
+function calculateHtmlDiff(src, dst, loose_compare) {
+  // Split the HTML strings into nodes; tags or text.
+  var src_tokenized = tokenizeHtml(src);
+  var dst_tokenized = tokenizeHtml(dst);
+  // Hash tags for faster (and optionally more loose) comparison.
+  var src_hashed = hashEach(src_tokenized, loose_compare);
+  var dst_hashed = hashEach(dst_tokenized, loose_compare);
+  // Diff the two hashed token lists.
+  var differ = new difflib.SequenceMatcher(src_hashed, dst_hashed);
+  var opcodes = differ.get_opcodes();
+  // Align tag replaces by chopping off text prefixes and suffixes.
+  var opcodes_aligned = alignTagRuns(opcodes,
+                                     src_tokenized, dst_tokenized,
+                                     src_hashed, dst_hashed);
+  // Merge interleaved runs where possible.
+  var opcodes_merged = mergeRuns(opcodes_aligned,
+                                 src_tokenized, dst_tokenized,
+                                 src_hashed, dst_hashed);
+  // Assemble the diff by inserting <del> and <ins> tags around changes.
+  var buffer = assembleHtmlDiff(opcodes_merged,
+                                src_tokenized, dst_tokenized,
+                                src_hashed, dst_hashed,
+                                loose_compare);
 
   return buffer.join('');
 }
