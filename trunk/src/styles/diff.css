@@ -1,28 +1,18 @@
-del {
+.chrome_page_monitor_del, .chrome_page_monitor_del * {
   background: #d65 !important;
   color: black !important;
   text-decoration: none !important;
 }
-del * {
-  background: #d65;
-  color: black;
-  text-decoration: none;
+.chrome_page_monitor_del img {
+  outline: 3px #d65 solid !important;
 }
-del>img {
-  outline: 1px #d65 solid !important;
-}
-ins {
+.chrome_page_monitor_ins, .chrome_page_monitor_ins * {
   background: #6d5 !important;
   color: black !important;
   text-decoration: none !important;
 }
-ins * {
-  background: #6d5;
-  color: black;
-  text-decoration: none;
-}
-ins>img {
-  outline: 1px #6d5 solid !important;
+.chrome_page_monitor_ins img {
+  outline: 3px #6d5 solid !important;
 }
 #chrome_page_monitor_ext_orig_link {
   font-family: Calibri, Tahoma, sans-serif !important;

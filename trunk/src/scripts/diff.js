@@ -266,13 +266,17 @@ function assembleHtmlDiff(opcodes, src, dst) {
     switch (opcode[0]) {
       case 'delete':
         if (src_start != src_end) {
-          if (last_opcode != 'delete') buffer.push('<del>');
+          if (last_opcode != 'delete') {
+            buffer.push('<del class="chrome_page_monitor_del">');
+          }
           buffer = buffer.concat(src.slice(src_start, src_end));
         }
         break;
       case 'insert':
         if (dst_start != dst_end) {
-          if (last_opcode != 'insert') buffer.push('<ins>');
+          if (last_opcode != 'insert') {
+            buffer.push('<ins class="chrome_page_monitor_ins">');
+          }
           buffer = buffer.concat(dst.slice(dst_start, dst_end));
         }
         break;
@@ -351,10 +355,14 @@ function calculateTextDiff(src, dst) {
 
     switch (mode) {
       case DIFF_DELETE:
-        buffer.push('<del>' + content + '</del>');
+        buffer.push('<del class="chrome_page_monitor_del">');
+        buffer.push(content);
+        buffer.push('</del>');
         break;
       case DIFF_INSERT:
-        buffer.push('<ins>' + content + '</ins>');
+        buffer.push('<ins class="chrome_page_monitor_ins">');
+        buffer.push(content);
+        buffer.push('</ins>');
         break;
       case DIFF_EQUAL:
         buffer.push(content);
