@@ -358,6 +358,7 @@ function initializeNotificationsTimeout() {
 function initializeSoundSelector() {
   var selects = $('#sound_alert select, #basic_sound_alert select');
   var play_button = $('#play_sound');
+  var delete_button = $('#delete_sound');
 
   var custom_sounds = getSetting(SETTINGS.custom_sounds) || [];
   $.each(custom_sounds, function(i, v) {
@@ -369,6 +370,7 @@ function initializeSoundSelector() {
     selects.not(this).val(audio_file);
     setSetting(SETTINGS.sound_alert, audio_file);
     play_button.attr({ disabled: audio_file == '' });
+    delete_button.attr({ disabled: /^$|^chrome-extension:/.test(audio_file) });
   });
 
   selects.val(getSetting(SETTINGS.sound_alert) || '');
@@ -380,16 +382,19 @@ function initializeSoundSelector() {
 function initializeSoundPlayer() {
   var select = $('#sound_alert select');
   var play_button = $('#play_sound');
+  var delete_button = $('#delete_sound');
 
   play_button.click(function() {
     select.attr('disabled', true);
     play_button.attr('disabled', true);
+    delete_button.attr('disabled', true);
 
     var audio = new Audio(select.val());
 
     audio.addEventListener('ended', function() {
       select.attr('disabled', false);
       play_button.attr('disabled', false);
+      delete_button.attr('disabled', false);
     });
     audio.play();
   });
@@ -462,6 +467,17 @@ function initializeSoundCreator() {
       shadeBackground(false);
       new_form.fadeOut();
     });
+  });
+
+  $('#delete_sound').click(function() {
+    var sound_list = $('#sound_alert select');
+    var selected = sound_list.val();
+    var sounds = getSetting(SETTINGS.custom_sounds) || [];
+    setSetting(SETTINGS.custom_sounds, sounds.filter(function(s) {
+      return s.url != selected;
+    }));
+    $('option:selected', sound_list).remove();
+    sound_list.val('');
   });
 }
 
