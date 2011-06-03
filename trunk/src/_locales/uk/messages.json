@@ -344,8 +344,12 @@
     "description": "The text of the 'create' button in the 'new sound' form."
   },
   "sound_new": {
-    "message": "Новий",
+    "message": "Створити",
     "description": "The text of the button that opens the 'new sound' form."
+  },
+  "sound_delete": {
+    "message": "Видалити",
+    "description": "The text of the button that deletes the selected sound."
   },
   "sound_play": {
     "message": "Відтворити",

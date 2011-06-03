@@ -347,6 +347,10 @@
     "message": "新建",
     "description": "打开“新建声音”表单的按钮文字。"
   },
+  "sound_delete": {
+    "message": "删除",
+    "description": "The text of the button that deletes the selected sound."
+  },
   "sound_play": {
     "message": "播放",
     "description": "播放所选声音的按钮文字。"

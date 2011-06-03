@@ -347,6 +347,10 @@
     "message": "New",
     "description": "The text of the button that opens the 'new sound' form."
   },
+  "sound_delete": {
+    "message": "Delete",
+    "description": "The text of the button that deletes the selected sound."
+  },
   "sound_play": {
     "message": "Play",
     "description": "The text of the button that plays the selected sound."

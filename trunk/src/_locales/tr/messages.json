@@ -347,6 +347,10 @@
     "message": "Yeni",
     "description": "The text of the button that opens the 'new sound' form."
   },
+  "sound_delete": {
+    "message": "Silmek",
+    "description": "The text of the button that deletes the selected sound."
+  },
   "sound_play": {
     "message": "Çal",
     "description": "The text of the button that plays the selected sound."
