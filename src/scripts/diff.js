@@ -152,25 +152,46 @@ function recurseHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
     if (opcode[0] != 'replace') {
       opcodes_recursed.push(opcode);
     } else {
-      // It is often the case that minor changes in the last item of a run
+      // It is often the case that minor changes in the first/last item of a run
       // produce an overly greedy replace subsequence. Here we chop off the
-      // beginning of either the deleted or the inserted array to make sure
-      // both are of the same size before recursing.
+      // beginning or end of either the deleted or the inserted array to make
+      // sure both are of the same size and hopefully aligned before recursing.
+      var opcode_to_add = null;
       var deleted_length = src_end - src_start;
       var inserted_length = dst_end - dst_start;
       if (deleted_length != inserted_length) {
         var shared_length = Math.min(deleted_length, inserted_length);
-        var new_src_start = src_end - shared_length;
-        var new_dst_start = dst_end - shared_length;
 
-        if (src_start != new_src_start) {
-          opcodes_recursed.push(['delete', src_start, new_src_start, 0, 0]);
-        } else if (dst_start != new_dst_start) {
-          opcodes_recursed.push(['insert', 0, 0, dst_start, new_dst_start]);
+        var src_tag = src[src_start].match(/^<(\w+)[^>]*>/)[1];
+        var dst_tag = dst[dst_start].match(/^<(\w+)[^>]*>/)[1];
+
+        if (src_tag == dst_tag) {
+          // Start tags match - cut from the end.
+          var new_src_end = src_start + shared_length;
+          var new_dst_end = dst_start + shared_length;
+
+          if (src_end != new_src_end) {
+            opcode_to_add = ['delete', new_src_end, src_end, 0, 0];
+          } else if (dst_end != new_dst_end) {
+            opcode_to_add = ['insert', 0, 0, new_dst_end, dst_end];
+          }
+
+          src_end = new_src_end;
+          dst_end = new_dst_end;
+        } else {
+          // Start tags mismatch - cut from the start.
+          var new_src_start = src_end - shared_length;
+          var new_dst_start = dst_end - shared_length;
+
+          if (src_start != new_src_start) {
+            opcodes_recursed.push(['delete', src_start, new_src_start, 0, 0]);
+          } else if (dst_start != new_dst_start) {
+            opcodes_recursed.push(['insert', 0, 0, dst_start, new_dst_start]);
+          }
+
+          src_start = new_src_start;
+          dst_start = new_dst_start;
         }
-
-        src_start = new_src_start;
-        dst_start = new_dst_start;
       }
 
       // Recursively diff each respective pair of deleted/inserted items if
@@ -197,6 +218,8 @@ function recurseHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
           opcodes_recursed.push(['insert', 0, 0, dst_index, dst_index + 1]);
         }
       }
+
+      if (opcode_to_add) opcodes_recursed.push(opcode_to_add);
     }
   });
 
