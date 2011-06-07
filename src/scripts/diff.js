@@ -324,7 +324,7 @@ function assembleHtmlDiff(opcodes, src, dst) {
 }
 
 // Walks the assembled HTML diff list and wraps the contents of all <td>s inside
-// an insert or delete sequence with isert or delete tags, respectively.
+// an insert or delete sequence with insert or delete tags, respectively.
 // NOTE: Works on the passed list in-place.
 function internalizeTableDiffs(assembled_diff) {
   var state = [];
