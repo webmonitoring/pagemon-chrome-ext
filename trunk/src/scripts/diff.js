@@ -16,6 +16,12 @@ var SCROLL_MARGIN = 75;
 // diff that should be merged into the surrounding runs.
 var SHORT_TEXT_LENGTH = 15;
 
+// The start and end tag for sequences of insertions or deletions.
+var INS_START = '<ins class="chrome_page_monitor_ins">';
+var INS_END = '</ins>';
+var DEL_START = '<del class="chrome_page_monitor_del">';
+var DEL_END = '</del>';
+
 /*******************************************************************************
 *                                HTML Diffing                                  *
 *******************************************************************************/
@@ -276,30 +282,27 @@ function clusterRuns(opcodes, src, dst, src_hashed, dst_hashed) {
   return opcodes_merged;
 }
 
-// Assemble a diff opcode sequence into an HTML string by surrounding sequences
-// of deletion or insertion runs with <del> or <ins>, respectively.
+// Assembles a diff opcode sequence into a string list whose concatenation is a
+// valid HTML string, by surrounding sequences of deletion or insertion runs
+// with <del> or <ins>, respectively.
 function assembleHtmlDiff(opcodes, src, dst) {
   var buffer = [];
   var last_opcode = 'equal';
 
   eachOpcode(opcodes, function(opcode, src_start, src_end, dst_start, dst_end) {
     if (last_opcode != 'equal' && last_opcode != opcode[0]) {
-      buffer.push((last_opcode == 'delete') ? '</del>' : '</ins>');
+      buffer.push((last_opcode == 'delete') ? DEL_END : INS_END);
     }
     switch (opcode[0]) {
       case 'delete':
         if (src_start != src_end) {
-          if (last_opcode != 'delete') {
-            buffer.push('<del class="chrome_page_monitor_del">');
-          }
+          if (last_opcode != 'delete') buffer.push(DEL_START);
           buffer = buffer.concat(src.slice(src_start, src_end));
         }
         break;
       case 'insert':
         if (dst_start != dst_end) {
-          if (last_opcode != 'insert') {
-            buffer.push('<ins class="chrome_page_monitor_ins">');
-          }
+          if (last_opcode != 'insert') buffer.push(INS_START);
           buffer = buffer.concat(dst.slice(dst_start, dst_end));
         }
         break;
@@ -314,10 +317,43 @@ function assembleHtmlDiff(opcodes, src, dst) {
     last_opcode = opcode[0];
   });
 
-  if (last_opcode == 'delete') buffer.push('</del>');
-  else if (last_opcode == 'insert') buffer.push('</ins>');
+  if (last_opcode == 'delete') buffer.push(DEL_END);
+  else if (last_opcode == 'insert') buffer.push(INS_END);
 
-  return buffer.join('');
+  return buffer;
+}
+
+// Walks the assembled HTML diff list and wraps the contents of all <td>s inside
+// an insert or delete sequence with isert or delete tags, respectively.
+// NOTE: Works on the passed list in-place.
+function internalizeTableDiffs(assembled_diff) {
+  var state = [];
+  for (var i = 0; i < assembled_diff.length; i++) {
+    var token = assembled_diff[i];
+    switch (token) {
+      case INS_START:
+        state.push(INS_START);
+        break;
+      case DEL_START:
+        state.push(DEL_START);
+        break;
+      case INS_END:
+        console.assert(state.pop() == INS_START);
+        break;
+      case DEL_END:
+        console.assert(state.pop() == DEL_START);
+        break;
+      default:
+        var token_tag = token.match(/^<(td|tr)\b/);
+        if (state.length && token_tag) {
+          var $token = $(token);
+          var to_wrap = (token_tag[1] == 'tr') ? $('td', $token) : $token;
+          to_wrap.wrapInner(state[state.length - 1]);
+          assembled_diff[i] = $token.get(0).outerHTML;
+        }
+    }
+  }
+  console.assert(state.length == 0);
 }
 
 // Calculates the diff between two HTML strings, src and dst, and returns a
@@ -353,7 +389,11 @@ function calculateHtmlDiff(src, dst, loose_compare) {
                                    src_tokenized, dst_tokenized,
                                    src_hashed, dst_hashed);
   // Assemble the diff by inserting <del> and <ins> tags around changes.
-  return assembleHtmlDiff(opcodes_merged, src_tokenized, dst_tokenized);
+  var html = assembleHtmlDiff(opcodes_merged, src_tokenized, dst_tokenized);
+  // Update the assembled HTML to internalize changes in <tr>s and <td>s.
+  internalizeTableDiffs(html);
+  // Finally return the HTML as a string.
+  return html.join('');
 }
 
 /*******************************************************************************
@@ -381,14 +421,14 @@ function calculateTextDiff(src, dst) {
 
     switch (mode) {
       case DIFF_DELETE:
-        buffer.push('<del class="chrome_page_monitor_del">');
+        buffer.push(DEL_START);
         buffer.push(content);
-        buffer.push('</del>');
+        buffer.push(DEL_END);
         break;
       case DIFF_INSERT:
-        buffer.push('<ins class="chrome_page_monitor_ins">');
+        buffer.push(INS_START);
         buffer.push(content);
-        buffer.push('</ins>');
+        buffer.push(INS_END);
         break;
       case DIFF_EQUAL:
         buffer.push(content);
