@@ -1,5 +1,8 @@
 #!/usr/bin/python2
-"""Builds a minified version of Page Monitor for distribution."""
+"""Builds a minified version of Page Monitor for distribution.
+
+Use --nocompilejs to leave Javascript unminified.
+"""
 
 
 import glob
@@ -38,6 +41,7 @@ def compileJS(text):
 def compileCSS(text):
   return re.sub(r'/\*.*?\*/|(?<!\w)\s+|\s(?=\{)', '', text.strip())
 
+
 def compileHTML(filename):
   string = open(filename).read()
   string = DEV_ONLY_REGEX.sub('', string)
@@ -58,7 +62,7 @@ def compileHTML(filename):
   return DOCTYPE + lxml.html.tostring(doc)
 
 
-def stripDotfiles(src, names):
+def stripDotfiles(_, names):
   return [i for i in names if i.startswith('.')]
 
 
@@ -106,8 +110,6 @@ def main():
     print 'Compiling HTML:', f
     data = compileHTML(f)
     open(f, 'w').write(data)
-
-  raw_input('Done. Press Enter to continue.')
 
 
 if __name__ == '__main__':
