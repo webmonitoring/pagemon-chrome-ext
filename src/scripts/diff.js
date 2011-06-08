@@ -26,6 +26,12 @@ var DEL_END = '</del>';
 *                                HTML Diffing                                  *
 *******************************************************************************/
 
+// Returns a rough similarity value of two strings, between 0 and 1, 0 being
+// entirely different and 1 being identical. Uses difflib.
+function getSimilarity(str1, str2) {
+  return (new difflib.SequenceMatcher(str1.split(''), str2.split(''))).ratio();
+}
+
 // Splits an HTML string into tokens for diffing. First the HTML is split into
 // nodes, then text nodes are further split into words, runs of punctuation and
 // runs of whitespace. Comment nodes are discarded.
@@ -168,11 +174,11 @@ function recurseHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
       if (deleted_length != inserted_length) {
         var shared_length = Math.min(deleted_length, inserted_length);
 
-        var src_tag = src[src_start].match(/^<(\w+)[^>]*>/)[1];
-        var dst_tag = dst[dst_start].match(/^<(\w+)[^>]*>/)[1];
+        var start_similarity = getSimilarity(src[src_start], dst[dst_start]);
+        var end_similarity = getSimilarity(src[src_end - 1], dst[dst_end - 1]);
 
-        if (src_tag == dst_tag) {
-          // Start tags match - cut from the end.
+        if (start_similarity > end_similarity) {
+          // Start tags are more similar - cut from the end.
           var new_src_end = src_start + shared_length;
           var new_dst_end = dst_start + shared_length;
 
@@ -185,7 +191,7 @@ function recurseHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
           src_end = new_src_end;
           dst_end = new_dst_end;
         } else {
-          // Start tags mismatch - cut from the start.
+          // End tags are more similar - cut from the start.
           var new_src_start = src_end - shared_length;
           var new_dst_start = dst_end - shared_length;
 
