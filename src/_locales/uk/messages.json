@@ -390,5 +390,9 @@
   "view_original": {
     "message": "попередня версія",
     "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
+  },
+  "until_closed": {
+    "message": "поки не закриєте",
+    "description": "The option describing the notifications remaining active until closed."
   }
 }
