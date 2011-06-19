@@ -58,8 +58,6 @@ hr {
 
 .main_controls>span img, .page_controls>span img {
   vertical-align: middle;
-  position: relative;
-  top: -2px;
 }
 
 .main_controls>span.inactive {
