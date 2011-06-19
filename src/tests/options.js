@@ -701,16 +701,16 @@ $(function() {
     setSetting = function(name, value) {
       equal(name, SETTINGS.notifications_timeout,
             'Setting passed to setSetting');
-      equal(value, 12345 * 1000, 'Value passed to setSetting');
+      equal(value, 12 * 1000, 'Value passed to setSetting');
     };
     describeTime = function(value) {
-      equal(value, 12345 * 1000, 'Value passed to describeTime');
+      equal(value, 12 * 1000, 'Value passed to describeTime');
       return 'abc';
     };
     var dispatcher = {
       val: function(arg) {
         if (arg === undefined) {
-          return 12345;
+          return 12;
         } else {
           equal(arg, 678, 'Value passed to val()');
           return this;
