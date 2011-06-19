@@ -345,7 +345,13 @@ function initializeNotificationsTimeout() {
 
   $('#notifications_timeout input').val(timeout).change(function() {
     var val_ms = parseFloat($(this).val()) * 1000;
-    $(this).siblings('.range_value_label').text(describeTime(val_ms));
+    var label;
+    if (val_ms > 60000) {
+      label = 'until closed';
+    } else {
+      label = describeTime(val_ms);
+    }
+    $(this).siblings('.range_value_label').text(label);
   }).mouseup(function() {
     var val_ms = parseFloat($(this).val()) * 1000;
     setSetting(SETTINGS.notifications_timeout, val_ms);

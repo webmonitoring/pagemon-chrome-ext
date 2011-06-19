@@ -66,7 +66,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     notification = webkitNotifications.createHTMLNotification(url);
 
     notification.show();
-    setTimeout(hideDesktopNotification, timeout);
+    if (timeout <= 60000) setTimeout(hideDesktopNotification, timeout);
   };
 
   // Hides the currently shown desktop notification (if one is displayed).
