@@ -61,11 +61,19 @@
 
 /* Outlines */
 
-.chrome_page_monitor_temp_outline {
+.chrome_page_monitor_temp_outline,
+tr.chrome_page_monitor_temp_outline>td,
+tbody.chrome_page_monitor_temp_outline>tr>td,
+thead.chrome_page_monitor_temp_outline>tr>td,
+tfoot.chrome_page_monitor_temp_outline>tr>td  {
   outline: #849ccb dashed 2px !important;
 }
 
-.chrome_page_monitor_outline {
+.chrome_page_monitor_outline,
+tr.chrome_page_monitor_outline>td,
+tbody.chrome_page_monitor_outline>tr>td,
+thead.chrome_page_monitor_outline>tr>td,
+tfoot.chrome_page_monitor_outline>tr>td {
   outline: #db849c dashed 2px !important;
 }
 
