@@ -390,5 +390,9 @@
   "view_original": {
     "message": "查看原始页面",
     "description": "“查看全部”功能下拉菜单中可能的选择之一。意即将打开原始页面，而非差异页面。"
+  },
+  "until_closed": {
+    "message": "直到关闭",
+    "description": "The option describing the notifications remaining active until closed."
   }
 }

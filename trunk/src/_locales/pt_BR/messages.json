@@ -387,8 +387,8 @@
     "message": "Função \"Ver Tudo\"",
     "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does."
   },
-  "view_original": {
-    "message": "ver original",
-    "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
+  "until_closed": {
+    "message": "até serem fechadas",
+    "description": "The option describing the notifications remaining active until closed."
   }
 }

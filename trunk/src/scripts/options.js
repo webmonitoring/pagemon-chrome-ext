@@ -347,7 +347,7 @@ function initializeNotificationsTimeout() {
     var val_ms = parseFloat($(this).val()) * 1000;
     var label;
     if (val_ms > 60000) {
-      label = 'until closed';
+      label = chrome.i18n.getMessage('until_closed');
     } else {
       label = describeTime(val_ms);
     }
