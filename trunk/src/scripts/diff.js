@@ -563,10 +563,21 @@ function getReferencedStyles(html) {
 
 // Returns the position of the first non-whitespace change in the page.
 function findFirstChangePosition() {
-  var pos = $('ins,del').filter(function() {
-    return $(this).text().replace(/^\s*$/, '');
-  }).first().position();
-  return pos || { left: 0, top: 0 };
+  var min_top = Infinity;
+  var min_left = Infinity;
+
+  $('ins,del').each(function() {
+    if (!/^\s*$/.test($(this).text())) {
+      var offset = $(this).offset();
+      if (offset.top < min_top) min_top = offset.top;
+      if (offset.left < min_left) min_left = offset.left;
+    }
+  });
+
+  if (min_left == Infinity) min_left = 0;
+  if (min_top == Infinity) min_top = 0;
+
+  return { left: min_left, top: min_top };
 }
 
 // Takes a URL, the source and destination HTML strings, and a MIME type. Diffs
