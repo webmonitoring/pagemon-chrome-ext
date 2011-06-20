@@ -604,9 +604,12 @@ function applyDiff(url, src, dst, type, loose) {
   // Insert controls.
   generateControls(url).appendTo('body');
 
-  // Scroll to the first change.
-  var pos = findFirstChangePosition();
-  window.scrollTo(pos.left, pos.top - SCROLL_MARGIN);
+  // Scroll to the first change. Need to delay the scrolling until the layout
+  // is rendered and readjusted. Otherwise the position is sometimes incorrect.
+  setTimeout(function() {
+    var pos = findFirstChangePosition();
+    window.scrollTo(pos.left, pos.top - SCROLL_MARGIN);
+  }, 10);
 }
 
 // Retrieves a saved snapshot of the URL, then the current live version, and
