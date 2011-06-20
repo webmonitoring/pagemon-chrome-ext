@@ -68,11 +68,11 @@
     "description": "The message to display while a check is in progress."
   },
   "stop_monitoring": {
-    "message": "parar monitoramento",
+    "message": "remover",
     "description": "The text on the button that stops a page from being monitored."
   },
   "mark_visited": {
-    "message": "marcar como visitado",
+    "message": "marcar visitado",
     "description": "The text on the button that marks an updated page as visited."
   },
   "view_diff": {
