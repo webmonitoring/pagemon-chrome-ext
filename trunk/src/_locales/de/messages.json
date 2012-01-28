@@ -1,0 +1,398 @@
+{
+  "name": {
+    "message": "Page Monitor",
+    "description": "The name of the extension."
+  },
+  "description": {
+    "message": "Bleibt im Hintergrund und überwacht Web-Seiten auf Änderungen.",
+    "description": "The global description of the extension."
+  },
+  "page_updated_single": {
+    "message": "Seite aktualisiert",
+    "description": "Notification title: a single page has been updated."
+  },
+  "page_updated_multi": {
+    "message": "$1 Seiten aktualisiert",
+    "description": "Notification title: multiple pages have been updated."
+  },
+  "diff_title": {
+    "message": "Page Monitor: Änderungen anzeigen",
+    "description": "The title of the diff page."
+  },
+  "diff_error": {
+    "message": "Fehler beim Abgleich. Bitte teilen Sie uns dies mit.",
+    "description": "A diff failure error message on the diff page."
+  },
+  "diff_show_deletions": {
+    "message": "Löschungen anzeigen",
+    "description": "Link to show deletions on the diff page."
+  },
+  "diff_hide_deletions": {
+    "message": "Löschungen verstecken",
+    "description": "Link to hide deletions on the diff page."
+  },
+  "diff_textize": {
+    "message": "Textmodus",
+    "description": "Link to switch the diff page to text-only mode."
+  },
+  "diff_untextize": {
+    "message": "Normaler Modus",
+    "description": "Link to switch the diff page from text-only mode to normal."
+  },
+  "diff_original": {
+    "message": "Original",
+    "description": "Text of the link to the original page on the diff page."
+  },
+  "diff_original_title": {
+    "message": "Original-Seite anzeigen",
+    "description": "Tooltip of the link to the original page on the diff page."
+  },
+  "diff_corruption": {
+    "message": "Defekter Cache wurde erkannt und behoben. Letzter Snapshot wurde verworfen. Änderungen werden mit der nächsten Aktualisierung wieder hervorgehoben.",
+    "description": "Cache corruption error message on the diff page."
+  },
+  "diff_progress": {
+    "message": "Abgleich in Bearbeitung.",
+    "description": "The message to show while fetching the page to diff."
+  },
+  "options_header": {
+    "message": "Überwachte Seiten",
+    "description": "The text of the pages list header on the options page."
+  },
+  "untitled": {
+    "message": "Unbenannt ($1)",
+    "description": "Default name for pages that have an empty name, with placeholder for the URL."
+  },
+  "check_in_progress": {
+    "message": "Überprüfe",
+    "description": "The message to display while a check is in progress."
+  },
+  "stop_monitoring": {
+    "message": "Beenden",
+    "description": "The text on the button that stops a page from being monitored."
+  },
+  "mark_visited": {
+    "message": "Besucht",
+    "description": "The text on the button that marks an updated page as visited."
+  },
+  "view_diff": {
+    "message": "Änderungen",
+    "description": "The text on the button that opens the diff page."
+  },
+  "no_changes": {
+    "message": "Keine Änderungen gefunden.",
+    "description": "The popup text when no changes have been found."
+  },
+  "feedback": {
+    "message": "Feedback",
+    "description": "The text of the feedback link."
+  },
+  "options": {
+    "message": "Optionen",
+    "description": "The text of the options link."
+  },
+  "view_all": {
+    "message": "Alle anzeigen",
+    "description": "The text of the button that opens all updated pages in new tabs."
+  },
+  "check_all": {
+    "message": "Alle überprüfen",
+    "description": "The text of the button that initiates a check of all pages."
+  },
+  "monitor": {
+    "message": "Überwachen",
+    "description": "The text of the button that marks a page for monitoring."
+  },
+  "page_monitored": {
+    "message": "Wird überwacht",
+    "description": "This text appears in the popup when the current page is already monitored."
+  },
+  "options_title": {
+    "message": "Optionen Seiten-Überwachung",
+    "description": "The title of the options page."
+  },
+  "new_sound_prompt": {
+    "message": "Bitte geben Sie einen Namen und eine URL für den neuen Ton ein.",
+    "description": "The prompt that appears when the user tries to add a new sound."
+  },
+  "new_sound_failed": {
+    "message": "Chrome konnte die Datei unter der angegebenen URL nicht abspielen.",
+    "description": "The error message displayed when the URL specified for a new sound could not be played."
+  },
+  "import_error": {
+    "message": "Ein Fehler ist aufgetreten. Der Import ist möglicherweise unvollständig.",
+    "description": "The error message displayed when a page import fails."
+  },
+  "import_empty": {
+    "message": "Keine Seiten zum Import gefunden.",
+    "description": "The error message displayed when no pages are found during an import."
+  },
+  "import_success_single": {
+    "message": "1 Seite erfolgreich importiert.",
+    "description": "The message displayed when 1 page was imported successfully."
+  },
+  "import_success_multi": {
+    "message": "$1 Seiten erfolgreich importiert.",
+    "description": "The message displayed when multiple pages were imported successfully."
+  },
+  "test_button": {
+    "message": "Testen",
+    "description": "The text on the button that tests a given regex or selector on a page in advanced mode."
+  },
+  "pick_button": {
+    "message": "Auswählen",
+    "description": "The text on the button that launches the selector GUI."
+  },
+  "test_progress": {
+    "message": "Testen...",
+    "description": "The message that appears while testing a regex or selector."
+  },
+  "test_matches": {
+    "message": "Treffer:",
+    "description": "The message that appears when a regex or selector test matches something."
+  },
+  "test_no_matches": {
+    "message": "Keine Treffer.",
+    "description": "The message that appears when a regex or selector test does not match anything."
+  },
+  "test_fail": {
+    "message": "Konnte die gewählte Seite nicht abrufen.",
+    "description": "The message that appears when a regex or selector test fails to retrieve the page to test."
+  },
+  "advanced": {
+    "message": "Erweitert",
+    "description": "The text of the button to toggle advanced settings."
+  },
+  "rename_page": {
+    "message": "Umbenennen",
+    "description": "The text of the button to rename a page."
+  },
+  "remove_page": {
+    "message": "Entfernen",
+    "description": "The text on the button that stops a page from being monitored."
+  },
+  "last_check": {
+    "message": "Letzter Check",
+    "description": "The text of the label that specified when the page was last checked."
+  },
+  "unknown": {
+    "message": "Unbekannt",
+    "description": "A placeholder for an unknown piece of data."
+  },
+  "never": {
+    "message": "Niemals",
+    "description": "A 'last checked' label for pages that have never been checked."
+  },
+  "second": {
+    "message": "1 Sekunde",
+    "description": "A single second, as a number suffix (e.g. '1 second')."
+  },
+  "seconds": {
+    "message": "$1 Sekunden",
+    "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds')."
+  },
+  "minute": {
+    "message": "1 Minute",
+    "description": "A single minute, as a number suffix (e.g. '1 minute')."
+  },
+  "minutes": {
+    "message": "$1 Minuten",
+    "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes')."
+  },
+  "hour": {
+    "message": "1 Stunde",
+    "description": "A single hour, as a number suffix (e.g. '1 hour')."
+  },
+  "hours": {
+    "message": "$1 Stunden",
+    "description": "A plural number of hours, as a number suffix (e.g. '7 hours')."
+  },
+  "day": {
+    "message": "1 Tag",
+    "description": "A single day, as a number suffix (e.g. '1 day')."
+  },
+  "days": {
+    "message": "$1 Tage",
+    "description": "A plural number of days, as a number suffix (e.g. '7 days')."
+  },
+  "ago": {
+    "message": "Vor $1",
+    "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
+  },
+  "check_every": {
+    "message": "Intervall",
+    "description": "The label for the check interval textbox."
+  },
+  "custom_mode": {
+    "message": "Benutzerdefiniert",
+    "description": "The label for custom checking mode (selector or regex)."
+  },
+  "regex": {
+    "message": "RegEx",
+    "description": "The label for regex mode."
+  },
+  "selector": {
+    "message": "Selektor",
+    "description": "The label for selector mode."
+  },
+  "no_pages_monitored": {
+    "message": "Keine Seiten werden überwacht.",
+    "description": "The text that replaces the pages list on the options page when no pages are monitored."
+  },
+  "notifications": {
+    "message": "Benachrichtigungen",
+    "description": "Label for the desktop notifications checkbox."
+  },
+  "disabled": {
+    "message": "deaktiviert",
+    "description": "Generic label for disabled items."
+  },
+  "enabled": {
+    "message": "aktiviert",
+    "description": "Generic label for enabled items."
+  },
+  "notifications_timeout": {
+    "message": "Benachrichtigungsdauer",
+    "description": "Label for the desktop notifications timeout textbox."
+  },
+  "badge_color": {
+    "message": "Kennzeichnungsfarbe",
+    "description": "Label for the badge color selector."
+  },
+  "sound_alert": {
+    "message": "Tonalarm",
+    "description": "Label for the sound alert drop-down."
+  },
+  "sound_none": {
+    "message": "Keine",
+    "description": "The value of the no-sound option in the sound alert drop-down."
+  },
+  "sort": {
+    "message": "Seiten sortieren nach",
+    "description": "The label for the sort order drop-down."
+  },
+  "sort_date": {
+    "message": "Hinzugefügt",
+    "description": "The 'date added' option in the sort order drop-down."
+  },
+  "sort_name": {
+    "message": "Name",
+    "description": "The 'name' option in the sort order drop-down."
+  },
+  "sort_url": {
+    "message": "URL",
+    "description": "The 'URL' option in the sort order drop-down."
+  },
+  "sort_interval": {
+    "message": "Überprüfungsintervall",
+    "description": "The 'check interval' option in the sort order drop-down."
+  },
+  "sort_last_check": {
+    "message": "Letzter Check",
+    "description": "The 'last check' option in the sort order drop-down."
+  },
+  "sort_last_change": {
+    "message": "Letzte Änderung",
+    "description": "The 'last changed' option in the sort order drop-down."
+  },
+  "animations": {
+    "message": "Animationen",
+    "description": "The label for the checkbox to disable/enable animations."
+  },
+  "import": {
+    "message": "Seiten importieren",
+    "description": "The text of the button to import pages from a bookmarks.html."
+  },
+  "export": {
+    "message": "Seiten exportieren",
+    "description": "The text of the button to export pages into a bookmarks.html."
+  },
+  "export_prompt": {
+    "message": "Kopieren Sie diesen Text in eine Datei und speichern Sie sie als bookmarks.html:",
+    "description": "The prompt that appears before the exported pages textbox."
+  },
+  "import_prompt": {
+    "message": "Fügen Sie den Inhalt Ihrer bookmarks.html hier ein:",
+    "description": "The prompt that appears before the bookmarks.html textbox when importing."
+  },
+  "import_button": {
+    "message": "Importieren",
+    "description": "The text for the 'import' button in the import form."
+  },
+  "ok": {
+    "message": "OK",
+    "description": "The text for a generic 'ok' button."
+  },
+  "cancel": {
+    "message": "Abbrechen",
+    "description": "The text for a generic 'cancel' button."
+  },
+  "close": {
+    "message": "Schließen",
+    "description": "The text for a generic 'close form' button."
+  },
+  "sound_name": {
+    "message": "Name",
+    "description": "The label for the sound name in the 'new sound' form."
+  },
+  "sound_url": {
+    "message": "URL (MP3- oder OGG-Datei)",
+    "description": "The label for the sound URL in the 'new sound' form."
+  },
+  "sound_create": {
+    "message": "Erstellen",
+    "description": "The text of the 'create' button in the 'new sound' form."
+  },
+  "sound_new": {
+    "message": "Neu",
+    "description": "The text of the button that opens the 'new sound' form."
+  },
+  "sound_delete": {
+    "message": "Löschen",
+    "description": "The text of the button that deletes the selected sound."
+  },
+  "sound_play": {
+    "message": "Abspielen",
+    "description": "The text of the button that plays the selected sound."
+  },
+  "sound_chime": {
+    "message": "Glocke",
+    "description": "The label of the default chime sound."
+  },
+  "sound_cuckoo": {
+    "message": "Kuckuck",
+    "description": "The label of the default cuckoo sound."
+  },
+  "selector_gui_pick": {
+    "message": "Element auswählen",
+    "description": "The 'pick element' button in the visual selector construction GUI."
+  },
+  "selector_gui_parent": {
+    "message": "Auswahl erweitern",
+    "description": "The button which switches from a selected element to its parent in the visual selector construction GUI."
+  },
+  "selector_gui_done": {
+    "message": "Fertig",
+    "description": "The button which accepts the selection and closes the page in the visual selector construction GUI."
+  },
+  "selector_gui_help": {
+    "message": "Hilfe",
+    "description": "The caption of the help button in the visual selector construction GUI."
+  },
+  "selector_gui_help_text": {
+    "message": "Diese Kontrollen erlauben Ihnen das Seitenelement, welches Sie überwachen möchten, auszuwählen.\n\nBewegen Sie Ihre Maus und sehen Sie, dass die Elemente, die Sie überfahren in blau umrandet werden. Sobald die Umrandung das gewünschte Element (oder Teile davon) umfasst, wählen Sie dieses durch klicken aus.\n\nWenn Sie mit Ihrer Auswahl zufrieden sind, klicken Sie einfach auf Fertig, um zu den Optionen zurückzukehren.\n\nWenn Ihr ausgewähltes Element nur ein Teil des Elements ist, welches Sie überwachen möchten, können Sie auf 'Auswahl erweitern' klicken, um die Auswahl auf das übergeordnete Element zu erweitern. Sie können diesen Schritt wiederholen, bis Sie mit dem Ergebnis zufrieden sind oder das oberste Element der Seite erreicht haben.\n\nWenn Sie von vorne beginnen und ein neues Element auswählen möchten, klicken Sie auf 'Element auswählen'.",
+    "description": "The help message in the visual selector construction GUI."
+  },
+  "view_all_function": {
+    "message": "\"Alle anzeigen\"-Funktion",
+    "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does."
+  },
+  "view_original": {
+    "message": "Original anzeigen",
+    "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened."
+  },
+  "until_closed": {
+    "message": "Bis zum schließen",
+    "description": "The option describing the notifications remaining active until closed."
+  }
+}
