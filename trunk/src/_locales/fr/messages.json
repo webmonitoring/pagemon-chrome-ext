@@ -220,7 +220,7 @@
     "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'."
   },
   "check_every": {
-    "message": "Interval de vérification",
+    "message": "Intervalle de vérification",
     "description": "The label for the check interval textbox."
   },
   "custom_mode": {
@@ -284,7 +284,7 @@
     "description": "The 'URL' option in the sort order drop-down."
   },
   "sort_interval": {
-    "message": "interval de vérification",
+    "message": "intervalle de vérification",
     "description": "The 'check interval' option in the sort order drop-down."
   },
   "sort_last_check": {
