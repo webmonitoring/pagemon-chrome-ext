@@ -825,6 +825,7 @@ function initializePageModeTester() {
 
     $.ajax({
       url: url,
+      dataType: 'text',
       success: function(html) {
         var findAndFormat = (mode == 'regex') ? findAndFormatRegexMatches :
                                                 findAndFormatSelectorMatches;
