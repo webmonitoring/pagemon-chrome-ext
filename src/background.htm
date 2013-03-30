@@ -4,14 +4,10 @@
   <head>
     <title>Page Monitor Background Page</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
-    <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
+    <script type="text/javascript" src="lib/jquery-1.7.1.js"></script> 
     <script type="text/javascript" src="scripts/base.js"></script>
     <script type="text/javascript" src="scripts/background.js"></script>
-    <script type="text/javascript">
-      bringUpToDate(parseFloat(getSetting(SETTINGS.version)) || 0, check);
-      setInterval(watchdog, WATCHDOG_INTERVAL);
-      updateBadge();
-    </script>
+    <script type="text/javascript" src="scripts/background-entry.js"></script>
   </head>
   <body></body>
 </html>

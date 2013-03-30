@@ -100,7 +100,9 @@ $(function() {
       return this;
     };
     $.fn.find = function(selector) {
-      equal(selector, '.page_link', 'Selector passed to find()');
+      if (selector != 'abc') {
+        equal(selector, '.page_link', 'Selector passed to find()');
+      }
       return this;
     };
     $.fn.get = function(index) {
@@ -170,11 +172,11 @@ $(function() {
 
     updatePageModeControls($('body>div'), true);
     ok(!span.hasClass('invalid'), 'Span made valid.');
-    equal(input.attr('disabled'), false, 'Input enabled.');
+    equal(input.attr('disabled'), undefined, 'Input enabled.');
 
     updatePageModeControls($('body>div'), false);
     ok(span.hasClass('invalid'), 'Span made invalid.');
-    equal(input.attr('disabled'), true, 'Input disabled.');
+    equal(input.attr('disabled'), 'disabled', 'Input disabled.');
   });
 
   test('setPageCheckInterval', function() {
@@ -796,7 +798,7 @@ $(function() {
     };
     basic_selector.val('d').change();
     equal(advanced_selector.val(), 'd', 'Synchronized value');
-    equal($('#play_sound').attr('disabled'), false, 'Play button disabled');
+    equal($('#play_sound').attr('disabled'), undefined, 'Play button disabled');
 
     getSetting = old_getSetting;
     setSetting = old_setSetting;
@@ -826,11 +828,11 @@ $(function() {
     };
     selector.html('<option>a</option><option>b</option>').val('b');
     button.click();
-    equal(selector.attr('disabled'), true, 'Selector disabled');
-    equal(button.attr('disabled'), true, 'Play button disabled');
+    equal(selector.attr('disabled'), 'disabled', 'Selector disabled');
+    equal(button.attr('disabled'), 'disabled', 'Play button disabled');
     ended_event_callback();
-    equal(selector.attr('disabled'), false, 'Selector disabled');
-    equal(button.attr('disabled'), false, 'Play button disabled');
+    equal(selector.attr('disabled'), undefined, 'Selector disabled');
+    equal(button.attr('disabled'), undefined, 'Play button disabled');
 
     Audio = old_Audio;
   });

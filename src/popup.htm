@@ -5,18 +5,10 @@
     <title>Page Monitor Popup</title>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <link rel="stylesheet" type="text/css" href="styles/popup.css" />
-    <script type="text/javascript" src="lib/jquery-1.4.1.js"></script> 
+    <script type="text/javascript" src="lib/jquery-1.7.1.js"></script> 
     <script type="text/javascript" src="scripts/base.js"></script>
     <script type="text/javascript" src="scripts/popup.js"></script>
-    <script type="text/javascript">
-      $(function() {
-        BG.hideDesktopNotification();
-        if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
-        applyLocalization();
-        setUpHandlers();
-        fillNotifications();
-      });
-    </script>
+    <script type="text/javascript" src="scripts/popup-entry.js"></script>
   </head>
   <body>
     <table id="templates">

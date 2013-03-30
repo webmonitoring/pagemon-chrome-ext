@@ -61,3 +61,5 @@ function initialize() {
     document.getElementById('content').innerHTML = buffer.join('');
   });
 }
+
+document.addEventListener('DOMContentLoaded', initialize, false);

@@ -491,7 +491,7 @@ function generateControls(url) {
   });
 
   // Text-only switcher.
-  var links = $('link[rel=stylesheet]:not([href=styles/diff.css]),style');
+  var links = $('link[rel="stylesheet"]:not([href="styles/diff.css"]),style');
   var print = $('<link rel="stylesheet" type="text/css" href="diff_txt.css"/>');
   var inline_styles = $('body *[style]').each(function() {
     $(this).data('style', $(this).attr('style'));
@@ -558,7 +558,7 @@ function getInlineStyles(html) {
 // the supplied HTML string.
 function getReferencedStyles(html) {
   var links = html.match(/<link[^>]*>/ig);
-  return links ? $(links.join('')).filter('[rel=stylesheet]') : $([]);
+  return links ? $(links.join('')).filter('[rel="stylesheet"]') : $([]);
 }
 
 // Returns the position of the first non-whitespace change in the page.

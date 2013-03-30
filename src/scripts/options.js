@@ -22,6 +22,9 @@ function isValidRegex(regex) {
 
 // Returns a boolean indicating whether the supplied string is a valid selector.
 function isValidSelector(selector) {
+  if (selector == '#') {
+    return false;
+  }
   try {
     $(selector);
   } catch (e) {
@@ -864,7 +867,7 @@ function initializePageModePicker() {
       url: findUrl(this),
       selected: true
     }, function(tab) {
-      chrome.tabs.executeScript(tab.id, { file: 'lib/jquery-1.4.1.js' },
+      chrome.tabs.executeScript(tab.id, { file: 'lib/jquery-1.7.1.js' },
                                 function() {
         chrome.tabs.executeScript(tab.id, { file: 'scripts/selector.js' },
                                   function() {
