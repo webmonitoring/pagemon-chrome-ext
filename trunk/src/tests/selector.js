@@ -22,7 +22,7 @@ $(function() {
 
     currentElementChanged();
 
-    equal(done_button.attr('disabled'), 'true', 'Done button disabled');
+    equal(done_button.attr('disabled'), 'disabled', 'Done button disabled');
     ok(parent_button.hasClass(DISABLED_CLASS), 'Parent class left.');
 
     equal($('.' + TEMP_OUTLINE_CLASS).length, 0, 'Temp outlines');
@@ -45,7 +45,7 @@ $(function() {
 
     currentElementChanged();
 
-    equal(done_button.attr('disabled'), 'false', 'Done button disabled');
+    equal(done_button.attr('disabled'), undefined, 'Done button disabled');
     ok(!parent_button.hasClass(DISABLED_CLASS), 'Parent class removed.');
 
     equal($('.' + TEMP_OUTLINE_CLASS).length, 0, 'Temp outlines');

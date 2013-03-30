@@ -260,62 +260,66 @@ $(function() {
     var old_scrollTo = scrollTo;
     var old_alert = alert;
     var old_html = $.fn.html;
+    var old_setTimeout = setTimeout;
 
+    setTimeout = function(f, ms) {
+      f();
+    };
     calculateBaseUrl = function(url, src, dest) {
       ok(true, 'calculateBaseUrl() called.');
       equal(url, 'url', 'URL passed to calculateBaseUrl()');
       equal(src, 'src', 'Src passed to calculateBaseUrl()');
       equal(dest, 'dest', 'Dest passed to calculateBaseUrl()');
       return 'url2';
-    }
+    };
     getInlineStyles = function(src) {
       ok(true, 'getInlineStyles() called.');
       equal(src, 'dest', 'Dest passed to getInlineStyles()');
       return 'style1';
-    }
+    };
     getReferencedStyles = function(src) {
       ok(true, 'getReferencedStyles() called.');
       equal(src, 'dest', 'Dest passed to getReferencedStyles()');
       return $('<link rel="test" />');
-    }
+    };
     calculateHtmlDiff = function(src, dest) {
       ok(true, 'calculateHtmlDiff() called for an HTML input.');
       equal(src, 'src2', 'Src passed to calculateHtmlDiff()');
       equal(dest, 'dest2', 'Dest passed to calculateHtmlDiff()');
       return 'diff';
-    }
+    };
     calculateTextDiff = function() {
       ok(false, 'calculateTextDiff() called for an HTML input.');
       return '';
-    }
+    };
     getStrippedBody = function(html) {
       ok(true, 'getStrippedBody() called.');
       var valid = (html == 'src') || (html == 'dest');
       ok(valid, 'Valid argument passed to getStrippedBody().');
       return html + '2';
-    }
+    };
     generateControls = function(url) {
       ok(true, 'generateControls() called.');
       equal(url, 'url', 'URL passed to generateControls()');
       return $('<div style="display: none" class="test_genControls">');
-    }
+    };
     findFirstChangePosition = function() {
       ok(true, 'findFirstChangePosition() called.');
       return { top: 42, left: 43 };
-    }
+    };
     scrollTo = function(left, top) {
       ok(true, 'scrollTo() called.');
       equal(top, 42 - SCROLL_MARGIN, 'Left passed to scrollTo()');
       equal(left, 43, 'Left passed to scrollTo()');
-    }
+    };
     alert = function(left, top) {
       ok(false, 'alert() called when it shouldn\'t.');
-    }
+    };
     $.fn.html = function(html) {
       ok(true, '$.fn.html() called.');
       equal(this.selector, 'body', 'Selector used when calling $.fn.html()');
       equal(html, 'diff', 'Diff passed to $.fn.html()');
-    }
+    };
 
     applyDiff('url', 'src', 'dest', 'text/html');
 
@@ -336,6 +340,7 @@ $(function() {
     findFirstChangePosition = old_findFirstChangePosition;
     scrollTo = old_scrollTo;
     alert = old_alert;
+    setTimeout = old_setTimeout;
     $.fn.html = old_html;
   });
 

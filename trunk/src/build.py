@@ -51,10 +51,6 @@ def compileHTML(filename):
     if not e.tail or e.tail.isspace():
       e.tail = ' '
 
-  for script in doc.cssselect('script'):
-    if script.text:
-      script.text = compileJS(script.text)
-
   for style in doc.cssselect('style'):
     if style.text:
       style.text = compileCSS(style.text)

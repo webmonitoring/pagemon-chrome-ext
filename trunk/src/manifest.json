@@ -1,6 +1,7 @@
 {
   "name": "__MSG_name__",
-  "version": "3.2.7",
+  "version": "3.2.8",
+  "manifest_version": 2,
   "description": "__MSG_description__",
   "default_locale": "en",
   "icons": {
@@ -9,20 +10,22 @@
     "32": "img/extension_icon.png",
     "16": "img/browser_icon.png"
   },
-  "background_page": "background.htm",
+  "background": {
+    "persistent": true,
+    "page": "background.htm"
+  },
   "options_page": "options.htm",
   "browser_action": {
     "default_icon": "img/browser_icon.png",
     "default_title": "__MSG_name__",
-    "popup": "popup.htm"
+    "default_popup": "popup.htm"
   },
-  "minimum_chrome_version": "5.0.375",
   "permissions": [
     "tabs",
-    "http://*/*",
-    "https://*/*",
+    "*://*/",
     "chrome://favicon/",
-    "unlimited_storage",
+    "unlimitedStorage",
     "notifications"
-  ]
+  ],
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
