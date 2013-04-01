@@ -2,20 +2,17 @@
   Renders the desktop notification window.
 */
 
-// A refernce to the background page of the extension.
+// A reference to the background page of the extension.
 var BG = chrome.extension.getBackgroundPage();
 
-// Makes am <a href="...">...</a> link to the diff of a given page.
+// Makes an <a href="...">...</a> link to the diff of a given page.
 function makeLink(page) {
-  var buffer = [];
-
-  buffer.push('<a href="diff.htm#' + btoa(page.url) + '" \
-                  onclick="markPageVisited(\'' + page.url + '\');" \
-                  target="_blank">');
-  buffer.push(page.name);
-  buffer.push('</a>');
-
-  return buffer.join('');
+  var link = document.createElement('a');
+  link.href = 'diff.htm#' + btoa(page.url);
+  link.onclick = function() { markPageVisited(page.url) };
+  link.target = '_blank';
+  link.appendChild(document.createTextNode(page.name));
+  return link;
 }
 
 // Marks an updated page as visited given its URL and reloads the notification.
@@ -44,21 +41,21 @@ function initialize() {
     }
     document.getElementsByTagName('h1')[0].innerHTML = title;
 
-    var buffer = [];
+    var contentElement = document.getElementById('content');
+    contentElement.innerHTML = '';
     if (pages.length == 1) {
-      buffer.push('<span>');
-      buffer.push(makeLink(pages[0]));
-      buffer.push('</span>');
+      var span = document.createElement('span');
+      span.appendChild(makeLink(pages[0]));
+      contentElement.appendChild(span);
     } else {
-      buffer.push('<ul>');
+      var list = document.createElement('ul');
+      contentElement.appendChild(list);
       pages.forEach(function(page) {
-        buffer.push('<li>');
-        buffer.push(makeLink(page));
-        buffer.push('</li>');
+        var listItem = document.createElement('li');
+        listItem.appendChild(makeLink(page));
+        list.appendChild(listItem);
       });
-      buffer.push('</ul>');
     }
-    document.getElementById('content').innerHTML = buffer.join('');
   });
 }
 
