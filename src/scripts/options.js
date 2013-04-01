@@ -989,7 +989,11 @@ function addPageToTable(page) {
   var interval = check_interval / (60 * 1000);
   var interval_log = timeAbsoluteToLog(interval);
   var interval_div = $('.page_interval', page_record);
-  $('input[type=range]', interval_div).val(interval_log).change();
+  $('input[type=range]', interval_div).val(interval_log);
+  // HACK: Delay refresh until the page DOM has rendered.
+  setTimeout(function() {
+    $('input[type=range]', interval_div).change();
+  }, 0);
   if (page.check_interval) {
     interval_div.children('span').addClass('enabled').removeClass('disabled');
     $('input', interval_div).attr({ disabled: false });
