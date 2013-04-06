@@ -554,6 +554,8 @@ function takeSnapshot(url, callback) {
 // Sets AJAX timeout and always prevents caching.
 $.ajaxSetup({
   timeout: REQUEST_TIMEOUT,
-  cache: true,
-  headers: {'Cache-Control': 'no-cache'}
+  headers: {
+    'Cache-Control': 'no-cache',
+    'Etag': 'bad-etag'
+  }
 });
