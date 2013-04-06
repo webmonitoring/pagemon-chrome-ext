@@ -161,7 +161,11 @@ function getStrippedBody(html) {
     body = html;
   }
 
-  return body.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/ig, '');
+  // We can't simply remove the script tags since that will invalidate the
+  // selectors which include nth-child(). Instead, we replace them with an
+  // unlikely tag.
+  return body.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/ig,
+                      '<blink/>');
 }
 
 // Returns a chrome://favicon/... URL that points to the Chrome-cached favicon

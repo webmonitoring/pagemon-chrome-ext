@@ -208,22 +208,22 @@ $(function() {
 
     equals(getStrippedBody('<html><body>abc<script src="qwe"></script>def' +
                            '</body></html>'),
-           'abcdef',
+           'abc<blink/>def',
            'HTML with an external srcipt within body');
 
     equals(getStrippedBody('<html><body>abc<script src="qwe" />def</body>' +
                            '</html>'),
-           'abcdef',
+           'abc<blink/>def',
            'HTML with a self-closed external srcipt within body');
 
     equals(getStrippedBody('<html><body>abc<script>qwe</script></body></html>'),
-           'abc',
+           'abc<blink/>',
            'HTML with an internal script within body');
 
     equals(getStrippedBody('<html><body>abc<script>qwe</script>def<script src' +
                            '="hello" type="text/javascript"></script>ghi' +
                            '<script src="rty" />\n jkl</body></html>'),
-           'abcdefghi\n jkl',
+           'abc<blink/>def<blink/>ghi<blink/>\n jkl',
            'HTML with multiple internal and external scripts within body');
 
     var old_MIN_BODY_TAIL_LENGTH = MIN_BODY_TAIL_LENGTH;
