@@ -46,6 +46,12 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // On platforms that use the Rich Notifications API, this is a string ID.
   // On platforms that use the HTML API, this is a Notification object.
   var notification = null;
+  // Whether the notification event listener has been added. Used only on
+  // platforms that use the Rich Notifications API.
+  var notificationEventAdded = false;
+  // A list of pages belonging to the current notification. Used only on
+  // platforms that use the Rich Notifications API.
+  var currentNotificationPages = [];
 
   // Triggers a sound alert if it is enabled.
   triggerSoundAlert = function() {
@@ -90,9 +96,18 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           message: '',
           buttons: items
         };
+        currentNotificationPages = pages;
+        if (notification != null) {
+          hideDesktopNotification();
+        }
+        chrome.notifications.create('', options, function(id) {
+          notification = id;
+        });
+      });
 
+      if (!notificationEventAdded) {
         chrome.notifications.onButtonClicked.addListener(function(id, button) {
-          var page = pages[button];
+          var page = currentNotificationPages[button];
           window.open('diff.htm#' + btoa(page.url));
           BG.setPageSettings(page.url, { updated: false }, function() {
             updateBadge();
@@ -100,10 +115,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
             triggerDesktopNotification();
           });
         });
-        chrome.notifications.create('', options, function(id) {
-          notification = id;
-        });
-      });
+        notificationEventAdded = true;
+      }
     } else {
       // Notifications are not supported. Oh well.
       return;
