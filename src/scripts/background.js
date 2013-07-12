@@ -97,6 +97,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           BG.setPageSettings(page.url, { updated: false }, function() {
             updateBadge();
             takeSnapshot(page.url, scheduleCheck);
+            triggerDesktopNotification();
           });
         });
         chrome.notifications.create('', options, function(id) {
