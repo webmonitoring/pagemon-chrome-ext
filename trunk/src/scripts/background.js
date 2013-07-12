@@ -42,7 +42,9 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 (function() {
   // The number of updated pages that has been last shown on the badge.
   var last_count = 0;
-  // The last shown notification. Saved so it can be hidden later.
+  // A handle for the last shown notification, saved so it can be hidden later.
+  // On platforms that use the Rich Notifications API, this is a string ID.
+  // On platforms that use the HTML API, this is a Notification object.
   var notification = null;
 
   // Triggers a sound alert if it is enabled.
@@ -62,17 +64,61 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     if (chrome.extension.getViews({ type: 'popup' }).length > 0) return;
     var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
 
-    var url = 'notification.htm';
-    notification = webkitNotifications.createHTMLNotification(url);
+    if (webkitNotifications && webkitNotifications.createHTMLNotification) {
+      // This platform uses HTML notifications.
+      var url = 'notification.htm';
+      notification = webkitNotifications.createHTMLNotification(url);
+      notification.show();
+    } else if (chrome.notifications && chrome.notifications.create) {
+      // This platform uses Rich notifications.
+      getAllUpdatedPages(function(pages) {
+        if (pages.length == 0) return;
 
-    notification.show();
+        if (pages.length == 1) {
+          title = chrome.i18n.getMessage('page_updated_single');
+        } else {
+          title = chrome.i18n.getMessage('page_updated_multi',
+                                         pages.length.toString());
+        }
+        var items = $.map(pages, function(page) {
+          return {title: page.name};
+        });
+        var options = {
+          type: 'list',
+          iconUrl: chrome.extension.getURL('img/extension_icon.png'),
+          title: title,
+          message: '',
+          buttons: items
+        };
+
+        chrome.notifications.onButtonClicked.addListener(function(id, button) {
+          var page = pages[button];
+          window.open('diff.htm#' + btoa(page.url));
+          BG.setPageSettings(page.url, { updated: false }, function() {
+            updateBadge();
+            takeSnapshot(page.url, scheduleCheck);
+          });
+        });
+        chrome.notifications.create('', options, function(id) {
+          notification = id;
+        });
+      });
+    } else {
+      // Notifications are not supported. Oh well.
+      return;
+    }
     if (timeout <= 60000) setTimeout(hideDesktopNotification, timeout);
   };
 
   // Hides the currently shown desktop notification (if one is displayed).
   hideDesktopNotification = function() {
-    if (notification) {
-      notification.cancel();
+    if (notification != null) {
+      if (typeof notification == 'string') {
+        // This platform uses Rich notifications.
+        chrome.notifications.clear(notification, $.noop);
+      } else {
+        notification.cancel();
+      }
       notification = null;
     }
   };
@@ -243,7 +289,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       if (manifest) version = manifest.version;
     }
 
-    return version; 
+    return version;
   };
 })();
 
