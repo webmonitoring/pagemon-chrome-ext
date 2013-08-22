@@ -90,7 +90,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           return {title: page.name};
         });
         var options = {
-          type: 'list',
+          type: 'basic',
           iconUrl: chrome.extension.getURL('img/extension_icon.png'),
           title: title,
           message: '',
