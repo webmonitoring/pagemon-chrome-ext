@@ -95,6 +95,14 @@
     "message": "查看所有更新",
     "description": "用于在新标签打开所有已更新页面的按钮文字。"
   },
+  "hide_deletions": {
+    "message": "隐藏删除部分",
+    "description": "The text for the checkbox that hides deletions by default."
+  },
+  "show_full_page_diff": {
+    "message": "显示在选择器模式下的所有更改",
+    "description": "The label for the full page diff when in selector mode"
+  },
   "check_all": {
     "message": "立即检查全部",
     "description": "用于开始检查所有页面的按钮文字。"

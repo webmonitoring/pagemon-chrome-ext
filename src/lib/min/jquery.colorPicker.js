@@ -1,22 +1,26 @@
 /**
  * Really Simple Color Picker in jQuery
- * 
- * Copyright (c) 2008 Lakshan Perera (www.laktek.com)
- * Licensed under the MIT (MIT-LICENSE.txt)  licenses.
- * 
- */
-
-(function($){$.fn.colorPicker=function(){if(this.length>0)buildSelector();return this.each(function(i){buildPicker(this)});};var selectorOwner;var selectorShowing=false;var buildPicker=function(element){control=$("<div class='color_picker'>&nbsp;</div>")
-control.css('background-color',$(element).val());control.bind("click",toggleSelector);$(element).after(control);$(element).bind("change",function(){selectedValue=toHex($(element).val());$(element).next(".color_picker").css("background-color",selectedValue);});$(element).hide();};var buildSelector=function(){selector=$("<div id='color_selector'></div>");$.each($.fn.colorPicker.defaultColors,function(i){swatch=$("<div class='color_swatch'>&nbsp;</div>")
-swatch.css("background-color","#"+this);swatch.bind("click",function(e){changeColor($(this).css("background-color"))});swatch.bind("mouseover",function(e){$(this).css("border-color","#598FEF");$("input#color_value").val(toHex($(this).css("background-color")));});swatch.bind("mouseout",function(e){$(this).css("border-color","#000");$("input#color_value").val(toHex($(selectorOwner).css("background-color")));});swatch.appendTo(selector);});hex_field=$("<label for='color_value'>Hex</label><input type='text' size='8' id='color_value'/>");hex_field.bind("keydown",function(event){if(event.keyCode==13){changeColor($(this).val());}
-if(event.keyCode==27){toggleSelector()}});$("<div id='color_custom'></div>").append(hex_field).appendTo(selector);$("body").append(selector);selector.hide();};var checkMouse=function(event){var selector="div#color_selector";var selectorParent=$(event.target).parents(selector).length;if(event.target==$(selector)[0]||event.target==selectorOwner||selectorParent>0)return
-hideSelector();}
-var hideSelector=function(){var selector=$("div#color_selector");$(document).unbind("mousedown",checkMouse);selector.hide();selectorShowing=false}
-var showSelector=function(){var selector=$("div#color_selector");selector.css({top:$(selectorOwner).offset().top+($(selectorOwner).outerHeight()),left:$(selectorOwner).offset().left});hexColor=$(selectorOwner).prev("input").val();$("input#color_value").val(hexColor);selector.show();$(document).bind("mousedown",checkMouse);selectorShowing=true}
-var toggleSelector=function(event){selectorOwner=this;selectorShowing?hideSelector():showSelector();}
-var changeColor=function(value){if(selectedValue=toHex(value)){$(selectorOwner).css("background-color",selectedValue);$(selectorOwner).prev("input").val(selectedValue).change();hideSelector();}};var toHex=function(color){if(color.match(/[0-9a-fA-F]{3}$/)||color.match(/[0-9a-fA-F]{6}$/)){color=(color.charAt(0)=="#")?color:("#"+color);}
-else if(color.match(/^rgb\(([0-9]|[1-9][0-9]|[1][0-9]{2}|[2][0-4][0-9]|[2][5][0-5]),[ ]{0,1}([0-9]|[1-9][0-9]|[1][0-9]{2}|[2][0-4][0-9]|[2][5][0-5]),[ ]{0,1}([0-9]|[1-9][0-9]|[1][0-9]{2}|[2][0-4][0-9]|[2][5][0-5])\)$/)){var c=([parseInt(RegExp.$1),parseInt(RegExp.$2),parseInt(RegExp.$3)]);var pad=function(str){if(str.length<2){for(var i=0,len=2-str.length;i<len;i++){str='0'+str;}}
-return str;}
-if(c.length==3){var r=pad(c[0].toString(16)),g=pad(c[1].toString(16)),b=pad(c[2].toString(16));color='#'+r+g+b;}}
-else color=false;return color}
-$.fn.colorPicker.addColors=function(colorArray){$.fn.colorPicker.defaultColors=$.fn.colorPicker.defaultColors.concat(colorArray);};$.fn.colorPicker.defaultColors=['00FFFF','00CCFF','33CCCC','3366FF','CCFFFF','99CCFF','008080','0000FF','FFFFFF','339966','C0C0C0','00B400','333399','666699','999999','FFFF99','000080','008000','808080','FF99CC','FFCC99','333333','99CC00','000000','333300','808000','800080','FF00FF','FFFF00','993366','FFCC00','993300','FF9900','800000','FF6600','FF0000'];})(jQuery);
+ *
+ * Licensed under the MIT (MIT-LICENSE.txt) licenses.
+ *
+ * Copyright (c) 2008-2012
+ * Lakshan Perera (www.laktek.com) & Daniel Lacy (daniellacy.com)
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to
+ * deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or
+ * sell copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
+ * IN THE SOFTWARE.
+ */(function(a){var b,c,d=0,e={control:a('<div class="colorPicker-picker">&nbsp;</div>'),palette:a('<div id="colorPicker_palette" class="colorPicker-palette" />'),swatch:a('<div class="colorPicker-swatch">&nbsp;</div>'),hexLabel:a('<label for="colorPicker_hex">Hex</label>'),hexField:a('<input type="text" id="colorPicker_hex" />')},f="transparent",g;a.fn.colorPicker=function(b){return this.each(function(){var c=a(this),g=a.extend({},a.fn.colorPicker.defaults,b),h=a.fn.colorPicker.toHex(c.val().length>0?c.val():g.pickerDefault),i=e.control.clone(),j=e.palette.clone().attr("id","colorPicker_palette-"+d),k=e.hexLabel.clone(),l=e.hexField.clone(),m=j[0].id,n,o;a.each(g.colors,function(b){n=e.swatch.clone(),g.colors[b]===f?(n.addClass(f).text("X"),a.fn.colorPicker.bindPalette(l,n,f)):(n.css("background-color","#"+this),a.fn.colorPicker.bindPalette(l,n)),n.appendTo(j)}),k.attr("for","colorPicker_hex-"+d),l.attr({id:"colorPicker_hex-"+d,value:h}),l.bind("keydown",function(b){if(b.keyCode===13){var d=a.fn.colorPicker.toHex(a(this).val());a.fn.colorPicker.changeColor(d?d:c.val())}b.keyCode===27&&a.fn.colorPicker.hidePalette()}),l.bind("keyup",function(b){var d=a.fn.colorPicker.toHex(a(b.target).val());a.fn.colorPicker.previewColor(d?d:c.val())}),a('<div class="colorPicker_hexWrap" />').append(k).appendTo(j),j.find(".colorPicker_hexWrap").append(l),g.showHexField===!1&&(l.hide(),k.hide()),a("body").append(j),j.hide(),i.css("background-color",h),i.bind("click",function(){c.is(":not(:disabled)")&&a.fn.colorPicker.togglePalette(a("#"+m),a(this))}),b&&b.onColorChange?i.data("onColorChange",b.onColorChange):i.data("onColorChange",function(){}),(o=c.data("text"))&&i.html(o),c.after(i),c.bind("change",function(){c.next(".colorPicker-picker").css("background-color",a.fn.colorPicker.toHex(a(this).val()))}),c.val(h);if(c[0].tagName.toLowerCase()==="input")try{c.attr("type","hidden")}catch(p){c.css("visibility","hidden").css("position","absolute")}else c.hide();d++})},a.extend(!0,a.fn.colorPicker,{toHex:function(a){if(a.match(/[0-9A-F]{6}|[0-9A-F]{3}$/i))return a.charAt(0)==="#"?a:"#"+a;if(!a.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/))return!1;var b=[parseInt(RegExp.$1,10),parseInt(RegExp.$2,10),parseInt(RegExp.$3,10)],c=function(a){if(a.length<2)for(var b=0,c=2-a.length;b<c;b++)a="0"+a;return a};if(b.length===3){var d=c(b[0].toString(16)),e=c(b[1].toString(16)),f=c(b[2].toString(16));return"#"+d+e+f}},checkMouse:function(d,e){var f=c,g=a(d.target).parents("#"+f.attr("id")).length;if(d.target===a(f)[0]||d.target===b[0]||g>0)return;a.fn.colorPicker.hidePalette()},hidePalette:function(){a(document).unbind("mousedown",a.fn.colorPicker.checkMouse),a(".colorPicker-palette").hide()},showPalette:function(c){var d=b.prev("input").val();c.css({top:b.offset().top+b.outerHeight(),left:b.offset().left}),a("#color_value").val(d),c.show(),a(document).bind("mousedown",a.fn.colorPicker.checkMouse)},togglePalette:function(d,e){e&&(b=e),c=d,c.is(":visible")?a.fn.colorPicker.hidePalette():a.fn.colorPicker.showPalette(d)},changeColor:function(c){b.css("background-color",c),b.prev("input").val(c).change(),a.fn.colorPicker.hidePalette(),b.data("onColorChange").call(b,a(b).prev("input").attr("id"),c)},previewColor:function(a){b.css("background-color",a)},bindPalette:function(c,d,e){e=e?e:a.fn.colorPicker.toHex(d.css("background-color")),d.bind({click:function(b){g=e,a.fn.colorPicker.changeColor(e)},mouseover:function(b){g=c.val(),a(this).css("border-color","#598FEF"),c.val(e),a.fn.colorPicker.previewColor(e)},mouseout:function(d){a(this).css("border-color","#000"),c.val(b.css("background-color")),c.val(g),a.fn.colorPicker.previewColor(g)}})}}),a.fn.colorPicker.defaults={pickerDefault:"FFFFFF",colors:["000000","993300","333300","000080","333399","333333","800000","FF6600","808000","008000","008080","0000FF","666699","808080","FF0000","FF9900","99CC00","339966","33CCCC","3366FF","800080","999999","FF00FF","FFCC00","FFFF00","00FF00","00FFFF","00CCFF","993366","C0C0C0","FF99CC","FFCC99","FFFF99","CCFFFF","99CCFF","FFFFFF"],addColors:[],showHexField:!0}})(jQuery);

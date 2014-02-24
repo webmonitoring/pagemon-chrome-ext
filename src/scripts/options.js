@@ -222,6 +222,8 @@ function initializeGlobalControls() {
   initializeSoundPlayer();
   initializeSoundCreator();
   initializeViewAllSelector();
+  initializeHideDeletionsToggler();
+  initializeShowFullPageDiff();
   initializeExporter();
   initializeImporter();
   initializeGlobalChecker();
@@ -238,7 +240,7 @@ function initializeColorPicker() {
   }
 
   var badge_color = getSetting(SETTINGS.badge_color) || [0, 180, 0, 255];
-  var badge_color = '#' + toHex(badge_color[0]) + 
+  var badge_color = '#' + toHex(badge_color[0]) +
                           toHex(badge_color[1]) +
                           toHex(badge_color[2]);
 
@@ -499,6 +501,26 @@ function initializeViewAllSelector() {
   }).val(getSetting(SETTINGS.view_all_action) || 'diff');
 }
 
+// Initializes the Hide Deletions toggler. Updates its state from
+// SETTINGS.hide_deletions and binds a handler for the change event to save the
+// newly selected setting.
+function initializeHideDeletionsToggler() {
+  $('#hide_deletions input:checkbox').change(function() {
+    var checked = ($(this).prop('checked'));
+    setSetting(SETTINGS.hide_deletions, checked);
+  }).prop('checked', getSetting(SETTINGS.hide_deletions));
+}
+
+// Initializes the Show Full Page Diff toggler. Updates its state from
+// SETTINGS.show_full_page_diff and binds a handler for the change event to save the
+// newly selected setting.
+function initializeShowFullPageDiff() {
+  $('#show_full_page_diff input:checkbox').change(function() {
+    var checked = ($(this).prop('checked'));
+    setSetting(SETTINGS.show_full_page_diff, checked);
+  }).prop('checked', getSetting(SETTINGS.show_full_page_diff));
+}
+
 // Initializes the Export Pages button and form. Binds a handler to the Export
 // Pages button that pops up the form on click and fills it with the output of
 // exportPagesList(), and another handler to the Close button in the form to
@@ -696,7 +718,7 @@ function initializePageCheck() {
     var url = findUrl(this);
     var progress_message = chrome.i18n.getMessage('check_in_progress') + '..';
 
-    timestamp.text(progress_message);  
+    timestamp.text(progress_message);
     BG.checkPage(url, function(url) {
       timestamp.trigger('time_updated');
       BG.updateBadge();

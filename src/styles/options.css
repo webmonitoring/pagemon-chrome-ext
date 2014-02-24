@@ -334,7 +334,7 @@ h1 {
   text-shadow: #849ccb 0px -1px 0px;
 }
 
-.color_picker {
+.colorPicker-picker {
   display: inline-block;
   position: relative;
   top: 2px;
