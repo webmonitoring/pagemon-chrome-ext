@@ -95,6 +95,14 @@
     "message": "Güncellenenleri Aç",
     "description": "The text of the button that opens all updated pages in new tabs."
   },
+  "hide_deletions": {
+    "message": "Silinenleri Gizle",
+    "description": "The text for the checkbox that hides deletions by default."
+  },
+  "show_full_page_diff": {
+    "message": "Seçici Modu tüm değişiklikleri göster",
+    "description": "The label for the full page diff when in selector mode"
+  },
   "check_all": {
     "message": "Tümünü Şimdi Denetle",
     "description": "The text of the button that initiates a check of all pages."

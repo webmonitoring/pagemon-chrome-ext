@@ -19,7 +19,9 @@ var SETTINGS = {
   animations_disabled: 'animations_disabled',
   sort_by: 'sort_by',
   custom_sounds: 'custom_sounds',
-  view_all_action: 'view_all_action'
+  view_all_action: 'view_all_action',
+  hide_deletions: 'hide_deletions',
+  show_full_page_diff: 'show_full_page_diff'
 };
 
 // Reference to the background page.
@@ -69,7 +71,7 @@ var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
     str = encodeUTF8(str);
 
     var length = str.length;
-    var crc = 0xFFFFFFFF; 
+    var crc = 0xFFFFFFFF;
 
     for (var i = 0; i < length; i++) {
       crc = (crc >>> 8) ^ table[(crc & 0xFF) ^ str.charCodeAt(i)];
@@ -493,7 +495,7 @@ function cleanAndHashPage(html, mode, regex, selector, callback) {
 // info. If a change is detected, sets the updated flag on that page. Once the
 // check is done and all updates are applied, the callback is called with the
 // URL of the checked page.
-// 
+//
 // If the changes in the page did not result in a different CRC from the one
 // recorded (e.g. changes in numbers only, or in non-selected parts during
 // selective monitoring), or force_snapshot is checked, the html field of the
@@ -511,26 +513,24 @@ function checkPage(url, callback, force_snapshot) {
       dataType: 'text',
       success: function(html, _, xhr) {
         var type = xhr.getResponseHeader('Content-type');
-        getPage(url, function(page) {
-          cleanAndHashPage(html, page.mode, page.regex, page.selector,
-                           function(crc) {
-            var settings = {};
+        cleanAndHashPage(html, page.mode, page.regex, page.selector,
+                        function(crc) {
+          var settings = {};
 
-            if (crc != page.crc) {
-              settings = {
-                updated: true,
-                crc: crc,
-                html: force_snapshot ? canonizePage(html, type) : page.html,
-                last_changed: Date.now()
-              }
-            } else {
-              settings = { html: canonizePage(html, type) };
+          if (crc != page.crc) {
+            settings = {
+              updated: true,
+              crc: crc,
+              html: force_snapshot ? canonizePage(html, type) : page.html,
+              last_changed: Date.now()
             }
+          } else {
+            settings = { html: canonizePage(html, type) };
+          }
 
-            settings.last_check = Date.now();
-            setPageSettings(url, settings, function() {
-              (callback || $.noop)(url);
-            });
+          settings.last_check = Date.now();
+          setPageSettings(url, settings, function() {
+            (callback || $.noop)(url);
           });
         });
       },

@@ -222,7 +222,7 @@ function recurseHtmlDiff(opcodes, src, dst, src_hashed, dst_hashed, loose) {
           var new_item_hashed = hashToken(new_item, loose);
           src[src_index] = dst[dst_index] = new_item;
           src_hashed[src_index] = dst_hashed[dst_index] = new_item_hashed;
-          opcodes_recursed.push(['equal', 
+          opcodes_recursed.push(['equal',
                                  src_index, src_index + 1,
                                  dst_index, dst_index + 1]);
         } else {
@@ -468,6 +468,8 @@ function generateControls(url) {
                     <a class="pm_hide" href="#">%hide%</a> \
                   </div>';
 
+  var deletions_shown = !getSetting(SETTINGS.hide_deletions);
+
   var title = chrome.i18n.getMessage('diff_original_title');
   var original = chrome.i18n.getMessage('diff_original');
   var textize = chrome.i18n.getMessage('diff_textize');
@@ -478,14 +480,16 @@ function generateControls(url) {
                          .replace('%title%', title)
                          .replace('%original%', original)
                          .replace('%textize%', textize)
-                         .replace('%hide%', hide);
+                         .replace('%hide%', deletions_shown ? hide : show);
 
   var $controls = $(controls);
 
   // Deletion visibility switcher.
-  var deletions_shown = true;
+  if (!deletions_shown) {
+    $('del').hide();
+  }
   $('.pm_hide', $controls).click(function() {
-    $(this).text($(this).text() == show ? hide : show);
+    $(this).text(deletions_shown ? hide : show);
     $('del').toggle(deletions_shown = !deletions_shown);
     return false;
   });
@@ -629,7 +633,7 @@ function initiateDiff(url) {
           var loose = (page.mode == 'text');
           applyDiff(url, page.html, canonizePage(new_html, type), type, loose);
           // Undo diff highlights outside of selector for selector-mode pages.
-          if (page.mode == 'selector' && page.selector) {
+          if (page.mode == 'selector' && page.selector && !getSetting(SETTINGS.show_full_page_diff)) {
             $('del,ins', page.selector).addClass('preserve');
             $(page.selector).each(function() {
               var parent = $(this).parent();

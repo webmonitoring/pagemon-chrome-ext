@@ -21,19 +21,28 @@ DOCTYPE = '''<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
 
 
 def compileJS(text):
-  import httplib, urllib, sys
+  done = False
+  wait = 1
+  while not done:
+    import httplib, urllib, sys, time
 
-  params = urllib.urlencode([('js_code', text),
-                             ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
-                             ('output_format', 'text'),
-                             ('output_info', 'compiled_code')])
-  headers = {'Content-type': 'application/x-www-form-urlencoded'}
+    params = urllib.urlencode([('js_code', text),
+                               ('compilation_level', 'SIMPLE_OPTIMIZATIONS'),
+                               ('output_format', 'text'),
+                               ('output_info', 'compiled_code')])
+    headers = {'Content-type': 'application/x-www-form-urlencoded'}
 
-  conn = httplib.HTTPConnection('closure-compiler.appspot.com')
-  conn.request('POST', '/compile', params, headers)
-  response = conn.getresponse()
-  data = response.read()
-  conn.close()
+    conn = httplib.HTTPConnection('closure-compiler.appspot.com')
+    conn.request('POST', '/compile', params, headers)
+    response = conn.getresponse()
+    data = response.read()
+    conn.close()
+    if data.strip() and not data.startswith('Error'):
+      done = True
+    else:
+      print '  Failed. Retrying in %d second(s)...' % wait
+      time.sleep(wait)
+      wait *= 2
 
   return data.replace('<!--', r'\<\!\-\-')
 

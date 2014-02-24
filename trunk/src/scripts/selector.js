@@ -184,7 +184,7 @@ function setUpButtonHandlers() {
 }
 
 // The main function. Inserts the controls, updates the global references to
-// them, then sets up event handlers for everything by calling 
+// them, then sets up event handlers for everything by calling
 // setUpBodyHandlers() and setUpButtonHandlers().
 function initialize() {
   generateControls().appendTo('body');
