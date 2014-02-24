@@ -118,7 +118,7 @@ $(function() {
       }
     }
 
-    equals(count, 10, 'Setting strings count');
+    equals(count, 12, 'Setting strings count');
   });
 
   test('References', function() {

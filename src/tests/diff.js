@@ -122,9 +122,9 @@ $(function() {
           'Generic text swap with lots of distorted spacing');
 
     equal(calculateTextDiff('hello\nthere\nnice\nworld!',
-                            'there\nis\na\nworld!'),
+                            'it\nis\na\nworld!'),
           '<pre><del class="chrome_page_monitor_del">hello<br />there<br />' +
-          'nice</del><ins class="chrome_page_monitor_ins">there<br />is' +
+          'nice</del><ins class="chrome_page_monitor_ins">it<br />is' +
           '<br />a</ins><br />world!</pre>',
           'Multi-line with shared suffix');
   });
