@@ -267,7 +267,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
         } else {
           // Network down. Do a constant reschedule.
           applySchedule(RESCHEDULE_DELAY);
-          (callback || null)();
+          (callback || $.noop)();
         }
       }
     });
