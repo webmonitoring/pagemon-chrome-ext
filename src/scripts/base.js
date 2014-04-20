@@ -322,9 +322,9 @@ function setPageSettings(url, settings, callback) {
 function addPage(page, callback) {
   if (window != BG) return BG.addPage(page, callback);
 
-  var query = "INSERT INTO pages(url, name, mode, regex, selector, \
-                                 check_interval, html, crc, updated, \
-                                 last_check, last_changed) \
+  var query = "REPLACE INTO pages(url, name, mode, regex, selector, \
+                                  check_interval, html, crc, updated, \
+                                  last_check, last_changed) \
                VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   executeSql(query, [
