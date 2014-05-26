@@ -70,10 +70,11 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
     if (chrome.extension.getViews({ type: 'popup' }).length > 0) return;
     var timeout = getSetting(SETTINGS.notifications_timeout) || 30000;
 
-    if (webkitNotifications && webkitNotifications.createHTMLNotification) {
+    if (window.webkitNotifications &&
+        webkitNotifications.createHTMLNotification) {
       // This platform uses HTML notifications.
       var url = 'notification.htm';
-      notification = webkitNotifications.createHTMLNotification(url);
+      notification = window.webkitNotifications.createHTMLNotification(url);
       notification.show();
     } else if (chrome.notifications && chrome.notifications.create) {
       // This platform uses Rich notifications.
