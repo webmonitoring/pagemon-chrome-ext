@@ -57,8 +57,13 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   triggerSoundAlert = function() {
     var sound_alert = getSetting(SETTINGS.sound_alert);
     if (sound_alert) {
-      new Audio(sound_alert).addEventListener('canplaythrough', function() {
-        this.play();
+      var audio = new Audio(sound_alert);
+      audio.addEventListener('canplaythrough', function() {
+        if (audio) {
+          if (audio.loop) audio.loop = false;
+          audio.play();
+          audio = null;
+        }
       });
     }
   };
