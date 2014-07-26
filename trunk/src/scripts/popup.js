@@ -46,8 +46,10 @@ function monitorCurrentPage() {
       updateButtonsState();
       // Refresh options page if it's opened.
       var tabs = chrome.extension.getViews({ type: 'tab' });
-      for (var i = 0; i < tabs.length; i++) {
-        if (tabs[i].fillPagesList) tabs[i].fillPagesList();
+      if (tabs) {
+        for (var i = 0; i < tabs.length; i++) {
+          if (tabs[i].fillPagesList) tabs[i].fillPagesList();
+        }
       }
     });
   });
