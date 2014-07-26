@@ -272,6 +272,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           actualCheck(force, callback, page_callback);
         } else {
           // Network down. Do a constant reschedule.
+          console.log('Network appears down (' + (xhr && xhr.status) +
+                      '). Rescheduling check.');
           applySchedule(RESCHEDULE_DELAY);
           (callback || $.noop)();
         }
