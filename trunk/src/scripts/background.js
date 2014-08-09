@@ -158,8 +158,14 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       chrome.browserAction.setIcon({ path: BROWSER_ICON });
 
       if (count > last_count) {
-        triggerSoundAlert();
-        triggerDesktopNotification();
+        try {
+          triggerSoundAlert();
+          triggerDesktopNotification();
+        } catch (e) {
+          // Notifications have been observed to fail sporadically.
+          // Log the error but do not explode if they do.
+          console.log(e);
+        }
       }
 
       last_count = count;
@@ -271,11 +277,16 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           // Network up; do the check.
           actualCheck(force, callback, page_callback);
         } else {
+          // TODO: This check has false negatives on OS X.
+          //       For now disabled, but it should be investigated further.
           // Network down. Do a constant reschedule.
+          actualCheck(force, callback, page_callback);
           console.log('Network appears down (' + (xhr && xhr.status) +
-                      '). Rescheduling check.');
-          applySchedule(RESCHEDULE_DELAY);
-          (callback || $.noop)();
+                      '). Checking anyway.');
+          //console.log('Network appears down (' + (xhr && xhr.status) +
+          //            '). Rescheduling check.');
+          //applySchedule(RESCHEDULE_DELAY);
+          //(callback || $.noop)();
         }
       }
     });
