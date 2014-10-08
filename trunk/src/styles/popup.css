@@ -35,13 +35,13 @@ hr {
   margin-bottom: 0;
   padding-top: 0;
   padding-bottom: 1em;
+  display: flex;
 }
 
 .main_controls>span {
-  text-align: left;
   color: #849ccb;
   cursor: pointer;
-  margin: 0 1.1em;
+  flex: 1;
 }
 
 .page_controls>span {
