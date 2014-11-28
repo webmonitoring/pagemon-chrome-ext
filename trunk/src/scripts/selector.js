@@ -29,12 +29,12 @@ var help_button = null;
 // Generates the controls that are inserted into the page. Returns a wrapped
 // jQuery set that's ready to be used with appendTo and the like.
 function generateControls() {
-  var template = '<div id="' + FRAME_ID + '"> \
-                    <span title="Pick" class="' + ACTIVE_CLASS + '">%pick%</span> \
-                    <span title="Parent" class="' + DISABLED_CLASS + '">%parent%</span> \
-                    <input type="button" title="Done" value="%done%" disabled="disabled" /> \
-                    <input type="button" title="Help" value="%help%" /> \
-                  </div>';
+  var template = '<div id="' + FRAME_ID + '"> ' +
+                 '  <span title="Pick" class="' + ACTIVE_CLASS + '">%pick%</span> ' +
+                 '  <span title="Parent" class="' + DISABLED_CLASS + '">%parent%</span> ' +
+                 '  <input type="button" title="Done" value="%done%" disabled="disabled" /> ' +
+                 '  <input type="button" title="Help" value="%help%" /> ' +
+                 '</div>';
 
   var pick = chrome.i18n.getMessage('selector_gui_pick');
   var parent = chrome.i18n.getMessage('selector_gui_parent');

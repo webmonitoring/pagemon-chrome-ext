@@ -459,14 +459,14 @@ function calculateTextDiff(src, dst) {
 // returned value is a jQuery-wrapped div with the appropriate event(s) already
 // attached.
 function generateControls(url) {
-  var template = '<div id="chrome_page_monitor_ext_orig_link"> \
-                    <a class="pm_original" href="%url%" \
-                       title="%title%">%original%</a> \
-                    <br /> \
-                    <a class="pm_textize" href="#">%textize%</a> \
-                    <br /> \
-                    <a class="pm_hide" href="#">%hide%</a> \
-                  </div>';
+  var template = '<div id="chrome_page_monitor_ext_orig_link"> ' +
+                 '  <a class="pm_original" href="%url%" ' +
+                 '     title="%title%">%original%</a> ' +
+                 '  <br /> ' +
+                 '  <a class="pm_textize" href="#">%textize%</a> ' +
+                 '  <br /> ' +
+                 '  <a class="pm_hide" href="#">%hide%</a> ' +
+                 '</div>';
 
   var deletions_shown = !getSetting(SETTINGS.hide_deletions);
 

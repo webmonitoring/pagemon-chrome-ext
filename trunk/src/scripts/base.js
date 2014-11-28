@@ -43,19 +43,19 @@ var REQUEST_TIMEOUT = 10000;
 var MIN_BODY_TAIL_LENGTH = 100;
 
 // The pages database table structure as an SQL CREATE TABLE statement.
-var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( \
-  `url` TEXT NOT NULL UNIQUE, \
-  `name` TEXT NOT NULL, \
-  `mode` TEXT NOT NULL DEFAULT 'text', \
-  `regex` TEXT, \
-  `selector` TEXT, \
-  `check_interval` INTEGER, \
-  `html` TEXT NOT NULL DEFAULT '', \
-  `crc` INTEGER NOT NULL DEFAULT 0, \
-  `updated` INTEGER, \
-  `last_check` INTEGER, \
-  `last_changed` INTEGER \
-);";
+var DATABASE_STRUCTURE = "CREATE TABLE IF NOT EXISTS pages ( " +
+"  `url` TEXT NOT NULL UNIQUE, " +
+"  `name` TEXT NOT NULL, " +
+"  `mode` TEXT NOT NULL DEFAULT 'text', " +
+"  `regex` TEXT, " +
+"  `selector` TEXT, " +
+"  `check_interval` INTEGER, " +
+"  `html` TEXT NOT NULL DEFAULT '', " +
+"  `crc` INTEGER NOT NULL DEFAULT 0, " +
+"  `updated` INTEGER, " +
+"  `last_check` INTEGER, " +
+"  `last_changed` INTEGER " +
+");";
 
 /*******************************************************************************
 *                                  Utilities                                   *
@@ -322,10 +322,10 @@ function setPageSettings(url, settings, callback) {
 function addPage(page, callback) {
   if (window != BG) return BG.addPage(page, callback);
 
-  var query = "REPLACE INTO pages(url, name, mode, regex, selector, \
-                                  check_interval, html, crc, updated, \
-                                  last_check, last_changed) \
-               VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+  var query = "REPLACE INTO pages(url, name, mode, regex, selector, " +
+              "                   check_interval, html, crc, updated, " +
+              "                   last_check, last_changed) " +
+              "VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
   executeSql(query, [
     page.url,
