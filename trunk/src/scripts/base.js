@@ -511,6 +511,7 @@ function checkPage(url, callback, force_snapshot) {
     $.ajax({
       url: url,
       dataType: 'text',
+      timeout: page.check_interval / 2,
       success: function(html, _, xhr) {
         var type = xhr.getResponseHeader('Content-type');
         cleanAndHashPage(html, page.mode, page.regex, page.selector,
