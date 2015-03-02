@@ -95,29 +95,34 @@ function fillNotifications(callback) {
 }
 
 // Updates the state of the three main buttons of the popup.
-// 1. If the page in the currently selected tab is being monitored, disables the
-//    Monitor This Page button and replaces its text with a localized variant of
-//    "Page is Monitored". If the current page is not an HTTP(S) one, disables
-//    the button and set the text to the localized variant of "Monitor This
-//    Page". Otherwise enables it and sets the text to a localized variant of
-//    "Monitor This Page".
-// 2. If there are any notifications displayed, enabled the View All button.
-//    Otherwise disables it.
-// 3. If there are any pages monitored at all, enabled the Check All button.
-//    Otherwise disables it.
+// 1. If the page in the currently selected tab is being monitored, replaces the
+//    Monitor This Page button with Stop Monitoring and Options buttons.
+//    If the current page is not an HTTP(S) one, disables the button and set
+//    the text to the localized variant of "Monitor This Page". Else enables
+//    it and sets the text to a localized variant of "Monitor This Page".
+// 2. If there are any notifications displayed, enabled the "View All" button.
+//    Else disables it.
+// 3. If there are any pages monitored at all, enabled the "Check All" button.
+//    Else disables it.
 function updateButtonsState() {
-  // Enable/Disable the Monitor This Page button.
+  // Choose the Monitor This Page bs Stop / Options button.
   chrome.tabs.getSelected(null, function(tab) {
     isPageMonitored(tab.url, function(monitored) {
-      if (monitored || !tab.url.match(/^https?:/)) {
-        $('#monitor_page').unbind('click').addClass('inactive');
-        $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
-        var message = monitored ? 'page_monitored' : 'monitor';
-        $('#monitor_page span').text(chrome.i18n.getMessage(message));
-      } else {
-        $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
-        $('#monitor_page img').attr('src', 'img/monitor.png');
-        $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
+      var monitorable = /^https?:/.test(tab.url);
+      $('#monitor_page').toggle(!monitored);
+      $('#stop_monitoring').toggle(monitored);
+      $('#options').toggle(monitored);
+      if (!monitored) {
+        if (monitorable) {
+          $('#monitor_page').click(monitorCurrentPage).removeClass('inactive');
+          $('#monitor_page img').attr('src', 'img/monitor.png');
+          $('#monitor_page span').text(chrome.i18n.getMessage('monitor'));
+        } else {
+          $('#monitor_page').unbind('click').addClass('inactive');
+          $('#monitor_page img').attr('src', 'img/monitor_inactive.png');
+          var message = monitored ? 'page_monitored' : 'monitor';
+          $('#monitor_page span').text(chrome.i18n.getMessage(message));
+        }
       }
     });
   });
@@ -244,6 +249,18 @@ function setUpHandlers() {
   $('#monitor_page').click(monitorCurrentPage);
   $('#check_now').click(checkAllPages);
   $('#view_all').click(openAllPages);
+  $('#stop_monitoring').click(function() {
+    chrome.tabs.getSelected(null, function(tab) {
+      BG.removePage(tab.url, updateButtonsState);
+    });
+  });
+  $('#options').click(function() {
+    chrome.tabs.getSelected(null, function(tab) {
+      var options_url = chrome.extension.getURL('options.htm') +
+                        '#' + btoa(tab.url);
+      chrome.tabs.create({ url: options_url, selected: true });
+    });
+  });
 
   // Live handlers for the per-notifications buttons.
   var buttons = $('.page_link,.mark_visited,.view_diff,.stop_monitoring');

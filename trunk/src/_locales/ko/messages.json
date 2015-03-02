@@ -355,6 +355,10 @@
       "description": "The text on the button that stops a page from being monitored.",
       "message": "감시 중지　　"
    },
+   "stop_monitoring_title": {
+      "description": "Like stop_monitoring, but in title case.",
+      "message": "감시 중지"
+   },
    "test_button": {
       "description": "The text on the button that tests a given regex or selector on a page in advanced mode.",
       "message": "시험"

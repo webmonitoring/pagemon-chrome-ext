@@ -71,6 +71,10 @@
     "message": "停止监控",
     "description": "用于停止监控某页面的按钮文字。"
   },
+  "stop_monitoring_title": {
+    "message": "停止监控",
+    "description": "Like stop_monitoring, but in title case."
+  },
   "mark_visited": {
     "message": "标记为已访问",
     "description": "用于标记已更新页面为已被访问的按钮文字。"

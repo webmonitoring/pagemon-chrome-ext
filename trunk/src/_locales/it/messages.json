@@ -71,6 +71,10 @@
     "message": "non monitorare",
     "description": "The text on the button that stops a page from being monitored."
   },
+  "stop_monitoring_title": {
+    "message": "Non Monitorare",
+    "description": "Like stop_monitoring, but in title case."
+  },
   "mark_visited": {
     "message": "già visitata",
     "description": "The text on the button that marks an updated page as visited."
