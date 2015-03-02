@@ -71,6 +71,10 @@
     "message": "izlemeyi durdur",
     "description": "The text on the button that stops a page from being monitored."
   },
+  "stop_monitoring_title": {
+    "message": "Izlemeyi Durdur",
+    "description": "Like stop_monitoring, but in title case."
+  },
   "mark_visited": {
     "message": "haberim var",
     "description": "The text on the button that marks an updated page as visited."

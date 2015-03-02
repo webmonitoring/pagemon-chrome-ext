@@ -1096,5 +1096,15 @@ function init() {
 
   chrome.extension.onRequest.addListener(selectorServer);
 
-  fillPagesList();
+  fillPagesList(function() {
+    var expanded_page_url = atob(window.location.hash.substring(1));
+    if (expanded_page_url) {
+      var record = findPageRecord(expanded_page_url);
+      var advanced_toggle = $('.advanced_toggle input[type=checkbox]', record);
+      advanced_toggle.attr('checked', true);
+      advanced_toggle.click();
+      advanced_toggle.attr('checked', true);
+      record[0].scrollIntoView();
+    }
+  });
 }

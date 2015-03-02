@@ -71,6 +71,10 @@
     "message": "stop monitoring",
     "description": "The text on the button that stops a page from being monitored."
   },
+  "stop_monitoring_title": {
+    "message": "Stop Monitoring",
+    "description": "Like stop_monitoring, but in title case."
+  },
   "mark_visited": {
     "message": "mark visited",
     "description": "The text on the button that marks an updated page as visited."

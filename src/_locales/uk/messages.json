@@ -71,6 +71,10 @@
     "message": "припинити відстежування",
     "description": "The text on the button that stops a page from being monitored."
   },
+  "stop_monitoring_title": {
+    "message": "Припинити Відстежування",
+    "description": "Like stop_monitoring, but in title case."
+  },
   "mark_visited": {
     "message": "позначити прочитаною",
     "description": "The text on the button that marks an updated page as visited."
