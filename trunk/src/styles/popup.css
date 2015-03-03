@@ -5,6 +5,7 @@
 /* General Page Styles */
 
 body {
+  white-space: nowrap;
   overflow-x: hidden;
   overflow-y: auto;
   height: 6.2em;
