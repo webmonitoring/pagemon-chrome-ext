@@ -289,7 +289,8 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
           // TODO: This check has false negatives on OS X.
           //       For now disabled, but it should be investigated further.
           // Network down. Do a constant reschedule.
-          actualCheck(force, callback, page_callback);
+          if(navigator.platform.toUpperCase().indexOf('MAC') > (-1))//is mac; Remove when problem with OS X will be found
+          	actualCheck(force, callback, page_callback);
           console.log('Network appears down (' + (xhr && xhr.status) +
                       '). Checking anyway.');
           //console.log('Network appears down (' + (xhr && xhr.status) +
