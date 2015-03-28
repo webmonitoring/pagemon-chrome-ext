@@ -11,6 +11,9 @@
 // The address to check when testing for network availability.
 var RELIABLE_CHECKPOINT = 'http://www.google.com/';
 
+//Expected title of the testing page (for wifi gates check)
+var RELIABLE_CHECKPOINT_TITLE = 'Google';
+
 // Default interval between checks.
 var DEFAULT_CHECK_INTERVAL = 3 * 60 * 60 * 1000;
 
@@ -270,10 +273,16 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // RESCHEDULE_DELAY.
   check = function(force, callback, page_callback) {
     $.ajax({
-      type: 'HEAD',
       url: RELIABLE_CHECKPOINT,
-      complete: function(xhr) {
-        if (xhr && xhr.status >= 200 && xhr.status < 300) {
+	    dataType: 'text',
+	    timeout: 5000,
+      complete: function(xhr, _, xh) {
+		
+		    var title = "";
+		    if(xhr.responseText)
+			    title = xhr.responseText.match("<title>(.*?)</title>")[1];				
+			
+        if (xhr && xhr.status >= 200 && xhr.status < 300 &&  title == RELIABLE_CHECKPOINT_TITLE) {
           // Network up; do the check.
           actualCheck(force, callback, page_callback);
         } else {
