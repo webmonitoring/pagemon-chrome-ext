@@ -279,7 +279,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
       complete: function(xhr, _, xh) {
 		
 	var gateway_detected = false;
-	if(xhr.responseText && (xhr.responseText.toLowerCase().match(RegExp("\\b("+ HOTSPOT_KEYWORDS +")\\b","g"))) ){
+	if(xhr.responseText && (xhr.responseText.toLowerCase().match(RegExp("\\b("+ HOTSPOT_KEYWORDS.toLowerCase() +")\\b","g"))) ){
 	  gateway_detected = true;
 	  console.log('wifi gateway detected.');
 	}
