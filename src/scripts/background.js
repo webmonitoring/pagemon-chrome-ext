@@ -11,8 +11,8 @@
 // The address to check when testing for network availability.
 var RELIABLE_CHECKPOINT = 'http://www.google.com/';
 
-//Expected title of the testing page (for wifi gates check)
-var RELIABLE_CHECKPOINT_TITLE = 'Google';
+// keywords used to detect a hospot gateway page
+var HOTSPOT_KEYWORDS = 'wifi|wi-fi|gateway|hotspot|rete';
 
 // Default interval between checks.
 var DEFAULT_CHECK_INTERVAL = 3 * 60 * 60 * 1000;
@@ -278,18 +278,20 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
 	    timeout: 5000,
       complete: function(xhr, _, xh) {
 		
-		    var title = "";
-		    if(xhr.responseText)
-			    title = xhr.responseText.match("<title>(.*?)</title>")[1];				
-			
-        if (xhr && xhr.status >= 200 && xhr.status < 300 &&  title == RELIABLE_CHECKPOINT_TITLE) {
+	var gateway_detected = false;
+	if(xhr.responseText && (xhr.responseText.toLowerCase().match(RegExp("\\b("+ HOTSPOT_KEYWORDS +")\\b","g"))) ){
+	  gateway_detected = true;
+	  console.log('wifi gateway detected.');
+	}
+		
+        if (xhr && xhr.status >= 200 && xhr.status < 300 &&  !gateway_detected) { 
           // Network up; do the check.
           actualCheck(force, callback, page_callback);
         } else {
           // TODO: This check has false negatives on OS X.
           //       For now disabled, but it should be investigated further.
           // Network down. Do a constant reschedule.
-          if(navigator.platform.toUpperCase().indexOf('MAC') > (-1))//is mac; Remove when problem with OS X will be found
+          if(navigator.platform.toUpperCase().indexOf('MAC') >= 0)//is mac; Remove when problem with OS X will be found
           	actualCheck(force, callback, page_callback);
           console.log('Network appears down (' + (xhr && xhr.status) +
                       '). Checking anyway.');
