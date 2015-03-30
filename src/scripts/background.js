@@ -11,6 +11,9 @@
 // The address to check when testing for network availability.
 var RELIABLE_CHECKPOINT = 'http://www.google.com/';
 
+// A regex that must match the checkpoint result (for detecting proxy portals).
+var RELIABLE_CHECKPOINT_REGEX = /Google/;
+
 // Default interval between checks.
 var DEFAULT_CHECK_INTERVAL = 3 * 60 * 60 * 1000;
 
@@ -270,23 +273,22 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // RESCHEDULE_DELAY.
   check = function(force, callback, page_callback) {
     $.ajax({
-      type: 'HEAD',
       url: RELIABLE_CHECKPOINT,
       complete: function(xhr) {
+        var internet_available = false;
         if (xhr && xhr.status >= 200 && xhr.status < 300) {
-          // Network up; do the check.
+          // Network up. Make sure this isn't a gateway portal.
+          internet_available = RELIABLE_CHECKPOINT_REGEX.test(xhr.responseText);
+        }
+        if (internet_available) {
+          // Network up. Do the check.
           actualCheck(force, callback, page_callback);
         } else {
-          // TODO: This check has false negatives on OS X.
-          //       For now disabled, but it should be investigated further.
           // Network down. Do a constant reschedule.
-          actualCheck(force, callback, page_callback);
           console.log('Network appears down (' + (xhr && xhr.status) +
-                      '). Checking anyway.');
-          //console.log('Network appears down (' + (xhr && xhr.status) +
-          //            '). Rescheduling check.');
-          //applySchedule(RESCHEDULE_DELAY);
-          //(callback || $.noop)();
+                      '). Rescheduling check.');
+          applySchedule(RESCHEDULE_DELAY);
+          (callback || $.noop)();
         }
       }
     });
