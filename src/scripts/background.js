@@ -11,6 +11,9 @@
 // The address to check when testing for network availability.
 var RELIABLE_CHECKPOINT = 'http://www.google.com/';
 
+// keywords used to detect a hospot gateway page
+var HOTSPOT_KEYWORDS = 'wifi|wi-fi|gateway|hotspot|rete';
+
 // Default interval between checks.
 var DEFAULT_CHECK_INTERVAL = 3 * 60 * 60 * 1000;
 
@@ -270,17 +273,26 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
   // RESCHEDULE_DELAY.
   check = function(force, callback, page_callback) {
     $.ajax({
-      type: 'HEAD',
       url: RELIABLE_CHECKPOINT,
-      complete: function(xhr) {
-        if (xhr && xhr.status >= 200 && xhr.status < 300) {
+	    dataType: 'text',
+	    timeout: 5000,
+      complete: function(xhr, _, xh) {
+		
+	var gateway_detected = false;
+	if(xhr.responseText && (xhr.responseText.toLowerCase().match(RegExp("\\b("+ HOTSPOT_KEYWORDS.toLowerCase() +")\\b","g"))) ){
+	  gateway_detected = true;
+	  console.log('wifi gateway detected.');
+	}
+		
+        if (xhr && xhr.status >= 200 && xhr.status < 300 &&  !gateway_detected) { 
           // Network up; do the check.
           actualCheck(force, callback, page_callback);
         } else {
           // TODO: This check has false negatives on OS X.
           //       For now disabled, but it should be investigated further.
           // Network down. Do a constant reschedule.
-          actualCheck(force, callback, page_callback);
+          if(navigator.platform.toUpperCase().indexOf('MAC') >= 0)//is mac; Remove when problem with OS X will be found
+          	actualCheck(force, callback, page_callback);
           console.log('Network appears down (' + (xhr && xhr.status) +
                       '). Checking anyway.');
           //console.log('Network appears down (' + (xhr && xhr.status) +
