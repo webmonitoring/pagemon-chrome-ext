@@ -100,7 +100,7 @@ var WATCHDOG_TOLERANCE = 2 * 60 * 1000;
         });
         var options = {
           type: 'basic',
-          iconUrl: chrome.extension.getURL('img/extension_icon.png'),
+          iconUrl: chrome.extension.getURL('img/icon128.png'),
           title: title,
           message: '',
           buttons: items
