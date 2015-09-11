@@ -222,9 +222,27 @@ function openAllPages() {
 
 // Opens the <a> link on which it is called (i.e. the this object) in a new
 // unfocused tab and returns false.
-function openLinkInNewTab(event) {
-  chrome.tabs.create({ url: this.href, selected: false });
-  event.preventDefault();
+function openLinkInNewTab(a){ 
+	// Clean The url: chrome do not find urls we anchor in its tabs
+  // For example if you search google.com#test while you actually have a 
+  // tab with google.com#test, the callback function will have an empty response
+  var urlToFind = this.href.replace(/(#.+?)$/, "");
+  chrome.tabs.query({url: urlToFind}, function(tabs){ 
+  	// If the tab has been found: refresh it and higlight it
+		if (tabs.length > 0) {
+			// Get tab id
+			var tabId = tabs[0].id;
+			// Reload it
+			chrome.tabs.reload(tabId);
+			// Put it as selected
+			chrome.tabs.update(tabId, {selected: true});
+		} 
+		// If no tab found, just open a new tab
+		else {
+			chrome.tabs.create({url: urlToFind, active:!1}); 
+		}
+		}); 
+		a.preventDefault();
 }
 
 // Open a diff page in a new unfocused tab. Expects to be called on an element
