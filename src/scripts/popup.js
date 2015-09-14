@@ -221,9 +221,22 @@ function openAllPages() {
 }
 
 // Opens the <a> link on which it is called (i.e. the this object) in a new
-// unfocused tab and returns false.
+// unfocused tab and returns false, or if another tab already has this URL open,
+// refreshes and focuses it.
 function openLinkInNewTab(event) {
-  chrome.tabs.create({ url: this.href, selected: false });
+  // Tab queries don't use hashes, so strip it.
+  var urlToFind = this.href.replace(/#.+/, '');
+  chrome.tabs.query({url: urlToFind}, function(tabs) {
+    // If the tab has been found: refresh and focus it.
+    if (tabs.length) {
+      var tabId = tabs[0].id;
+      chrome.tabs.reload(tabId);
+      chrome.tabs.update(tabId, { selected: true });
+    } else {
+      // No tab found; just open a new tab.
+      chrome.tabs.create({ url: this.href, selected: false });
+    }
+  });
   event.preventDefault();
 }
 
