@@ -209,7 +209,7 @@ function delSetting(name) {
 
 // Creates the pages table in the database if it does not already exist.
 function initializeStorage(callback) {
-  executeSql(DATABASE_STRUCTURE, $.noop, callback);
+  executeSql(DATABASE_STRUCTURE, [], callback);
 }
 
 // Executes the specified SQL query with the specified arguments within a
