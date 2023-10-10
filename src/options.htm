@@ -1,9 +1,7 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
-
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
   <head>
     <title>Page Monitor Options</title>
-    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta http-equiv='origin-trial' content='A7BbcANSUFw5QP3/lXzWdjoT6yoaUleulXKVCok4/bo79XBxLj/HsoHiPyRKUDv02+CxU8doNArVElgLicfnugcAAABleyJvcmlnaW4iOiJodHRwczovL3d3dy52aXN1YWxwaW5nLmlvOjQ0MyIsImZlYXR1cmUiOiJXZWJTUUwiLCJleHBpcnkiOjE3MTY5NDA3OTksImlzVGhpcmRQYXJ0eSI6dHJ1ZX0='>
     <link rel="shortcut icon" type="image/png" href="image/browser_icon.png" />
     <link rel="stylesheet" type="text/css" href="styles/options.css" />
@@ -15,7 +13,6 @@
   </head>
   <body>
     <h1><span class="i18n" title="options_header"></span></h1>
-
     <!-- Templates for the page table. -->
 
     <table id="templates">
@@ -44,14 +41,16 @@
               <img src="img/refresh.png" class="check_now" alt="Check Now" />
               <img src="img/monitor.png" alt="Last Check" />
               <span class="i18n" title="last_check"></span>:
-              <span class="last_check_time"><span class="i18n" title="unknown"></span></span>.
+              <span class="last_check_time"
+                ><span class="i18n" title="unknown"></span> </span
+              >.
             </span>
             <div class="advanced_controls">
               <div class="page_interval">
                 <input type="checkbox" />
                 <span class="disabled">
                   <span class="i18n" title="check_every"></span>:
-                  <input type="range" disabled="disabled" min="-6" max="20" step="0.01" />
+                  <input type="range" disabled min="-6" max="20" step="0.01" />
                   <label class="range_value_label"></label>
                 </span>
               </div>
@@ -59,13 +58,27 @@
                 <input type="checkbox" />
                 <span class="disabled">
                   <span class="i18n" title="custom_mode"></span>:
-                  <select disabled="disabled">
-                    <option value="selector" class="i18n" title="selector"></option>
+                  <select disabled>
+                    <option
+                      value="selector"
+                      class="i18n"
+                      title="selector"
+                    ></option>
                     <option value="regex" class="i18n" title="regex"></option>
                   </select>
-                  <input type="text" disabled="disabled" class="mode_string" />
-                  <input type="button" disabled="disabled" value="Test" class="mode_test" />
-                  <input type="button" disabled="disabled" value="Pick" class="mode_pick" />
+                  <input type="text" disabled class="mode_string" />
+                  <input
+                    type="button"
+                    disabled
+                    value="Test"
+                    class="mode_test"
+                  />
+                  <input
+                    type="button"
+                    disabled
+                    value="Pick"
+                    class="mode_pick"
+                  />
                 </span>
               </div>
             </div>
@@ -78,11 +91,9 @@
         </td>
       </tr>
     </table>
-
     <!-- Pages table. -->
 
     <table id="pages" class="main_table"></table>
-
     <!-- Basic opetions. -->
 
     <div id="basic_options">
@@ -112,7 +123,6 @@
         </tr>
       </table>
     </div>
-
     <!-- Advanced options. -->
 
     <div id="advanced_options">
@@ -142,9 +152,15 @@
         <select>
           <option value="" class="i18n" title="sound_none"></option>
         </select>
-        <button id="play_sound"><span class="i18n" title="sound_play"></span></button>
-        <button id="new_sound"><span class="i18n" title="sound_new"></span></button>
-        <button id="delete_sound"><span class="i18n" title="sound_delete"></span></button>
+        <button id="play_sound">
+          <span class="i18n" title="sound_play"></span>
+        </button>
+        <button id="new_sound">
+          <span class="i18n" title="sound_new"></span>
+        </button>
+        <button id="delete_sound">
+          <span class="i18n" title="sound_delete"></span>
+        </button>
       </p>
       <p id="sort">
         <img src="img/sort.png" alt="Sort By" />
@@ -153,9 +169,21 @@
           <option value="date added" class="i18n" title="sort_date"></option>
           <option value="name" class="i18n" title="sort_name"></option>
           <option value="url" class="i18n" title="sort_url"></option>
-          <option value="check interval" class="i18n" title="sort_interval"></option>
-          <option value="last check" class="i18n" title="sort_last_check"></option>
-          <option value="last change" class="i18n" title="sort_last_change"></option>
+          <option
+            value="check interval"
+            class="i18n"
+            title="sort_interval"
+          ></option>
+          <option
+            value="last check"
+            class="i18n"
+            title="sort_last_check"
+          ></option>
+          <option
+            value="last change"
+            class="i18n"
+            title="sort_last_change"
+          ></option>
         </select>
       </p>
       <p id="animation">
@@ -189,7 +217,6 @@
         <span class="i18n" title="show_full_page_diff"></span>
         <input type="checkbox" />
       </p>
-
       <div id="actions">
         <span id="import">
           <img src="img/import.png" alt="Import" />
@@ -205,68 +232,46 @@
         </span>
       </div>
     </div>
-
     <!-- Basic/Advanced options switch. -->
 
     <label id="options_switch">
-      <input type="checkbox" />
-      <span class="i18n" title="advanced"></span>
+      <input type="checkbox" /> <span class="i18n" title="advanced"></span>
     </label>
-
     <!-- Pop-up forms. -->
 
     <div id="test_result_form">
       <span class="i18n" title="test_matches"></span>
-      <textarea rows="10" cols="80" readonly="readonly">...</textarea>
+      <textarea rows="10" cols="80" readonly>...</textarea>
       <button><span class="i18n" title="close"></span></button>
     </div>
-
     <div id="export_form">
       <span class="i18n" title="export_prompt"></span>
       <textarea rows="10" cols="80">...</textarea>
       <button><span class="i18n" title="close"></span></button>
     </div>
-
     <div id="import_form">
       <span class="i18n" title="import_prompt"></span>
       <textarea rows="10" cols="80"></textarea>
-      <button id="import_perform"><span class="i18n" title="import_button"></span></button>
-      <button id="import_cancel"><span class="i18n" title="cancel"></span></button>
+      <button id="import_perform">
+        <span class="i18n" title="import_button"></span>
+      </button>
+      <button id="import_cancel">
+        <span class="i18n" title="cancel"></span>
+      </button>
     </div>
-
     <div id="new_sound_form">
       <label for="new_sound_name" class="i18n" title="sound_name"></label>:
       <input type="text" id="new_sound_name" value="" />
       <label for="new_sound_url" class="i18n" title="sound_url"></label>:
       <input type="text" id="new_sound_url" value="" />
       <div id="new_sound_buttons">
-        <button id="new_sound_create"><span class="i18n" title="sound_create"></span></button>
-        <button id="new_sound_cancel"><span class="i18n" title="cancel"></span></button>
+        <button id="new_sound_create">
+          <span class="i18n" title="sound_create"></span>
+        </button>
+        <button id="new_sound_cancel">
+          <span class="i18n" title="cancel"></span>
+        </button>
       </div>
     </div>
-
-    <!--DEV_ONLY-->
-    <hr />
-    <table style="text-align: center;">
-      <tr>
-        <td><a href="tests/base.htm">Base Test</a></td>
-        <td><a href="tests/background.htm">Background Test</a></td>
-        <td><a href="tests/popup.htm">Popup Test</a></td>
-        <td><a href="tests/options.htm">Options Test</a></td>
-        <td><a href="tests/selector.htm">Selector Test</a></td>
-        <td><a href="tests/regex.htm">Regex Test</a></td>
-        <td><a href="tests/diff.htm">Diff Test</a></td>
-      </tr>
-      <tr>
-        <td colspan="7">
-          <a href="http://code.google.com/p/pagemon-chrome-ext/issues/list">
-            <strong>
-              Issues List
-            </strong>
-          </a>
-        </td>
-      </tr>
-    </table>
-    <!--/DEV_ONLY-->
   </body>
 </html>

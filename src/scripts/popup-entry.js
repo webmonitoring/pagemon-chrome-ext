@@ -1,7 +1,1 @@
-$(function() {
-  BG.hideDesktopNotification();
-  if (getSetting(SETTINGS.animations_disabled)) $.fx.off = true;
-  applyLocalization();
-  setUpHandlers();
-  fillNotifications();
-});
+$(function(){BG.hideDesktopNotification();getSetting(SETTINGS.animations_disabled)&&($.fx.off=!0);applyLocalization();setUpHandlers();fillNotifications()});
