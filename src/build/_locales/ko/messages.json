@@ -1,0 +1,410 @@
+﻿{
+   "advanced": {
+      "description": "The text of the button to toggle advanced settings.",
+      "message": "고급"
+   },
+   "ago": {
+      "description": "A setence that describes that something happened {placeholder} time ago, e.g. '{20 minutes} ago'.",
+      "message": "$1 앞에"
+   },
+   "animations": {
+      "description": "The label for the checkbox to disable/enable animations.",
+      "message": "움직임"
+   },
+   "badge_color": {
+      "description": "Label for the badge color selector.",
+      "message": "증표 색상"
+   },
+   "cancel": {
+      "description": "The text for a generic 'cancel' button.",
+      "message": "취소"
+   },
+   "check_all": {
+      "description": "The text of the button that initiates a check of all pages.",
+      "message": "지금 모두 확인"
+   },
+   "check_every": {
+      "description": "The label for the check interval textbox.",
+      "message": "확인 간격"
+   },
+   "check_in_progress": {
+      "description": "The message to display while a check is in progress.",
+      "message": "확인 중"
+   },
+   "close": {
+      "description": "The text for a generic 'close form' button.",
+      "message": "닫기"
+   },
+   "custom_mode": {
+      "description": "The label for custom checking mode (selector or regex).",
+      "message": "사용자 형태"
+   },
+   "day": {
+      "description": "A single day, as a number suffix (e.g. '1 day').",
+      "message": "1일"
+   },
+   "days": {
+      "description": "A plural number of days, as a number suffix (e.g. '7 days').",
+      "message": "$1일"
+   },
+   "description": {
+      "description": "The global description of the extension.",
+      "message": "백그라운드에서 유지하고 웹 페이지의 변화를 관찰합니다."
+   },
+   "diff_corruption": {
+      "description": "Cache corruption error message on the diff page.",
+      "message": "캐시가 손상이 발견되고 수정되었습니다. 마지막 스냅숏이 폐기되었습니다. 변화 강조는 다음 갱신에 가능합니다."
+   },
+   "diff_error": {
+      "description": "A diff failure error message on the diff page.",
+      "message": "비교 중 오류가 발생했습니다. 이 보고서를 제출해주세요."
+   },
+   "diff_hide_deletions": {
+      "description": "Link to hide deletions on the diff page.",
+      "message": "삭제 부분 숨기기"
+   },
+   "diff_original": {
+      "description": "Text of the link to the original page on the diff page.",
+      "message": "원본"
+   },
+   "diff_original_title": {
+      "description": "Tooltip of the link to the original page on the diff page.",
+      "message": "원래 쪽 보기"
+   },
+   "diff_progress": {
+      "description": "The message to show while fetching the page to diff.",
+      "message": "비교를 진행하고 있습니다."
+   },
+   "diff_show_deletions": {
+      "description": "Link to show deletions on the diff page.",
+      "message": "삭제 보기"
+   },
+   "diff_textize": {
+      "description": "Link to switch the diff page to text-only mode.",
+      "message": "글자 형태"
+   },
+   "diff_title": {
+      "description": "The title of the diff page.",
+      "message": "쪽 감시: 변경 보기"
+   },
+   "diff_untextize": {
+      "description": "Link to switch the diff page from text-only mode to normal.",
+      "message": "보통 형태"
+   },
+   "disabled": {
+      "description": "Generic label for disabled items.",
+      "message": "끄기"
+   },
+   "enabled": {
+      "description": "Generic label for enabled items.",
+      "message": "켜기"
+   },
+   "export": {
+      "description": "The text of the button to export pages into a bookmarks.html.",
+      "message": "쪽 내보내기"
+   },
+   "export_prompt": {
+      "description": "The prompt that appears before the exported pages textbox.",
+      "message": "파일 안에 이 문자를 복사하고 bookmarks.html로 저장하세요:"
+   },
+   "feedback": {
+      "description": "The text of the feedback link.",
+      "message": "피드백"
+   },
+   "hide_deletions": {
+      "description": "The text for the checkbox that hides deletions by default.",
+      "message": "삭제 숨기기"
+   },
+   "hour": {
+      "description": "A single hour, as a number suffix (e.g. '1 hour').",
+      "message": "1시간"
+   },
+   "hours": {
+      "description": "A plural number of hours, as a number suffix (e.g. '7 hours').",
+      "message": "$1시간"
+   },
+   "import": {
+      "description": "The text of the button to import pages from a bookmarks.html.",
+      "message": "쪽 가져오기"
+   },
+   "import_button": {
+      "description": "The text for the 'import' button in the import form.",
+      "message": "가져오기"
+   },
+   "import_empty": {
+      "description": "The error message displayed when no pages are found during an import.",
+      "message": "넣은 것 중에 가져올 쪽을 찾을 수 없습니다."
+   },
+   "import_error": {
+      "description": "The error message displayed when a page import fails.",
+      "message": "오류가 발생했습니다. 가져오기가 완벽하지 않을 수 있습니다."
+   },
+   "import_prompt": {
+      "description": "The prompt that appears before the bookmarks.html textbox when importing.",
+      "message": "bookmarks.html의 내용을 여기에 붙여넣기:"
+   },
+   "import_success_multi": {
+      "description": "The message displayed when multiple pages were imported successfully.",
+      "message": "$1쪽을 성공적으로 가져왔습니다."
+   },
+   "import_success_single": {
+      "description": "The message displayed when 1 page was imported successfully.",
+      "message": "1쪽을 성공적으로 가져왔습니다."
+   },
+   "last_check": {
+      "description": "The text of the label that specified when the page was last checked.",
+      "message": "마지막 확인"
+   },
+   "mark_visited": {
+      "description": "The text on the button that marks an updated page as visited.",
+      "message": "방문된 표시　　"
+   },
+   "minute": {
+      "description": "A single minute, as a number suffix (e.g. '1 minute').",
+      "message": "1분"
+   },
+   "minutes": {
+      "description": "A plural number of minutes, as a number suffix (e.g. '7 minutes').",
+      "message": "$1분"
+   },
+   "monitor": {
+      "description": "The text of the button that marks a page for monitoring.",
+      "message": "이 쪽 감시"
+   },
+   "name": {
+      "description": "The name of the extension.",
+      "message": "쪽 감시자"
+   },
+   "never": {
+      "description": "A 'last checked' label for pages that have never been checked.",
+      "message": "절대"
+   },
+   "new_sound_failed": {
+      "description": "The error message displayed when the URL specified for a new sound could not be played.",
+      "message": "크롬은 지적된 URL의 파일을 재생할 수 없습니다."
+   },
+   "new_sound_prompt": {
+      "description": "The prompt that appears when the user tries to add a new sound.",
+      "message": "새로운 소리의 이름과 URL을 입력해주세요."
+   },
+   "no_changes": {
+      "description": "The popup text when no changes have been found.",
+      "message": "찾은 변경이 없습니다."
+   },
+   "no_pages_monitored": {
+      "description": "The text that replaces the pages list on the options page when no pages are monitored.",
+      "message": "감시가 시작된 쪽이 없습니다."
+   },
+   "notifications": {
+      "description": "Label for the desktop notifications checkbox.",
+      "message": "바탕 화면 알림"
+   },
+   "notifications_timeout": {
+      "description": "Label for the desktop notifications timeout textbox.",
+      "message": "알림 유지"
+   },
+   "ok": {
+      "description": "The text for a generic 'ok' button.",
+      "message": "확인"
+   },
+   "options": {
+      "description": "The text of the options link.",
+      "message": "선택"
+   },
+   "options_header": {
+      "description": "The text of the pages list header on the options page.",
+      "message": "감시된 쪽"
+   },
+   "options_title": {
+      "description": "The title of the options page.",
+      "message": "쪽 감시자 선택"
+   },
+   "page_monitored": {
+      "description": "This text appears in the popup when the current page is already monitored.",
+      "message": "쪽 감시됨"
+   },
+   "page_updated_multi": {
+      "description": "Notification title: multiple pages have been updated.",
+      "message": "$1쪽 갱신됨"
+   },
+   "page_updated_single": {
+      "description": "Notification title: a single page has been updated.",
+      "message": "쪽 갱신됨"
+   },
+   "pick_button": {
+      "description": "The text on the button that launches the selector GUI.",
+      "message": "고르기"
+   },
+   "regex": {
+      "description": "The label for regex mode.",
+      "message": "정규 표현식"
+   },
+   "remove_page": {
+      "description": "The text on the button that stops a page from being monitored.",
+      "message": "제거"
+   },
+   "rename_page": {
+      "description": "The text of the button to rename a page.",
+      "message": "이름 바꾸기"
+   },
+   "second": {
+      "description": "A single second, as a number suffix (e.g. '1 second').",
+      "message": "1초"
+   },
+   "seconds": {
+      "description": "A plural number of seconds, as a number suffix (e.g. '7 seconds').",
+      "message": "$1초"
+   },
+   "selector": {
+      "description": "The label for selector mode.",
+      "message": "선택자"
+   },
+   "selector_gui_done": {
+      "description": "The button which accepts the selection and closes the page in the visual selector construction GUI.",
+      "message": "완료"
+   },
+   "selector_gui_help": {
+      "description": "The caption of the help button in the visual selector construction GUI.",
+      "message": "도움말"
+   },
+   "selector_gui_help_text": {
+      "description": "The help message in the visual selector construction GUI.",
+      "message": "이런 조작을 허용하면 감시할 요소를 시각적인 선택을 합니다.\n\nStart by moving your mouse around and notice that the elements over which you pass are outlined in blue. Once the outline matches the element you want (or some part of it), click to select it.\n\nIf you're happy with your selection, simply click Done to return to the options page.\n\nIf the element you selected is only part of the element you would like to monitor, you can click on 'Grow Selection' to extend the selection over to the element in which your selection resides. You can repeat this until you are satisfied with the result or until you reach a top-level part of the page.\n\nIf you'd like to start from scratch and select a new element, click 'Pick Element'."
+   },
+   "selector_gui_parent": {
+      "description": "The button which switches from a selected element to its parent in the visual selector construction GUI.",
+      "message": "선택 증가"
+   },
+   "selector_gui_pick": {
+      "description": "The 'pick element' button in the visual selector construction GUI.",
+      "message": "요소 고르기"
+   },
+      "show_full_page_diff": {
+      "description": "The label for the full page diff when in selector mode",
+      "message": "선택자 방식에서 전체의 다름을 보기"
+   },
+   "sort": {
+      "description": "The label for the sort order drop-down.",
+      "message": "쪽 정렬"
+   },
+   "sort_date": {
+      "description": "The 'date added' option in the sort order drop-down.",
+      "message": "추가된 날짜"
+   },
+   "sort_interval": {
+      "description": "The 'check interval' option in the sort order drop-down.",
+      "message": "확인 간격"
+   },
+   "sort_last_change": {
+      "description": "The 'last changed' option in the sort order drop-down.",
+      "message": "마지막 변화"
+   },
+   "sort_last_check": {
+      "description": "The 'last check' option in the sort order drop-down.",
+      "message": "마지막 확인"
+   },
+   "sort_name": {
+      "description": "The 'name' option in the sort order drop-down.",
+      "message": "이름"
+   },
+   "sort_url": {
+      "description": "The 'URL' option in the sort order drop-down.",
+      "message": "URL"
+   },
+   "sound_alert": {
+      "description": "Label for the sound alert drop-down.",
+      "message": "소리 경보"
+   },
+   "sound_chime": {
+      "description": "The label of the default chime sound.",
+      "message": "울림"
+   },
+   "sound_create": {
+      "description": "The text of the 'create' button in the 'new sound' form.",
+      "message": "만들기"
+   },
+   "sound_cuckoo": {
+      "description": "The label of the default cuckoo sound.",
+      "message": "뻐꾸기"
+   },
+   "sound_delete": {
+      "description": "The text of the button that deletes the selected sound.",
+      "message": "삭제"
+   },
+   "sound_name": {
+      "description": "The label for the sound name in the 'new sound' form.",
+      "message": "이름"
+   },
+   "sound_new": {
+      "description": "The text of the button that opens the 'new sound' form.",
+      "message": "새로운"
+   },
+   "sound_none": {
+      "description": "The value of the no-sound option in the sound alert drop-down.",
+      "message": "없음"
+   },
+   "sound_play": {
+      "description": "The text of the button that plays the selected sound.",
+      "message": "재생"
+   },
+   "sound_url": {
+      "description": "The label for the sound URL in the 'new sound' form.",
+      "message": "URL (MP3 또는 OGG 파일)"
+   },
+   "stop_monitoring": {
+      "description": "The text on the button that stops a page from being monitored.",
+      "message": "감시 중지　　"
+   },
+   "stop_monitoring_title": {
+      "description": "Like stop_monitoring, but in title case.",
+      "message": "감시 중지"
+   },
+   "test_button": {
+      "description": "The text on the button that tests a given regex or selector on a page in advanced mode.",
+      "message": "시험"
+   },
+   "test_fail": {
+      "description": "The message that appears when a regex or selector test fails to retrieve the page to test.",
+      "message": "선택된 쪽을 검색할 수 없습니다."
+   },
+   "test_matches": {
+      "description": "The message that appears when a regex or selector test matches something.",
+      "message": "일치:"
+   },
+   "test_no_matches": {
+      "description": "The message that appears when a regex or selector test does not match anything.",
+      "message": "일치하지 않습니다."
+   },
+   "test_progress": {
+      "description": "The message that appears while testing a regex or selector.",
+      "message": "시험 중..."
+   },
+   "unknown": {
+      "description": "A placeholder for an unknown piece of data.",
+      "message": "알 수 없음"
+   },
+   "until_closed": {
+      "description": "The option describing the notifications remaining active until closed.",
+      "message": "까지 닫힘"
+   },
+   "untitled": {
+      "description": "Default name for pages that have an empty name, with placeholder for the URL.",
+      "message": "제목 없음 ($1)"
+   },
+   "view_all": {
+      "description": "The text of the button that opens all updated pages in new tabs.",
+      "message": "갱신 모두 보기"
+   },
+   "view_all_function": {
+      "description": "The caption of the settings drop-down to select what the 'View All' button in the popup does.",
+      "message": "\"모두 보기\" 기능"
+   },
+   "view_diff": {
+      "description": "The text on the button that opens the diff page.",
+      "message": "변경 보기"
+   },
+   "view_original": {
+      "description": "One of the possible selections for the 'View All function' dropdown. Means that the original page rather than the diff will be opened.",
+      "message": "원본 보기"
+   }
+}
