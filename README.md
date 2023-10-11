@@ -19,3 +19,7 @@ Features:
 - Custom sound alerts.
 - Desktop notifications.
 - Import and export the monitored pages list.
+
+## Building
+Run the following command from the root folder to build the app
+`python ./src/build.py`
