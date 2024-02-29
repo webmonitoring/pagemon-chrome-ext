@@ -1,5 +1,7 @@
 $(function () {
-  BG.hideDesktopNotification();
+  chrome.runtime.sendMessage({
+    type: 'hideDesktopNotification'
+  });
   getSetting(SETTINGS.animations_disabled) && ($.fx.off = !0);
   applyLocalization();
   setUpHandlers();

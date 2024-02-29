@@ -280,3 +280,18 @@ function bringUpToDate(b, a) {
           : d();
   });
 }
+
+const messageHash = {
+  ['hideDesktopNotification']: () => {
+    hideDesktopNotification();
+  },
+}
+
+chrome.runtime.onMessage.addListener(async (message, _sender, sendResponse) => {
+  console.log("message", message);
+  if (messageHash[message.type]) {
+    messageHash[message.type](message);
+  }
+
+  sendResponse(true);
+});

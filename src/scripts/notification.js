@@ -18,7 +18,11 @@ function markPageVisited(a) {
 }
 function initialize() {
   BG.getAllUpdatedPages(function (a) {
-    if (0 == a.length) setTimeout(BG.hideDesktopNotification, 1);
+    if (0 == a.length) setTimeout(async () => {
+      chrome.runtime.sendMessage({
+        type: 'hideDesktopNotification'
+      });
+    }, 1);
     else {
       var b =
         1 == a.length
