@@ -5,11 +5,11 @@ function getNotificationUrl(a) {
 function markPageVisited() {
   var a = getNotificationUrl(this),
     b = this;
-  BG.setPageSettings(a, { updated: !1 }, function () {
+  setPageSettings(a, { updated: !1 }, function () {
     chrome.runtime.sendMessage({
       type: 'updateBadge'
     });
-    takeSnapshot(a, BG.scheduleCheck);
+    takeSnapshot(a, scheduleCheck);
     $(b)
       .closest(".notification td")
       .slideUp("slow", function () {

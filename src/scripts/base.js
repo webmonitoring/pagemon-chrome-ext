@@ -19,7 +19,13 @@ var SETTINGS = {
   REQUEST_TIMEOUT = 1e4,
   MIN_BODY_TAIL_LENGTH = 100,
   DATABASE_STRUCTURE =
-    "CREATE TABLE IF NOT EXISTS pages (   `url` TEXT NOT NULL UNIQUE,   `name` TEXT NOT NULL,   `mode` TEXT NOT NULL DEFAULT 'text',   `regex` TEXT,   `selector` TEXT,   `check_interval` INTEGER,   `html` TEXT NOT NULL DEFAULT '',   `crc` INTEGER NOT NULL DEFAULT 0,   `updated` INTEGER,   `last_check` INTEGER,   `last_changed` INTEGER );";
+    "CREATE TABLE IF NOT EXISTS pages (   `url` TEXT NOT NULL UNIQUE,   `name` TEXT NOT NULL,   `mode` TEXT NOT NULL DEFAULT 'text',   `regex` TEXT,   `selector` TEXT,   `check_interval` INTEGER,   `html` TEXT NOT NULL DEFAULT '',   `crc` INTEGER NOT NULL DEFAULT 0,   `updated` INTEGER,   `last_check` INTEGER,   `last_changed` INTEGER );",
+  MINIMUM_CHECK_SPACING = 1e3,
+  RELIABLE_CHECKPOINT = "http://www.google.com/",
+  RELIABLE_CHECKPOINT_REGEX = /Google/,
+  RESCHEDULE_DELAY = 9e5,
+  EPSILON = 500,
+  DEFAULT_CHECK_INTERVAL = 108e5;
 (function () {
   var a = [
     0, 1996959894, 3993919788, 2567524794, 124634137, 1886057615, 3915621685,
@@ -214,7 +220,7 @@ function setPageSettings(a, b, d) {
     : (d || $.noop)();
 }
 function addPage(a, b) {
-  if (window != BG) return BG.addPage(a, b);
+  // if (window != BG) return BG.addPage(a, b);
   executeSql(
     "REPLACE INTO pages(url, name, mode, regex, selector,                    check_interval, html, crc, updated,                    last_check, last_changed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [
@@ -232,15 +238,15 @@ function addPage(a, b) {
     ],
     null,
     function () {
-      BG.takeSnapshot();
-      BG.scheduleCheck();
+      takeSnapshot();
+      scheduleCheck();
       (b || $.noop)();
     }
   );
 }
 function removePage(a, b) {
   executeSql("DELETE FROM pages WHERE url = ?", [a], null, function () {
-    BG.scheduleCheck();
+    scheduleCheck();
     (b || $.noop)();
   });
 }
@@ -355,6 +361,162 @@ function takeSnapshot(a, b) {
     !0
   );
 }
+
+scheduleCheck = function () {
+  var b = Date.now();
+  getAllPages(function (a) {
+    0 != a.length &&
+      ((a = $.map(a, function (a) {
+        if (a.updated || !a.last_check) return b;
+        var c = a.check_interval || getSetting(SETTINGS.check_interval);
+        return a.last_check + c - b;
+      })),
+        (a = Math.min.apply(Math, a)),
+        a < MINIMUM_CHECK_SPACING
+          ? (a = MINIMUM_CHECK_SPACING)
+          : a == b && (a = DEFAULT_CHECK_INTERVAL),
+        applySchedule(a, b));
+  });
+};
+
+applySchedule = function (d, now = Date.now()) {
+  a = Date.now() + d;
+  clearTimeout(now);
+  b = setTimeout(check, d);
+};
+
+check = function (a, b, c) {
+  $.ajax({
+    url: RELIABLE_CHECKPOINT,
+    complete: function (d) {
+      var e = !1;
+      d &&
+        200 <= d.status &&
+        300 > d.status &&
+        (e = RELIABLE_CHECKPOINT_REGEX.test(d.responseText));
+      e
+        ? actualCheck(a, b, c)
+        : (console.log(
+          "Network appears down (" +
+          (d && d.status) +
+          "). Rescheduling check."
+        ),
+          applySchedule(RESCHEDULE_DELAY),
+          (b || $.noop)());
+    },
+  });
+};
+
+actualCheck = function (b, a, c) {
+  getAllPages(function (e) {
+    function d(b) {
+      (c || $.noop)(b);
+      h++;
+      console.assert(h <= f.length);
+      h == f.length && (updateBadge(), scheduleCheck(), (a || $.noop)());
+    }
+    var g = Date.now(),
+      f = b
+        ? e
+        : $.grep(e, function (b) {
+          var a = b.check_interval || getSetting(SETTINGS.check_interval);
+          return b.last_check + a - EPSILON <= g;
+        }),
+      h = 0;
+    f.length
+      ? $.each(f, function (b, a) {
+        checkPage(a.url, d);
+      })
+      : (updateBadge(), scheduleCheck(), (a || $.noop)());
+  });
+};
+
+updateBadge = function () {
+  getAllUpdatedPages(function (a) {
+    a = a.length;
+    chrome.browserAction.setBadgeBackgroundColor({
+      color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255],
+    });
+    chrome.browserAction.setBadgeText({ text: a ? String(a) : "" });
+    chrome.browserAction.setIcon({ path: BROWSER_ICON });
+    if (a > b)
+      try {
+        triggerSoundAlert(), triggerDesktopNotification();
+      } catch (g) {
+        console.log(g);
+      }
+    b = a;
+  });
+};
+
+triggerSoundAlert = function () {
+  var b = getSetting(SETTINGS.sound_alert);
+  if (b) {
+    var a = new Audio(b);
+    a.addEventListener("canplaythrough", function () {
+      a && (a.loop && (a.loop = !1), a.play(), (a = null));
+    });
+  }
+};
+
+triggerDesktopNotification = function () {
+  if (
+    getSetting(SETTINGS.notifications_enabled) &&
+    !(0 < chrome.extension.getViews({ type: "popup" }).length)
+  ) {
+    var b = getSetting(SETTINGS.notifications_timeout) || 3e4;
+    if (
+      window.webkitNotifications &&
+      webkitNotifications.createHTMLNotification
+    )
+      (a =
+        window.webkitNotifications.createHTMLNotification(
+          "notification.htm"
+        )),
+        a.show();
+    else if (chrome.notifications && chrome.notifications.create)
+      getAllUpdatedPages(function (b) {
+        if (0 != b.length) {
+          title =
+            1 == b.length
+              ? chrome.i18n.getMessage("page_updated_single")
+              : chrome.i18n.getMessage(
+                "page_updated_multi",
+                b.length.toString()
+              );
+          var c = $.map(b, function (b) {
+            return { title: b.name };
+          });
+          c = {
+            type: "basic",
+            iconUrl: chrome.extension.getURL("img/icon128.png"),
+            title: title,
+            message: "",
+            buttons: c,
+          };
+          e = b;
+          null != a && hideDesktopNotification();
+          chrome.notifications.create("", c, function (b) {
+            a = b;
+          });
+        }
+      }),
+        d ||
+        (chrome.notifications.onButtonClicked.addListener(function (b, a) {
+          var c = e[a];
+          window.open("diff.htm#" + btoa(c.url));
+          setPageSettings(c.url, { updated: !1 }, function () {
+            updateBadge();
+            takeSnapshot(c.url, scheduleCheck);
+            triggerDesktopNotification();
+          });
+        }),
+          (d = !0));
+    else return;
+    6e4 >= b && setTimeout(hideDesktopNotification, b);
+  }
+};
+
 $.ajaxSetup({
   timeout: REQUEST_TIMEOUT,
   headers: { "Cache-Control": "no-cache", Etag: "bad-etag" },
