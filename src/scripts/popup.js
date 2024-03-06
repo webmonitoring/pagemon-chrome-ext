@@ -6,8 +6,10 @@ function markPageVisited() {
   var a = getNotificationUrl(this),
     b = this;
   BG.setPageSettings(a, { updated: !1 }, function () {
-    BG.updateBadge();
-    BG.takeSnapshot(a, BG.scheduleCheck);
+    chrome.runtime.sendMessage({
+      type: 'updateBadge'
+    });
+    takeSnapshot(a, BG.scheduleCheck);
     $(b)
       .closest(".notification td")
       .slideUp("slow", function () {
@@ -23,9 +25,9 @@ function markPageVisited() {
 }
 function monitorCurrentPage() {
   $("#monitor_page").addClass("inprogress");
-  chrome.tabs.getSelected(null, function (a) {
+  getCurrentTab(function (a) {
     addPage({ url: a.url, name: a.title }, function () {
-      BG.takeSnapshot(a.url);
+      takeSnapshot(a.url);
       $("#monitor_page").removeClass("inprogress");
       updateButtonsState();
       var b = chrome.extension.getViews({ type: "tab" });
@@ -58,7 +60,7 @@ function fillNotifications(a) {
   });
 }
 function updateButtonsState() {
-  chrome.tabs.getSelected(null, function (a) {
+  getCurrentTab(function (a) {
     isPageMonitored(a.url, function (b) {
       var c = /^https?:/.test(a.url);
       $("#monitor_page").toggle(!b);
@@ -103,7 +105,7 @@ function checkAllPages() {
           $("#templates .loading_spacer").clone().appendTo($(this));
           $(this).show().animate({ opacity: 1 }, 400);
         }),
-        BG.check(!0, function () {
+        check(!0, function () {
           $("#notifications").animate({ opacity: 0 }, 400, function () {
             var a = $(this);
             fillNotifications(function () {
@@ -139,20 +141,20 @@ function openDiffPage() {
   chrome.tabs.create({ url: a, selected: !1 });
 }
 function stopMonitoring() {
-  BG.removePage(getNotificationUrl(this));
+  removePage(getNotificationUrl(this));
 }
 function setUpHandlers() {
   $("#monitor_page").click(monitorCurrentPage);
   $("#check_now").click(checkAllPages);
   $("#view_all").click(openAllPages);
   $("#stop_monitoring").click(function () {
-    chrome.tabs.getSelected(null, function (a) {
-      BG.removePage(a.url, updateButtonsState);
+    getCurrentTab(function (a) {
+      removePage(a.url, updateButtonsState);
     });
   });
   $("#options").click(function () {
-    chrome.tabs.getSelected(null, function (a) {
-      a = chrome.extension.getURL("options.htm") + "#" + btoa(a.url);
+    getCurrentTab(function (a) {
+      a = chrome.runtime.getURL("options.htm") + "#" + btoa(a.url);
       chrome.tabs.create({ url: a, selected: !0 });
     });
   });
@@ -167,5 +169,14 @@ function setUpHandlers() {
     var a = $("html").get(0);
     a = a.scrollHeight > a.clientHeight ? "1em" : "0";
     $("body").css("margin-right", a);
+  });
+}
+function getCurrentTab(callback) {
+  let queryOptions = { active: true, currentWindow: true };
+  chrome.tabs.query(queryOptions, ([tab]) => {
+    if (chrome.runtime.lastError)
+      console.error(chrome.runtime.lastError);
+    // `tab` will either be a `tabs.Tab` instance or `undefined`.
+    callback(tab);
   });
 }

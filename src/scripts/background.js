@@ -51,7 +51,7 @@ var RELIABLE_CHECKPOINT = "http://www.google.com/",
             });
             c = {
               type: "basic",
-              iconUrl: chrome.extension.getURL("img/icon128.png"),
+              iconUrl: chrome.runtime.getURL("img/icon128.png"),
               title: title,
               message: "",
               buttons: c,
@@ -234,18 +234,18 @@ function fixSoundAlerts() {
   var b = getSetting(SETTINGS.custom_sounds) || [];
   b.unshift({
     name: chrome.i18n.getMessage("sound_cuckoo"),
-    url: chrome.extension.getURL("audio/cuckoo.ogg"),
+    url: chrome.runtime.getURL("audio/cuckoo.ogg"),
   });
   b.unshift({
     name: chrome.i18n.getMessage("sound_chime"),
-    url: chrome.extension.getURL("audio/bell.ogg"),
+    url: chrome.runtime.getURL("audio/bell.ogg"),
   });
   setSetting(SETTINGS.custom_sounds, b);
   b = /^http:\/\/work\.max99x\.com\/(bell.ogg|cuckoo.ogg)$/;
   var a = getSetting(SETTINGS.sound_alert);
   b.test(a) &&
     ((b = "audio/" + a.match(b)[1]),
-      setSetting(SETTINGS.sound_alert, chrome.extension.getURL(b)));
+      setSetting(SETTINGS.sound_alert, chrome.runtime.getURL(b)));
 }
 function bringUpToDate(b, a) {
   initializeStorage(function () {
