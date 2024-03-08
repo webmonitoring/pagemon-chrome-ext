@@ -15,7 +15,7 @@ var SETTINGS = {
   BG = chrome.extension.getBackgroundPage(),
   DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224),
   REGEX_TIMEOUT = 7e3,
-  REGEX_WORKER_PATH = "scripts/regex.js",
+  REGEX_WORKER_PATH = "./regex.js",
   REQUEST_TIMEOUT = 1e4,
   MIN_BODY_TAIL_LENGTH = 100,
   DATABASE_STRUCTURE =
@@ -25,7 +25,8 @@ var SETTINGS = {
   RELIABLE_CHECKPOINT_REGEX = /Google/,
   RESCHEDULE_DELAY = 9e5,
   EPSILON = 500,
-  DEFAULT_CHECK_INTERVAL = 108e5;
+  DEFAULT_CHECK_INTERVAL = 108e5,
+  BROWSER_ICON = "../img/icon_16.png";
 (function () {
   var a = [
     0, 1996959894, 3993919788, 2567524794, 124634137, 1886057615, 3915621685,
@@ -80,6 +81,12 @@ var SETTINGS = {
     return c ^ -1;
   };
 })();
+
+var b = 0,
+  a = null,
+  d = !1,
+  e = [];
+
 function encodeUTF8(a) {
   for (var b = [], d = 0; d < a.length; d++) {
     var c = a.charCodeAt(d);
@@ -434,11 +441,11 @@ actualCheck = function (b, a, c) {
 updateBadge = function () {
   getAllUpdatedPages(function (a) {
     a = a.length;
-    chrome.browserAction.setBadgeBackgroundColor({
+    chrome.action.setBadgeBackgroundColor({
       color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255],
     });
-    chrome.browserAction.setBadgeText({ text: a ? String(a) : "" });
-    chrome.browserAction.setIcon({ path: BROWSER_ICON });
+    chrome.action.setBadgeText({ text: a ? String(a) : "" });
+    chrome.action.setIcon({ path: BROWSER_ICON });
     if (a > b)
       try {
         triggerSoundAlert(), triggerDesktopNotification();

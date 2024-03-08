@@ -88,11 +88,11 @@ var RELIABLE_CHECKPOINT = "http://www.google.com/",
   updateBadge = function () {
     getAllUpdatedPages(function (a) {
       a = a.length;
-      chrome.browserAction.setBadgeBackgroundColor({
+      chrome.action.setBadgeBackgroundColor({
         color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255],
       });
-      chrome.browserAction.setBadgeText({ text: a ? String(a) : "" });
-      chrome.browserAction.setIcon({ path: BROWSER_ICON });
+      chrome.action.setBadgeText({ text: a ? String(a) : "" });
+      chrome.action.setIcon({ path: BROWSER_ICON });
       if (a > b)
         try {
           triggerSoundAlert(), triggerDesktopNotification();
