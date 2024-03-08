@@ -50,7 +50,7 @@ function updatePageModeControls(a, b) {
 }
 function setPageCheckInterval(a, b) {
   var c = 6e4 * parseFloat(b) || null;
-  setPageSettings(a, { check_interval: c }, BG.scheduleCheck);
+  setPageSettings(a, { check_interval: c }, scheduleCheck);
 }
 function setPageRegexOrSelector(a, b, c) {
   if ("regex" != b && "selector" != b) throw Error("Invalid mode.");
@@ -161,7 +161,7 @@ function initializeColorPicker() {
         parseInt(a.slice(5, 7), 16),
         255,
       ]);
-      BG.updateBadge();
+      updateBadge();
     })
     .colorPicker();
 }
@@ -415,7 +415,7 @@ function initializeGlobalChecker() {
     getAllPageURLs(function (a) {
       a = chrome.i18n.getMessage("check_in_progress") + "..";
       $(".last_check_time").text(a);
-      BG.check(!0, $.noop, function (a) {
+      check(!0, $.noop, function (a) {
         a = findPageRecord(a);
         $(".last_check_time", a).trigger("time_updated");
       });
@@ -487,7 +487,7 @@ function initializePageRename() {
 function initializePageRemove() {
   $(".stop_monitoring").live("click", function () {
     var a = findUrl(this);
-    removePage(a, BG.updateBadge);
+    removePage(a, updateBadge);
     var b = scrollY;
     $("td", findPageRecord(this)).slideUp("slow", function () {
       1 == $("#pages .page_record").length
@@ -506,9 +506,9 @@ function initializePageCheck() {
       b = findUrl(this),
       c = chrome.i18n.getMessage("check_in_progress") + "..";
     a.text(c);
-    BG.checkPage(b, function (b) {
+    checkPage(b, function (b) {
       a.trigger("time_updated");
-      BG.updateBadge();
+      updateBadge();
     });
   });
 }
