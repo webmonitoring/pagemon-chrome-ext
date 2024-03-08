@@ -747,7 +747,7 @@ function init() {
   $(".mode_pick").val(chrome.i18n.getMessage("pick_button"));
   initializeGlobalControls();
   initializePageControls();
-  chrome.extension.onRequest.addListener(selectorServer);
+  chrome.runtime.onMessage.addListener(selectorServer);
   fillPagesList(function () {
     var a = atob(window.location.hash.substring(1));
     if (a) {
