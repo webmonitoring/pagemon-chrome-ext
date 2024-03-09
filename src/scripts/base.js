@@ -12,7 +12,6 @@ var SETTINGS = {
   hide_deletions: "hide_deletions",
   show_full_page_diff: "show_full_page_diff",
 },
-  BG = chrome.extension.getBackgroundPage(),
   DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224),
   REGEX_TIMEOUT = 7e3,
   REGEX_WORKER_PATH = "./regex.js",
@@ -142,7 +141,7 @@ function getStrippedBody(a) {
   return b.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/gi, "<blink/>");
 }
 function getFavicon(a) {
-  return "chrome://favicon/" + a;
+  return chrome.runtime.getURL("/_favicon/") + a;
 }
 function applyLocalization() {
   $(".i18n[title]").each(function () {
@@ -227,7 +226,6 @@ function setPageSettings(a, b, d) {
     : (d || $.noop)();
 }
 function addPage(a, b) {
-  // if (window != BG) return BG.addPage(a, b);
   executeSql(
     "REPLACE INTO pages(url, name, mode, regex, selector,                    check_interval, html, crc, updated,                    last_check, last_changed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
     [

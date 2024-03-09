@@ -1,4 +1,3 @@
-var BG = chrome.extension.getBackgroundPage();
 function makeLink(a) {
   var b = document.createElement("a");
   b.href = "diff.htm#" + btoa(a.url);
@@ -10,14 +9,14 @@ function makeLink(a) {
   return b;
 }
 function markPageVisited(a) {
-  BG.setPageSettings(a, { updated: !1 }, function () {
-    BG.updateBadge();
-    BG.takeSnapshot(a, BG.scheduleCheck);
+  setPageSettings(a, { updated: !1 }, function () {
+    updateBadge();
+    takeSnapshot(a, scheduleCheck);
     initialize();
   });
 }
 function initialize() {
-  BG.getAllUpdatedPages(function (a) {
+  getAllUpdatedPages(function (a) {
     if (0 == a.length) setTimeout(async () => {
       chrome.runtime.sendMessage({
         type: 'hideDesktopNotification'
