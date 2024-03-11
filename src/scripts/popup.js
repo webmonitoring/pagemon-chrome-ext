@@ -6,9 +6,7 @@ function markPageVisited() {
   var a = getNotificationUrl(this),
     b = this;
   setPageSettings(a, { updated: !1 }, function () {
-    chrome.runtime.sendMessage({
-      type: 'updateBadge'
-    });
+    updateBadge();
     takeSnapshot(a, scheduleCheck);
     $(b)
       .closest(".notification td")

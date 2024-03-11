@@ -522,38 +522,44 @@ triggerDesktopNotification = function () {
   }
 };
 
+hideDesktopNotification = function () {
+  null != a &&
+    ("string" == typeof a
+      ? chrome.notifications.clear(a, $.noop)
+      : a.cancel(),
+      (a = null));
+};
+
 const emitAnalytics = (eventType, eventParams) => {
-  let platformInfo = { os: '?', arch: '?' };
-  chrome.runtime.getPlatformInfo((info) => {
-    platformInfo = info;
+  chrome.runtime.getPlatformInfo((platformInfo) => {
+    const chromeVersion = /Chrome\/([0-9.]+)/.exec(navigator.userAgent)[1];
+
+    const PAGE_MONITOR_EXTENSION_ID_PROD = 'ogeebjpdeabhncjpfhgdibjajcajepgg'
+    const currentExtensionId = chrome.runtime.id;
+    const isProd = currentExtensionId === PAGE_MONITOR_EXTENSION_ID_PROD;
+    const ACCOUNT_SERVICE_BASE_URL = isProd
+      ? "https://account.api.visualping.io"
+      : "https://develop.account.api.visualping.io";
+
+    try {
+      const manifestData = chrome.runtime.getManifest();
+      const src = `${manifestData.name}@${currentExtensionId}@${manifestData.version}`;
+      const data = {
+        extId: currentExtensionId,
+        extVersion: manifestData.version,
+        platform: `${platformInfo.os}-${platformInfo.arch}`,
+        chromeVersion,
+        eventType,
+        eventParams,
+      };
+
+      fetch(`${ACCOUNT_SERVICE_BASE_URL}/fyi?src=${encodeURIComponent(src)}&data=${encodeURIComponent(
+        JSON.stringify(data)
+      )}`);
+    } finally {
+      // simply ignore all analytics error
+    }
   });
-  const chromeVersion = /Chrome\/([0-9.]+)/.exec(navigator.userAgent)[1];
-
-  const PAGE_MONITOR_EXTENSION_ID_PROD = 'ogeebjpdeabhncjpfhgdibjajcajepgg'
-  const currentExtensionId = chrome.runtime.id;
-  const isProd = currentExtensionId === PAGE_MONITOR_EXTENSION_ID_PROD;
-  const ACCOUNT_SERVICE_BASE_URL = isProd
-    ? "https://account.api.visualping.io"
-    : "https://develop.account.api.visualping.io";
-
-  try {
-    const manifestData = chrome.runtime.getManifest();
-    const src = `${manifestData.name}@${extensionId}@${manifestData.version}`;
-    const data = {
-      extId: extensionId,
-      extVersion: manifestData.version,
-      platform: `${platformInfo.os}-${platformInfo.arch}`,
-      chromeVersion,
-      eventType,
-      eventParams,
-    };
-
-    fetch(`${ACCOUNT_SERVICE_BASE_URL}/fyi?src=${encodeURIComponent(src)}&data=${encodeURIComponent(
-      JSON.stringify(data)
-    )}`);
-  } finally {
-    // simply ignore all analytics error
-  }
 }
 
 $.ajaxSetup({

@@ -2,38 +2,7 @@ var DEFAULT_CHECK_INTERVAL = 108e5, //Duplicate
   BROWSER_ICON = "img/browser_icon.png",
   WATCHDOG_INTERVAL = 9e5,
   WATCHDOG_TOLERANCE = 12e4;
-(function () {
-  var b = 0,
-    a = null,
-    d = !1,
-    e = [];
 
-  hideDesktopNotification = function () {
-    null != a &&
-      ("string" == typeof a
-        ? chrome.notifications.clear(a, $.noop)
-        : a.cancel(),
-        (a = null));
-  };
-  //Duplicate
-  updateBadge = function () {
-    getAllUpdatedPages(function (a) {
-      a = a.length;
-      chrome.action.setBadgeBackgroundColor({
-        color: getSetting(SETTINGS.badge_color) || [0, 180, 0, 255],
-      });
-      chrome.action.setBadgeText({ text: a ? String(a) : "" });
-      chrome.action.setIcon({ path: BROWSER_ICON });
-      if (a > b)
-        try {
-          triggerSoundAlert(), triggerDesktopNotification();
-        } catch (g) {
-          console.log(g);
-        }
-      b = a;
-    });
-  };
-})();
 (function () {
   var b = 0,
     a = 0;
@@ -147,17 +116,3 @@ function bringUpToDate(b, a) {
           : d();
   });
 }
-
-const messageHash = {
-  ['hideDesktopNotification']: () => {
-    hideDesktopNotification();
-  },
-}
-
-chrome.runtime.onMessage.addListener(async (message, _sender, sendResponse) => {
-  if (messageHash[message.type]) {
-    messageHash[message.type](message);
-  }
-
-  sendResponse(true);
-});
