@@ -649,6 +649,10 @@ function initializePageModePicker() {
 }
 function fillPagesList(a) {
   getAllPages(function (b) {
+    emitAnalytics("loaded jobs", {
+      numberOfJobs: b.length,
+      numberOfActiveJobs: b.length,
+    });
     sortPagesInplace(b, getSetting(SETTINGS.sort_by) || "date added");
     $("#pages").html("");
     0 < b.length
