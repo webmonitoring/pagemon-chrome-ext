@@ -630,18 +630,37 @@ function initializePageModeTester() {
 function initializePageModePicker() {
   $(".mode_pick").live("click", function () {
     chrome.tabs.create({ url: findUrl(this), selected: !0 }, function (a) {
-      chrome.tabs.executeScript(
-        a.id,
-        { file: "lib/jquery-1.7.1.js" },
+      chrome.scripting.executeScript(
+        {
+          files: ["lib/jquery-1.7.1.js"],
+          target: {
+            tabId: a.id
+          },
+        },
         function () {
-          chrome.tabs.executeScript(
-            a.id,
-            { file: "scripts/selector.js" },
-            function () {
-              chrome.tabs.executeScript(a.id, { code: "$(initialize);" });
+          chrome.scripting.executeScript(
+            {
+              files: ["scripts/selector.js"],
+              target: {
+                tabId: a.id
+              },
             }
-          );
-          chrome.tabs.insertCSS(a.id, { file: "styles/selector.css" });
+          ).then(() => {
+            chrome.scripting.executeScript(
+              {
+                func: initialize,
+                target: {
+                  tabId: a.id
+                },
+              }
+            );
+            chrome.scripting.insertCSS({
+              files: ["styles/selector.css"],
+              target: {
+                tabId: a.id
+              }
+            });
+          })
         }
       );
     });

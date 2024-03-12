@@ -99,7 +99,7 @@ function setUpButtonHandlers() {
   });
   done_button.click(function () {
     current_selector
-      ? chrome.extension.sendRequest(
+      ? chrome.runtime.sendMessage(
         { selector: current_selector, url: window.location.href },
         window.close
       )
