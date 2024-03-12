@@ -1,118 +1,59 @@
-var DEFAULT_CHECK_INTERVAL = 108e5, //Duplicate
-  BROWSER_ICON = "img/browser_icon.png",
-  WATCHDOG_INTERVAL = 9e5,
-  WATCHDOG_TOLERANCE = 12e4;
+const messageHash = {
+  ['getExtensionVersion']: () => {
+    const manifest = chrome.runtime.getManifest();
 
-(function () {
-  var b = 0,
-    a = 0;
+    return manifest.version
+  },
+  ['getMessage']: ({ key }) => {
+    return chrome.i18n.getMessage(key)
+  },
+  ['setBadgeBackgroundColor']: ({ data }) => {
+    return chrome.action.setBadgeBackgroundColor(data)
+  },
+  ['setBadgeText']: ({ data }) => {
+    return chrome.action.setBadgeText(data)
+  },
+  ['setIcon']: ({ data }) => {
+    return chrome.action.setIcon(data)
+  },
+};
 
-  watchdog = function () {
-    Date.now() - a > WATCHDOG_TOLERANCE &&
-      (console.log("WARNING: Watchdog recovered a lost timeout."),
-        scheduleCheck());
-  };
-})();
-(function () {
-  var b = null;
-  getExtensionVersion = function () {
-    if (!b) {
-      var a = $.ajax({ url: "manifest.json", async: !1 }).responseText;
-      if ((a = JSON.parse(a || "null"))) b = a.version;
-    }
-    return b;
-  };
-})();
-function insertPages(b, a) {
-  for (var d = b.length, e = 0; e < b.length; e++)
-    addPage(b[e], function () {
-      0 == --d && (a || $.noop)();
-    });
-}
-function importVersionOnePages(b) {
-  var a = [];
-  $.each(getSetting("pages_to_check") || {}, function (b, e) {
-    a.push({
-      url: b,
-      name: e.name,
-      mode: e.regex ? "regex" : "text",
-      regex: e.regex || null,
-    });
-  });
-  insertPages(a, b);
-}
-function importVersionTwoPages(b) {
-  var a = getSetting("pages"),
-    d = [],
-    e;
-  for (e in a) {
-    var c = a[e];
-    d.push({
-      url: c,
-      name: getSetting(c + " name"),
-      mode: getSetting(c + " mode"),
-      regex: getSetting(c + " regex"),
-      selector: getSetting(c + " selector"),
-      check_interval: getSetting(c + " timeout"),
-      html: getSetting(c + " html"),
-      crc: getSetting(c + " crc"),
-      updated: getSetting(c + " updated"),
-      last_check: getSetting(c + " last_check"),
-      last_changed: getSetting(c + " last_changed"),
-    });
+chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+  let response;
+
+  if (messageHash[message.type]) {
+    response = messageHash[message.type](message);
   }
-  insertPages(d, b);
-}
-function removeUnusedSettings(b) {
-  for (var a in b) void 0 === SETTINGS[a] && delete b[a];
-}
-function fixSoundAlerts() {
-  var b = getSetting(SETTINGS.custom_sounds) || [];
-  b.unshift({
-    name: chrome.i18n.getMessage("sound_cuckoo"),
-    url: chrome.extension.getURL("audio/cuckoo.ogg"),
+  sendResponse(response);
+});
+
+let creating; // A global promise to avoid concurrency issues
+async function setupOffscreenDocument() {
+  const path = '../offscreen.htm';
+  // Check all windows controlled by the service worker to see if one
+  // of them is the offscreen document with the given path
+  const offscreenUrl = chrome.runtime.getURL(path);
+  const existingContexts = await chrome.runtime.getContexts({
+    contextTypes: ['OFFSCREEN_DOCUMENT'],
+    documentUrls: [offscreenUrl],
   });
-  b.unshift({
-    name: chrome.i18n.getMessage("sound_chime"),
-    url: chrome.extension.getURL("audio/bell.ogg"),
-  });
-  setSetting(SETTINGS.custom_sounds, b);
-  b = /^http:\/\/work\.max99x\.com\/(bell.ogg|cuckoo.ogg)$/;
-  var a = getSetting(SETTINGS.sound_alert);
-  b.test(a) &&
-    ((b = "audio/" + a.match(b)[1]),
-      setSetting(SETTINGS.sound_alert, chrome.extension.getURL(b)));
+
+  if (existingContexts.length > 0) {
+    return;
+  }
+
+  // create offscreen document
+  if (creating) {
+    await creating;
+  } else {
+    creating = chrome.offscreen.createDocument({
+      url: path,
+      reasons: ['CLIPBOARD'],
+      justification: 'reason for needing the document',
+    });
+    await creating;
+    creating = null;
+  }
 }
-function bringUpToDate(b, a) {
-  initializeStorage(function () {
-    function d() {
-      setSetting(SETTINGS.version, getExtensionVersion());
-      removeUnusedSettings(localStorage);
-      (a || $.noop)();
-    }
-    3.1 > b && fixSoundAlerts();
-    1 > b
-      ? (setSetting(SETTINGS.badge_color, [0, 180, 0, 255]),
-        setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL),
-        setSetting(SETTINGS.sound_alert, null),
-        setSetting(SETTINGS.notifications_enabled, !1),
-        setSetting(SETTINGS.notifications_timeout, 3e4),
-        setSetting(SETTINGS.animations_disabled, !1),
-        setSetting(SETTINGS.sort_by, "date added"),
-        setSetting(SETTINGS.view_all_action, "original"),
-        d())
-      : 2 > b
-        ? (setSetting(SETTINGS.view_all_action, "original"),
-          delSetting("last_check"),
-          importVersionOnePages(d))
-        : 3 > b
-          ? (setSetting(
-            SETTINGS.check_interval,
-            getSetting("timeout") || DEFAULT_CHECK_INTERVAL
-          ),
-            setSetting(SETTINGS.view_all_action, "original"),
-            delSetting("timeout"),
-            importVersionTwoPages(d))
-          : d();
-  });
-}
+
+setupOffscreenDocument();
