@@ -4,8 +4,8 @@ const messageHash = {
 
     return manifest.version
   },
-  ['getMessage']: ({ key }) => {
-    return chrome.i18n.getMessage(key)
+  ['getMessage']: ({ data }) => {
+    return chrome.i18n.getMessage(data.key, data.substitutions)
   },
   ['setBadgeBackgroundColor']: ({ data }) => {
     return chrome.action.setBadgeBackgroundColor(data)

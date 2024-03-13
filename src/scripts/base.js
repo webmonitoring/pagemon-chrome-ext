@@ -141,7 +141,7 @@ function getStrippedBody(a) {
   return b.replace(/<script\b[^>]*(?:>[^]*?<\/script>|\/>)/gi, "<blink/>");
 }
 function getFavicon(a) {
-  return chrome.runtime.getURL("/_favicon/") + a;
+  return chrome.runtime.getURL("/_favicon/?pageUrl=") + a;
 }
 function applyLocalization() {
   $(".i18n[title]").each(function () {

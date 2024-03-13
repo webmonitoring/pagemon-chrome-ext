@@ -1,11 +1,39 @@
 var DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224);
-var b = 0
+var a = 0, b = 0
 
 function getAllPages(a) {
   a &&
     executeSql("SELECT * FROM pages", [], function (b) {
       a(sqlResultToArray(b));
     });
+}
+
+function getPage(a, b) {
+  b &&
+    executeSql("SELECT * FROM pages WHERE url = ?", [a], function (a) {
+      console.assert(1 >= a.rows.length);
+      a.rows.length
+        ? ((a = a.rows.item(0)),
+          a.check_interval ||
+          (a.check_interval = getSetting(SETTINGS.check_interval)),
+          b(a))
+        : b(null);
+    });
+}
+
+function setPageSettings(a, b, d) {
+  var c = [],
+    e = [],
+    f;
+  for (f in b)
+    c.push(f + " = ?"),
+      "boolean" == typeof b[f] && (b[f] = new Number(b[f])),
+      e.push(b[f]);
+  e.push(a);
+  c
+    ? ((a = "UPDATE pages SET " + c.join(", ") + " WHERE url = ?"),
+      executeSql(a, e, null, d))
+    : (d || $.noop)();
 }
 
 const check = function (a, b, c) {
@@ -78,6 +106,42 @@ applySchedule = function (d, now = Date.now()) {
   clearTimeout(now);
   b = setTimeout(check, d);
 };
+
+function checkPage(a, b, d) {
+  getPage(a, function (c) {
+    !c || c.updated
+      ? (b || $.noop)(a)
+      : $.ajax({
+        url: a,
+        dataType: "text",
+        timeout: c.check_interval / 2,
+        success: function (e, f, g) {
+          var h = g.getResponseHeader("Content-type");
+          cleanAndHashPage(e, c.mode, c.regex, c.selector, function (f) {
+            var g = {};
+            g =
+              f != c.crc
+                ? {
+                  updated: !0,
+                  crc: f,
+                  html: d ? canonizePage(e, h) : c.html,
+                  last_changed: Date.now(),
+                }
+                : { html: canonizePage(e, h) };
+            g.last_check = Date.now();
+            setPageSettings(a, g, function () {
+              (b || $.noop)(a);
+            });
+          });
+        },
+        error: function () {
+          setPageSettings(a, { last_check: Date.now() }, function () {
+            (b || $.noop)(a);
+          });
+        },
+      });
+  });
+}
 
 function importVersionTwoPages(b) {
   var a = getSetting("pages"),
@@ -157,8 +221,8 @@ function bringUpToDate(b, a) {
 
 async function fixSoundAlerts() {
   var b = getSetting(SETTINGS.custom_sounds) || [];
-  const soundCuckooName = await chrome.runtime.sendMessage({ key: "sound_cuckoo", type: 'getMessage' })
-  const soundChimeName = await chrome.runtime.sendMessage({ key: "sound_chime", type: 'getMessage' })
+  const soundCuckooName = await chrome.runtime.sendMessage({ data: { key: "sound_cuckoo" }, type: 'getMessage' })
+  const soundChimeName = await chrome.runtime.sendMessage({ data: { key: "sound_chime" }, type: 'getMessage' })
 
   b.unshift({
     name: soundCuckooName,
@@ -182,6 +246,7 @@ function insertPages(b, a) {
       0 == --d && (a || $.noop)();
     });
 }
+
 function importVersionOnePages(b) {
   var a = [];
   $.each(getSetting("pages_to_check") || {}, function (b, e) {
@@ -215,7 +280,7 @@ updateBadge = function () {
       data: { text: a ? String(a) : "" },
       type: 'setBadgeText'
     })
-    await chrome.runtime.sendMessage({ path: BROWSER_ICON })
+    await chrome.runtime.sendMessage({ data: { path: BROWSER_ICON }, type: 'setIcon' })
 
     if (a > b)
       try {
@@ -225,6 +290,61 @@ updateBadge = function () {
       }
     b = a;
   });
+};
+
+triggerDesktopNotification = function () {
+  if (
+    getSetting(SETTINGS.notifications_enabled) &&
+    !(0 < chrome.extension.getViews({ type: "popup" }).length)
+  ) {
+    var b = getSetting(SETTINGS.notifications_timeout) || 3e4;
+    if (
+      window.webkitNotifications &&
+      webkitNotifications.createHTMLNotification
+    )
+      (a =
+        window.webkitNotifications.createHTMLNotification(
+          "notification.htm"
+        )),
+        a.show();
+    else if (chrome.notifications && chrome.notifications.create)
+      getAllUpdatedPages(async function (b) {
+        if (0 != b.length) {
+          title =
+            1 == b.length
+              ? await chrome.runtime.sendMessage({ data: { key: "page_updated_single" }, type: "getMessage" })
+              : await chrome.runtime.sendMessage({ data: { key: "page_updated_multi", substitutions: b.length.toString() }, type: "getMessage" })
+          var c = $.map(b, function (b) {
+            return { title: b.name };
+          });
+          c = {
+            type: "basic",
+            iconUrl: chrome.extension.getURL("img/icon128.png"),
+            title: title,
+            message: "",
+            buttons: c,
+          };
+          e = b;
+          null != a && hideDesktopNotification();
+          chrome.notifications.create("", c, function (b) {
+            a = b;
+          });
+        }
+      }),
+        d ||
+        (chrome.notifications.onButtonClicked.addListener(function (b, a) {
+          var c = e[a];
+          window.open("diff.htm#" + btoa(c.url));
+          setPageSettings(c.url, { updated: !1 }, function () {
+            updateBadge();
+            takeSnapshot(c.url, scheduleCheck);
+            triggerDesktopNotification();
+          });
+        }),
+          (d = !0));
+    else return;
+    6e4 >= b && setTimeout(hideDesktopNotification, b);
+  }
 };
 
 const watchdog = function () {
