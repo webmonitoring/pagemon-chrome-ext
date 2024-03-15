@@ -1,31 +1,8 @@
-var SETTINGS = {
-  check_interval: "check_interval",
-  badge_color: "badge_color",
-  version: "version",
-  sound_alert: "sound_alert",
-  notifications_enabled: "notifications_enabled",
-  notifications_timeout: "notifications_timeout",
-  animations_disabled: "animations_disabled",
-  sort_by: "sort_by",
-  custom_sounds: "custom_sounds",
-  view_all_action: "view_all_action",
-  hide_deletions: "hide_deletions",
-  show_full_page_diff: "show_full_page_diff",
-},
-  DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224),
+var DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224),
   REGEX_TIMEOUT = 7e3,
   REGEX_WORKER_PATH = "./regex.js",
-  REQUEST_TIMEOUT = 1e4,
-  MIN_BODY_TAIL_LENGTH = 100,
-  DATABASE_STRUCTURE =
-    "CREATE TABLE IF NOT EXISTS pages (   `url` TEXT NOT NULL UNIQUE,   `name` TEXT NOT NULL,   `mode` TEXT NOT NULL DEFAULT 'text',   `regex` TEXT,   `selector` TEXT,   `check_interval` INTEGER,   `html` TEXT NOT NULL DEFAULT '',   `crc` INTEGER NOT NULL DEFAULT 0,   `updated` INTEGER,   `last_check` INTEGER,   `last_changed` INTEGER );",
-  MINIMUM_CHECK_SPACING = 1e3,
-  RELIABLE_CHECKPOINT = "http://www.google.com/",
-  RELIABLE_CHECKPOINT_REGEX = /Google/,
-  RESCHEDULE_DELAY = 9e5,
-  EPSILON = 500,
-  DEFAULT_CHECK_INTERVAL = 108e5,
-  BROWSER_ICON = "../img/icon_16.png";
+  REQUEST_TIMEOUT = 1e4;
+
 (function () {
   var a = [
     0, 1996959894, 3993919788, 2567524794, 124634137, 1886057615, 3915621685,
@@ -160,56 +137,37 @@ function setSetting(a, b) {
 function delSetting(a) {
   localStorage.removeItem(a);
 }
-function initializeStorage(a) {
-  executeSql(DATABASE_STRUCTURE, $.noop, a);
+function initializeStorage(callback) {
+  executeSql(DATABASE_STRUCTURE, [], callback);
 }
-function executeSql(a, b, d, c) {
-  var e = "function" === typeof b ? [] : b;
-  DB.transaction(
-    function (b) {
-      b.executeSql(a, e, function (a, b) {
-        (d || $.noop)(b);
-      });
-    },
-    $.noop,
-    c || $.noop
-  );
+function executeSql(query, values, callback) {
+  SQLITE_DB.executeSql(query, values, callback)
 }
-function sqlResultToArray(a) {
-  for (var b = [], d = 0; d < a.rows.length; d++) b.push(a.rows.item(d));
-  return b;
-}
-function getPage(a, b) {
-  b &&
-    executeSql("SELECT * FROM pages WHERE url = ?", [a], function (a) {
-      console.assert(1 >= a.rows.length);
-      a.rows.length
-        ? ((a = a.rows.item(0)),
+function getPage(url, callback) {
+  PAGES.getPage(url)
+    .then(result => {
+      console.assert(1 >= result.length);
+      result.length
+        ? ((a = result[0]),
           a.check_interval ||
           (a.check_interval = getSetting(SETTINGS.check_interval)),
-          b(a))
-        : b(null);
-    });
+          callback(a))
+        : callback(null);
+    })
 }
-function getAllPageURLs(a) {
-  a &&
-    executeSql("SELECT url FROM pages", [], function (b) {
-      for (var d = [], c = 0; c < b.rows.length; c++)
-        d.push(b.rows.item(c).url);
-      a(d);
-    });
+function getAllPageURLs(callback) {
+  PAGES.getAllPageURLs()
+    .then(result => callback(result))
 }
-function getAllPages(a) {
-  a &&
-    executeSql("SELECT * FROM pages", [], function (b) {
-      a(sqlResultToArray(b));
-    });
+function getAllPages(callback) {
+  PAGES.getAllPages(callback)
+    .then(result => callback(result))
 }
-function getAllUpdatedPages(a) {
-  a &&
-    executeSql("SELECT * FROM pages WHERE updated = 1", [], function (b) {
-      a(sqlResultToArray(b));
-    });
+function getAllUpdatedPages(callback) {
+  PAGES.getAllUpdatedPages()
+    .then(result => {
+      callback(result);
+    })
 }
 function setPageSettings(a, b, d) {
   var c = [],
@@ -222,46 +180,24 @@ function setPageSettings(a, b, d) {
   e.push(a);
   c
     ? ((a = "UPDATE pages SET " + c.join(", ") + " WHERE url = ?"),
-      executeSql(a, e, null, d))
+      executeSql(a, e, d))
     : (d || $.noop)();
 }
-function addPage(a, b) {
-  executeSql(
-    "REPLACE INTO pages(url, name, mode, regex, selector,                    check_interval, html, crc, updated,                    last_check, last_changed) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-    [
-      a.url,
-      a.name || chrome.i18n.getMessage("untitled", a.url),
-      a.mode || "text",
-      a.regex || null,
-      a.selector || null,
-      a.check_interval || null,
-      a.html || "",
-      a.crc || 0,
-      a.updated ? 1 : 0,
-      Date.now(),
-      a.last_changed || null,
-    ],
-    null,
-    function () {
+function addPage(value, callback) {
+  PAGES.addPage(value)
+    .then(() => {
       takeSnapshot();
       scheduleCheck();
-      (b || $.noop)();
-    }
-  );
+      (callback || $.noop)();
+    })
 }
 function removePage(a, b) {
-  executeSql("DELETE FROM pages WHERE url = ?", [a], null, function () {
+  executeSql("DELETE FROM pages WHERE url = ?", [a], function () {
     scheduleCheck();
     (b || $.noop)();
   });
 }
-function isPageMonitored(a, b) {
-  executeSql("SELECT COUNT(*) FROM pages WHERE url = ?", [a], function (a) {
-    a = a.rows.item(0)["COUNT(*)"];
-    console.assert(1 >= a);
-    (b || $.noop)(1 == a);
-  });
-}
+
 function canonizePage(a, b) {
   return a ? (b.match(/\b(x|xht|ht)ml\b/) ? a.replace(/\s+/g, " ") : a) : a;
 }

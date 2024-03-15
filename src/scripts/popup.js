@@ -23,8 +23,8 @@ function markPageVisited() {
 }
 function monitorCurrentPage() {
   $("#monitor_page").addClass("inprogress");
-  getCurrentTab(function (a) {
-    addPage({ url: a.url, name: a.title }, function () {
+  getCurrentTab(async function (a) {
+    await addPage({ url: a.url, name: a.title }, function () {
       takeSnapshot(a.url);
       $("#monitor_page").removeClass("inprogress");
       updateButtonsState();
@@ -58,8 +58,8 @@ function fillNotifications(a) {
   });
 }
 function updateButtonsState() {
-  getCurrentTab(function (a) {
-    isPageMonitored(a.url, function (b) {
+  getCurrentTab(async function (a) {
+    await PAGES.isPageMonitored(a.url, function (b) {
       var c = /^https?:/.test(a.url);
       $("#monitor_page").toggle(!b);
       $("#stop_monitoring").toggle(b);

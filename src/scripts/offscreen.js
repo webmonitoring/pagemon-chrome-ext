@@ -2,23 +2,21 @@ var DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224);
 var a = 0, b = 0
 
 function getAllPages(a) {
-  a &&
-    executeSql("SELECT * FROM pages", [], function (b) {
-      a(sqlResultToArray(b));
-    });
+  PAGES.getAllPages()
+    .then(result => a(result));
 }
 
-function getPage(a, b) {
-  b &&
-    executeSql("SELECT * FROM pages WHERE url = ?", [a], function (a) {
-      console.assert(1 >= a.rows.length);
-      a.rows.length
-        ? ((a = a.rows.item(0)),
+function getPage(url, callback) {
+  PAGES.getPage(url)
+    .then(result => {
+      console.assert(1 >= result.length);
+      result.length
+        ? ((a = result[0]),
           a.check_interval ||
           (a.check_interval = getSetting(SETTINGS.check_interval)),
-          b(a))
-        : b(null);
-    });
+          callback(a))
+        : callback(null);
+    })
 }
 
 function setPageSettings(a, b, d) {
@@ -32,11 +30,11 @@ function setPageSettings(a, b, d) {
   e.push(a);
   c
     ? ((a = "UPDATE pages SET " + c.join(", ") + " WHERE url = ?"),
-      executeSql(a, e, null, d))
+      SQLITE_DB.executeSql(a, e, null, d))
     : (d || $.noop)();
 }
 
-const check = function (a, b, c) {
+const runCheck = function (a, b, c) {
   $.ajax({
     url: RELIABLE_CHECKPOINT,
     complete: function (d) {
@@ -104,10 +102,11 @@ scheduleCheck = function () {
 applySchedule = function (d, now = Date.now()) {
   a = Date.now() + d;
   clearTimeout(now);
-  b = setTimeout(check, d);
+  b = setTimeout(runCheck, d);
 };
 
 function checkPage(a, b, d) {
+  console.log("checkPage", a, b, d);
   getPage(a, function (c) {
     !c || c.updated
       ? (b || $.noop)(a)
@@ -166,25 +165,26 @@ function importVersionTwoPages(b) {
   insertPages(d, b);
 }
 
-function initializeStorage(a) {
-  executeSql(DATABASE_STRUCTURE, $.noop, a);
+function importVersionOnePages(b) {
+  var a = [];
+  $.each(getSetting("pages_to_check") || {}, function (b, e) {
+    a.push({
+      url: b,
+      name: e.name,
+      mode: e.regex ? "regex" : "text",
+      regex: e.regex || null,
+    });
+  });
+  insertPages(a, b);
 }
 
-function executeSql(a, b, d, c) {
-  var e = "function" === typeof b ? [] : b;
-  DB.transaction(
-    function (b) {
-      b.executeSql(a, e, function (a, b) {
-        (d || $.noop)(b);
-      });
-    },
-    $.noop,
-    c || $.noop
-  );
+async function initializeStorage(callback) {
+  await SQLITE_DB.executeSql(DATABASE_STRUCTURE, [], callback);
 }
 
 function bringUpToDate(b, a) {
   initializeStorage(function () {
+    // run migration here
     function d() {
       chrome.runtime.sendMessage({ type: 'getExtensionVersion' }, (response) => {
         setSetting(SETTINGS.version, response);
@@ -247,24 +247,9 @@ function insertPages(b, a) {
     });
 }
 
-function importVersionOnePages(b) {
-  var a = [];
-  $.each(getSetting("pages_to_check") || {}, function (b, e) {
-    a.push({
-      url: b,
-      name: e.name,
-      mode: e.regex ? "regex" : "text",
-      regex: e.regex || null,
-    });
-  });
-  insertPages(a, b);
-}
-
-function getAllUpdatedPages(a) {
-  a &&
-    executeSql("SELECT * FROM pages WHERE updated = ?", [1], function (b) {
-      a(sqlResultToArray(b));
-    });
+function getAllUpdatedPages(callback) {
+  PAGES.getAllUpdatedPages()
+    .then(result => callback(result));
 }
 
 updateBadge = function () {
@@ -354,7 +339,7 @@ const watchdog = function () {
 };
 
 const init = () => {
-  bringUpToDate(parseFloat(getSetting(SETTINGS.version)) || 0, check);
+  bringUpToDate(parseFloat(getSetting(SETTINGS.version)) || 0, runCheck);
   setInterval(watchdog, WATCHDOG_INTERVAL);
   updateBadge();
 }

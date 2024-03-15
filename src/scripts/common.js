@@ -106,10 +106,6 @@ function setSetting(a, b) {
 function delSetting(a) {
   localStorage.removeItem(a);
 }
-function sqlResultToArray(a) {
-  for (var b = [], d = 0; d < a.rows.length; d++) b.push(a.rows.item(d));
-  return b;
-}
 
 function triggerSoundAlert() {
   var b = getSetting(SETTINGS.sound_alert);
