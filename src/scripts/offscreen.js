@@ -1,5 +1,6 @@
-var DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224);
 var a = 0, b = 0
+
+const dataMigrationService = new DataMigrationService()
 
 function getAllPages(a) {
   PAGES.getAllPages()
@@ -184,38 +185,40 @@ async function initializeStorage(callback) {
 
 function bringUpToDate(b, a) {
   initializeStorage(function () {
-    // run migration here
-    function d() {
-      chrome.runtime.sendMessage({ type: 'getExtensionVersion' }, (response) => {
-        setSetting(SETTINGS.version, response);
-        removeUnusedSettings(localStorage);
-        (a || $.noop)();
-      });
-    }
-    fixSoundAlerts();
-    1 > b
-      ? (setSetting(SETTINGS.badge_color, [0, 180, 0, 255]),
-        setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL),
-        setSetting(SETTINGS.sound_alert, null),
-        setSetting(SETTINGS.notifications_enabled, !1),
-        setSetting(SETTINGS.notifications_timeout, 3e4),
-        setSetting(SETTINGS.animations_disabled, !1),
-        setSetting(SETTINGS.sort_by, "date added"),
-        setSetting(SETTINGS.view_all_action, "original"),
-        d())
-      : 2 > b
-        ? (setSetting(SETTINGS.view_all_action, "original"),
-          delSetting("last_check"),
-          importVersionOnePages(d))
-        : 3 > b
-          ? (setSetting(
-            SETTINGS.check_interval,
-            getSetting("timeout") || DEFAULT_CHECK_INTERVAL
-          ),
+    dataMigrationService.handle()
+      .then(() => {
+        function d() {
+          chrome.runtime.sendMessage({ type: 'getExtensionVersion' }, (response) => {
+            setSetting(SETTINGS.version, response);
+            removeUnusedSettings(localStorage);
+            (a || $.noop)();
+          });
+        }
+        fixSoundAlerts();
+        1 > b
+          ? (setSetting(SETTINGS.badge_color, [0, 180, 0, 255]),
+            setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL),
+            setSetting(SETTINGS.sound_alert, null),
+            setSetting(SETTINGS.notifications_enabled, !1),
+            setSetting(SETTINGS.notifications_timeout, 3e4),
+            setSetting(SETTINGS.animations_disabled, !1),
+            setSetting(SETTINGS.sort_by, "date added"),
             setSetting(SETTINGS.view_all_action, "original"),
-            delSetting("timeout"),
-            importVersionTwoPages(d))
-          : d();
+            d())
+          : 2 > b
+            ? (setSetting(SETTINGS.view_all_action, "original"),
+              delSetting("last_check"),
+              importVersionOnePages(d))
+            : 3 > b
+              ? (setSetting(
+                SETTINGS.check_interval,
+                getSetting("timeout") || DEFAULT_CHECK_INTERVAL
+              ),
+                setSetting(SETTINGS.view_all_action, "original"),
+                delSetting("timeout"),
+                importVersionTwoPages(d))
+              : d();
+      })
   });
 }
 
@@ -347,5 +350,6 @@ const init = () => {
   setInterval(watchdog, WATCHDOG_INTERVAL);
   updateBadge();
 }
+
 
 init();

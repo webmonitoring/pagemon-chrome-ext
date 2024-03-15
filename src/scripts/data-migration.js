@@ -11,9 +11,9 @@ class DataMigrationService {
       try {
         if (pages.rows.length > 0) {
           let pagesArray = Array.from(pages.rows);
-          // await Promise.all(pagesArray.map(job => this.pages.addPage()))
+          await Promise.all(pagesArray.map(page => this.pages.addPage(page)))
           chrome.runtime.sendMessage({
-            jobs: pagesArray,
+            data: { jobs: pagesArray },
             type: 'dataMigrated'
           });
           this.oldDatabase.executeSql(`DELETE FROM pages`)

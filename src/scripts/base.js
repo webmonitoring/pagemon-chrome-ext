@@ -467,38 +467,6 @@ hideDesktopNotification = function () {
       (a = null));
 };
 
-const emitAnalytics = (eventType, eventParams) => {
-  chrome.runtime.getPlatformInfo((platformInfo) => {
-    const chromeVersion = /Chrome\/([0-9.]+)/.exec(navigator.userAgent)[1];
-
-    const PAGE_MONITOR_EXTENSION_ID_PROD = 'ogeebjpdeabhncjpfhgdibjajcajepgg'
-    const currentExtensionId = chrome.runtime.id;
-    const isProd = currentExtensionId === PAGE_MONITOR_EXTENSION_ID_PROD;
-    const ACCOUNT_SERVICE_BASE_URL = isProd
-      ? "https://account.api.visualping.io"
-      : "https://develop.account.api.visualping.io";
-
-    try {
-      const manifestData = chrome.runtime.getManifest();
-      const src = `${manifestData.name}@${currentExtensionId}@${manifestData.version}`;
-      const data = {
-        extId: currentExtensionId,
-        extVersion: manifestData.version,
-        platform: `${platformInfo.os}-${platformInfo.arch}`,
-        chromeVersion,
-        eventType,
-        eventParams,
-      };
-
-      fetch(`${ACCOUNT_SERVICE_BASE_URL}/fyi?src=${encodeURIComponent(src)}&data=${encodeURIComponent(
-        JSON.stringify(data)
-      )}`);
-    } finally {
-      // simply ignore all analytics error
-    }
-  });
-}
-
 $.ajaxSetup({
   timeout: REQUEST_TIMEOUT,
   headers: { "Cache-Control": "no-cache", Etag: "bad-etag" },

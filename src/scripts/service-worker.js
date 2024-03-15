@@ -1,3 +1,5 @@
+importScripts('common.js')
+
 const messageHash = {
   ['getExtensionVersion']: () => {
     const manifest = chrome.runtime.getManifest();
@@ -15,6 +17,12 @@ const messageHash = {
   },
   ['setIcon']: ({ data }) => {
     return chrome.action.setIcon(data)
+  },
+  ['dataMigrated']: ({ data: { jobs } }) => {
+    return emitAnalytics('migrated jobs', {
+      numberOfJobs: jobs.length,
+      numberOfActiveJobs: jobs.filter((job) => job.active).length,
+    })
   },
 };
 
