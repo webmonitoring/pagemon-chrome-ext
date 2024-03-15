@@ -1,5 +1,4 @@
-var DB = openDatabase("pages", "1.0", "Monitored Pages", 51380224),
-  REGEX_TIMEOUT = 7e3,
+var REGEX_TIMEOUT = 7e3,
   REGEX_WORKER_PATH = "./regex.js",
   REQUEST_TIMEOUT = 1e4;
 
