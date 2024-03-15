@@ -192,7 +192,7 @@ function bringUpToDate(b, a) {
         (a || $.noop)();
       });
     }
-    3.1 > b && fixSoundAlerts();
+    fixSoundAlerts();
     1 > b
       ? (setSetting(SETTINGS.badge_color, [0, 180, 0, 255]),
         setSetting(SETTINGS.check_interval, DEFAULT_CHECK_INTERVAL),
@@ -221,15 +221,19 @@ function bringUpToDate(b, a) {
 
 async function fixSoundAlerts() {
   var b = getSetting(SETTINGS.custom_sounds) || [];
-  const soundCuckooName = await chrome.runtime.sendMessage({ data: { key: "sound_cuckoo" }, type: 'getMessage' })
-  const soundChimeName = await chrome.runtime.sendMessage({ data: { key: "sound_chime" }, type: 'getMessage' })
+  const cuckoo = await chrome.runtime.sendMessage({ data: { key: "sound_cuckoo" }, type: 'getMessage' })
+  const chime = await chrome.runtime.sendMessage({ data: { key: "sound_chime" }, type: 'getMessage' })
+
+  if (b.map(sound => sound.name).includes(chime || cuckoo)) {
+    return;
+  }
 
   b.unshift({
-    name: soundCuckooName,
+    name: cuckoo,
     url: chrome.runtime.getURL("audio/cuckoo.ogg"),
   });
   b.unshift({
-    name: soundChimeName,
+    name: chime,
     url: chrome.runtime.getURL("audio/bell.ogg"),
   });
   setSetting(SETTINGS.custom_sounds, b);

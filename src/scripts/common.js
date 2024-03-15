@@ -1,7 +1,7 @@
 const SETTINGS = {
   check_interval: "check_interval",
   badge_color: "badge_color",
-  version: "4.0.0",
+  version: "version",
   sound_alert: "sound_alert",
   notifications_enabled: "notifications_enabled",
   notifications_timeout: "notifications_timeout",
