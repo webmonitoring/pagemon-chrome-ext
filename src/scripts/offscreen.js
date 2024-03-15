@@ -25,7 +25,7 @@ function setPageSettings(a, b, d) {
     f;
   for (f in b)
     c.push(f + " = ?"),
-      "boolean" == typeof b[f] && (b[f] = new Number(b[f])),
+      "boolean" == typeof b[f] && (b[f] = Number(b[f])),
       e.push(b[f]);
   e.push(a);
   c

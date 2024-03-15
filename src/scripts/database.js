@@ -35,7 +35,7 @@ class SQLiteDatabaseService {
       if (!(err instanceof Error)) {
         err = new Error(err.result.message);
       }
-      console.error(err.name, err.message);
+      console.error(err.name, err.message, sql, args);
     } finally {
       (await this.promiser)('close', { dbId });
     }

@@ -160,8 +160,10 @@ function getAllPageURLs(callback) {
     .then(result => callback(result))
 }
 function getAllPages(callback) {
-  PAGES.getAllPages(callback)
-    .then(result => callback(result))
+  PAGES.getAllPages()
+    .then(result => {
+      callback(result)
+    })
 }
 function getAllUpdatedPages(callback) {
   PAGES.getAllUpdatedPages()
@@ -175,7 +177,7 @@ function setPageSettings(a, b, d) {
     f;
   for (f in b)
     c.push(f + " = ?"),
-      "boolean" == typeof b[f] && (b[f] = new Number(b[f])),
+      "boolean" == typeof b[f] && (b[f] = Number(b[f])),
       e.push(b[f]);
   e.push(a);
   c
