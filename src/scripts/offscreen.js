@@ -107,7 +107,6 @@ applySchedule = function (d, now = Date.now()) {
 };
 
 function checkPage(a, b, d) {
-  console.log("checkPage", a, b, d);
   getPage(a, function (c) {
     !c || c.updated
       ? (b || $.noop)(a)
