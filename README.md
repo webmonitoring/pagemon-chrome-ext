@@ -23,3 +23,6 @@ Features:
 ## Building
 Run the following command from the root folder to build the app
 `python ./src/build.py`
+
+You also need to pip install these: `pip install --no-binary lxml lxml cssselect`
+
