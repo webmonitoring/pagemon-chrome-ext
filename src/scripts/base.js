@@ -431,7 +431,7 @@ triggerDesktopNotification = function () {
           });
           c = {
             type: "basic",
-            iconUrl: chrome.extension.getURL("img/icon128.png"),
+            iconUrl: chrome.runtime.getURL("img/icon128.png"),
             title: title,
             message: "",
             buttons: c,

@@ -97,12 +97,20 @@ function canonizePage(a, b) {
   return a ? (b.match(/\b(x|xht|ht)ml\b/) ? a.replace(/\s+/g, " ") : a) : a;
 }
 
-function getSetting(a) {
-  return JSON.parse(localStorage.getItem(a) || "null");
+function getSetting(key) {
+  const setting = localStorage.getItem(key);
+
+  if (setting === 'undefined') {
+    return JSON.parse("null")
+  }
+
+  return JSON.parse(setting || "null");
 }
+
 function setSetting(a, b) {
   localStorage.setItem(a, JSON.stringify(b));
 }
+
 function delSetting(a) {
   localStorage.removeItem(a);
 }
