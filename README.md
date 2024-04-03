@@ -25,3 +25,5 @@ Features:
 
 Run the following command from the `/src` folder to build the app
 `python ./build.py --nocompilejs`
+
+You also need to pip install these: `pip install --no-binary lxml lxml cssselect`
