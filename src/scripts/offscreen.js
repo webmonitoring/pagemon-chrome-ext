@@ -185,10 +185,9 @@ function bringUpToDate(b, a) {
     try {
       const dataMigrationService = new DataMigrationService()
       await dataMigrationService.handle();
-  
-      initializeSettings(a, b);
     } catch (error) {
       console.error(error);
+    } finally {
       initializeSettings(a, b);
     }
   });
