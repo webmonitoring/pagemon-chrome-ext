@@ -1,7 +1,5 @@
 var a = 0, b = 0
 
-const dataMigrationService = new DataMigrationService()
-
 function getAllPages(a) {
   PAGES.getAllPages()
     .then(result => a(result));
@@ -184,6 +182,8 @@ async function initializeStorage(callback) {
 
 function bringUpToDate(b, a) {
   initializeStorage(function () {
+    const dataMigrationService = new DataMigrationService()
+
     dataMigrationService.handle()
       .then(() => {
         function d() {
