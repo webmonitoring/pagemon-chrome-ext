@@ -85,7 +85,9 @@ hr {
 .depreciation_message {
     padding: .3em .7em;
     white-space: normal;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+}
+
+.depreciation_message p {
+    margin: 0;
+    padding: .3em .5em;
 }
