@@ -1,8 +1,9 @@
 {
-  "update_url": "https://clients2.google.com/service/update2/crx",
+"update_url": "https://clients2.google.com/service/update2/crx",
+
   "name": "__MSG_name__",
-  "version": "4.0.0",
-  "manifest_version": 3,
+  "version": "3.4.7",
+  "manifest_version": 2,
   "description": "__MSG_description__",
   "default_locale": "en",
   "icons": {
@@ -12,10 +13,11 @@
     "16": "img/icon_16.png"
   },
   "background": {
-    "service_worker": "scripts/service-worker.js"
+    "persistent": true,
+    "page": "background.htm"
   },
   "options_page": "options.htm",
-  "action": {
+  "browser_action": {
     "default_icon": {
       "38": "img/browser_action_38.png",
       "19": "img/browser_action_19.png"
@@ -23,18 +25,12 @@
     "default_title": "__MSG_name__",
     "default_popup": "popup.htm"
   },
-  "host_permissions": [
-    "*://*/"
-  ],
   "permissions": [
     "tabs",
-    "favicon",
+    "*://*/",
+    "chrome://favicon/",
     "unlimitedStorage",
-    "notifications",
-    "scripting",
-    "offscreen"
+    "notifications"
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
-  }
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }

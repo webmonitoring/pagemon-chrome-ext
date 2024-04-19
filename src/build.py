@@ -85,7 +85,7 @@ def main():
   print 'Applying minified libs'
   for f in glob.glob('build/lib/*.js'):
     os.remove(f)
-  for f in glob.glob('build/lib/min/*'):
+  for f in glob.glob('build/lib/min/*.js'):
     shutil.copy(f, 'build/lib')
   shutil.rmtree('build/lib/min')
 
