@@ -1,8 +1,8 @@
 {
   "update_url": "https://clients2.google.com/service/update2/crx",
   "name": "__MSG_name__",
-  "version": "4.0.0",
-  "manifest_version": 3,
+  "version": "4.0.1",
+  "manifest_version": 2,
   "description": "__MSG_description__",
   "default_locale": "en",
   "icons": {
@@ -34,7 +34,5 @@
     "scripting",
     "offscreen"
   ],
-  "content_security_policy": {
-    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self';"
-  }
+  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
