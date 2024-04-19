@@ -12,11 +12,10 @@
     "16": "img/icon_16.png"
   },
   "background": {
-    "persistent": true,
-    "page": "background.htm"
+    "service_worker": "scripts/service-worker.js"
   },
   "options_page": "options.htm",
-  "browser_action": {
+  "action": {
     "default_icon": {
       "38": "img/browser_action_38.png",
       "19": "img/browser_action_19.png"
@@ -24,12 +23,16 @@
     "default_title": "__MSG_name__",
     "default_popup": "popup.htm"
   },
+  "host_permissions": [
+    "*://*/"
+  ],
   "permissions": [
     "tabs",
-    "*://*/",
-    "chrome://favicon/",
+    "favicon",
     "unlimitedStorage",
-    "notifications"
+    "notifications",
+    "scripting",
+    "offscreen"
   ],
   "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'"
 }
